@@ -1,3 +1,5 @@
+from engine.tools.line_tool import LineTool
+
 from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QPainter, QColor, QPen
 from PySide6.QtCore import Qt, QPoint
@@ -14,19 +16,17 @@ class Canvas(QWidget):
 
         self.points = []
 
+        self.current_tool = LineTool()
+
     def mouseMoveEvent(self, event):
         self.mouse_pos = event.position().toPoint()
+        self.current_tool.mouse_move(self, event)
         self.update()
-
 
     def mousePressEvent(self, event):
-
-     if event.button() == Qt.MouseButton.LeftButton:
-        self.points.append(event.position().toPoint())
-        self.update()
+        self.current_tool.mouse_press(self, event)
 
     def paintEvent(self, event):
-
         painter = QPainter(self)
 
         painter.fillRect(self.rect(), QColor("#202020"))
@@ -40,13 +40,8 @@ class Canvas(QWidget):
 
         for y in range(0, self.height(), grid):
             painter.drawLine(0, y, self.width(), y)
-            painter.setPen(Qt.NoPen)
-            painter.setBrush(QColor("#D4A017"))
 
-        for point in self.points:
-            painter.drawEllipse(point, 4, 4)
-
-        # Draw mouse crosshair
+        # Crosshair
         painter.setPen(QPen(QColor("#D4A017"), 1))
 
         x = self.mouse_pos.x()
@@ -54,10 +49,6 @@ class Canvas(QWidget):
 
         painter.drawLine(x, 0, x, self.height())
         painter.drawLine(0, y, self.width(), y)
-        
-       # Draw clicked points
-        painter.setPen(Qt.NoPen)
-        painter.setBrush(QColor("#D4A017"))
 
-        for point in self.points:
-         painter.drawEllipse(point, 4, 4)
+        # Draw Line Tool
+        self.current_tool.draw(painter)
