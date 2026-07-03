@@ -1,51 +1,69 @@
-from PySide6.QtCore import Qt
-from PySide6.QtGui import QPen, QColor
+from engine.tools.tool import Tool
+from engine.entities import LineEntity
+from engine.geometry import Vector2
 
 
-class LineTool:
+class LineTool(Tool):
 
     def __init__(self):
-        self.lines = []
-        self.current_start = None
-        self.preview_end = None
 
-    def mouse_press(self, canvas, event):
+        super().__init__()
 
-        point = event.position().toPoint()
+        self.start = None
+        self.preview = None
 
-        # LEFT CLICK
-        if event.button() == Qt.MouseButton.LeftButton:
+    # --------------------------------
 
-            if self.current_start is None:
-                self.current_start = point
-            else:
-                self.lines.append((self.current_start, point))
-                self.current_start = point
+    def mouse_press(self, workspace, point):
 
-            self.preview_end = point
-            canvas.update()
+        p = Vector2(point.x, point.y)
 
-        # RIGHT CLICK = Finish
-        elif event.button() == Qt.MouseButton.RightButton:
+        if self.start is None:
 
-            self.current_start = None
-            self.preview_end = None
-            canvas.update()
+            self.start = p
 
-    def mouse_move(self, canvas, event):
+        else:
 
-        if self.current_start is not None:
-            self.preview_end = event.position().toPoint()
-            canvas.update()
+            line = LineEntity(
 
-    def draw(self, painter):
+                self.start.copy(),
 
-        # Permanent lines
-        painter.setPen(QPen(QColor("#00FFFF"), 2))
+                p.copy()
 
-        for start, end in self.lines:
-            painter.drawLine(start, end)
+            )
 
-        # Preview line
-        if self.current_start is not None and self.preview_end is not None:
-            painter.drawLine(self.current_start, self.preview_end)
+            workspace.add_entity(line)
+
+            self.start = None
+
+            self.preview = None
+
+    # --------------------------------
+
+    def mouse_move(self, workspace, point):
+
+        if self.start is None:
+
+            return
+
+        self.preview = LineEntity(
+
+            self.start.copy(),
+
+            Vector2(point.x, point.y)
+
+        )
+
+    # --------------------------------
+
+    def mouse_release(self, workspace, point):
+
+        pass
+
+    # --------------------------------
+
+    def draw_preview(self, painter):
+
+        if self.preview:
+
+            self.preview.draw(painter)

@@ -1,0 +1,68 @@
+from engine.tools.tool import Tool
+from engine.entities import RectangleEntity
+from engine.geometry import Vector2
+
+
+class RectangleTool(Tool):
+
+    def __init__(self):
+
+        super().__init__()
+
+        self.start = None
+        self.preview = None
+
+    # --------------------------------
+
+    def mouse_press(self, workspace, point):
+
+        p = Vector2(point.x, point.y)
+
+        if self.start is None:
+
+            self.start = p
+
+        else:
+
+            rect = RectangleEntity(
+
+                self.start.copy(),
+
+                p.copy()
+
+            )
+
+            workspace.add_entity(rect)
+
+            self.start = None
+            self.preview = None
+
+    # --------------------------------
+
+    def mouse_move(self, workspace, point):
+
+        if self.start is None:
+
+            return
+
+        self.preview = RectangleEntity(
+
+            self.start.copy(),
+
+            Vector2(point.x, point.y)
+
+        )
+
+    # --------------------------------
+
+    def mouse_release(self, workspace, point):
+
+        pass
+
+    # --------------------------------
+
+    def draw_preview(self, painter):
+
+        if self.preview:
+
+            self.preview.draw(painter)

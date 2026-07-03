@@ -1,8 +1,4 @@
-from PySide6.QtCore import Qt
-
-
 class BaseTool:
-    """Base class for all drawing tools."""
 
     def mouse_press(self, canvas, event):
         pass
@@ -13,5 +9,8 @@ class BaseTool:
     def mouse_release(self, canvas, event):
         pass
 
-    def draw(self, painter):
+    def key_press(self, canvas, event):
+        pass
+
+    def draw_preview(self, painter):
         pass

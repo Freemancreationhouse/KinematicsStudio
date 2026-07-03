@@ -1,8 +1,9 @@
-from engine.tools.line_tool import LineTool
+from engine.tool_manager import ToolManager
+from engine.project import Project
 
 from PySide6.QtWidgets import QWidget
 from PySide6.QtGui import QPainter, QColor, QPen
-from PySide6.QtCore import Qt, QPoint
+from PySide6.QtCore import Qt, QPoint, QPointF
 
 
 class Canvas(QWidget):
@@ -10,45 +11,143 @@ class Canvas(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.setFocusPolicy(Qt.StrongFocus)
         self.setMouseTracking(True)
 
-        self.mouse_pos = QPoint(0, 0)
+        self.project = Project()
+        self.tool_manager = ToolManager()
 
-        self.points = []
+        self.zoom = 1.0
+        self.pan = QPointF(0, 0)
 
-        self.current_tool = LineTool()
+        self.middle_pressed = False
+        self.last_pan_pos = QPointF()
 
-    def mouseMoveEvent(self, event):
-        self.mouse_pos = event.position().toPoint()
-        self.current_tool.mouse_move(self, event)
+        self.mouse_pos = QPointF()
+
+    def to_world(self, pos):
+
+        return QPoint(
+            int((pos.x() - self.pan.x()) / self.zoom),
+            int((pos.y() - self.pan.y()) / self.zoom),
+        )
+
+    def wheelEvent(self, event):
+
+        if event.angleDelta().y() > 0:
+            self.zoom *= 1.1
+        else:
+            self.zoom /= 1.1
+
+        self.zoom = max(0.2, min(20.0, self.zoom))
         self.update()
 
     def mousePressEvent(self, event):
-        self.current_tool.mouse_press(self, event)
+
+        self.setFocus()
+
+        if event.button() == Qt.MiddleButton:
+            self.middle_pressed = True
+            self.last_pan_pos = event.position()
+            return
+
+        event.world_pos = self.to_world(event.position())
+
+        self.tool_manager.mouse_press(self, event)
+
+        self.update()
+
+    def mouseMoveEvent(self, event):
+
+        if self.middle_pressed:
+
+            delta = event.position() - self.last_pan_pos
+
+            self.pan += delta
+
+            self.last_pan_pos = event.position()
+
+            self.update()
+            return
+
+        self.mouse_pos = self.to_world(event.position())
+
+        event.world_pos = self.mouse_pos
+
+        self.tool_manager.mouse_move(self, event)
+
+        self.update()
+
+    def mouseReleaseEvent(self, event):
+
+        if event.button() == Qt.MiddleButton:
+            self.middle_pressed = False
+            return
+
+        self.tool_manager.mouse_release(self, event)
+
+        self.update()
+
+    def keyPressEvent(self, event):
+
+        # Ctrl + Z
+        if event.modifiers() & Qt.ControlModifier:
+
+            if event.key() == Qt.Key_Z:
+                self.project.undo()
+                self.update()
+                return
+
+            if event.key() == Qt.Key_Y:
+                self.project.redo()
+                self.update()
+                return
+
+        self.tool_manager.key_press(self, event)
+
+        self.update()
 
     def paintEvent(self, event):
+
         painter = QPainter(self)
 
         painter.fillRect(self.rect(), QColor("#202020"))
 
+        painter.translate(self.pan)
+
+        painter.scale(self.zoom, self.zoom)
+
+        # Grid
         painter.setPen(QColor("#404040"))
 
         grid = 25
 
-        for x in range(0, self.width(), grid):
-            painter.drawLine(x, 0, x, self.height())
+        for x in range(-5000, 5000, grid):
+            painter.drawLine(x, -5000, x, 5000)
 
-        for y in range(0, self.height(), grid):
-            painter.drawLine(0, y, self.width(), y)
+        for y in range(-5000, 5000, grid):
+            painter.drawLine(-5000, y, 5000, y)
 
         # Crosshair
         painter.setPen(QPen(QColor("#D4A017"), 1))
 
-        x = self.mouse_pos.x()
-        y = self.mouse_pos.y()
+        painter.drawLine(
+            self.mouse_pos.x(),
+            -5000,
+            self.mouse_pos.x(),
+            5000,
+        )
 
-        painter.drawLine(x, 0, x, self.height())
-        painter.drawLine(0, y, self.width(), y)
+        painter.drawLine(
+            -5000,
+            self.mouse_pos.y(),
+            5000,
+            self.mouse_pos.y(),
+        )
 
-        # Draw Line Tool
-        self.current_tool.draw(painter)
+        # Draw entities
+        for entity in self.project.entities:
+            entity.draw(painter)
+
+        # Draw active tool preview
+        self.tool_manager.draw(painter)
