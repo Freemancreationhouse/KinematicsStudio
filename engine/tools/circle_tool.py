@@ -1,5 +1,3 @@
-from math import sqrt
-
 from engine.tools.tool import Tool
 from engine.entities import CircleEntity
 from engine.geometry import Vector2
@@ -10,6 +8,11 @@ class CircleTool(Tool):
     def __init__(self):
 
         super().__init__()
+
+        self.center = None
+        self.preview = None
+
+    def deactivate(self):
 
         self.center = None
         self.preview = None
@@ -74,3 +77,8 @@ class CircleTool(Tool):
         if self.preview:
 
             self.preview.draw(painter)
+
+    def key_press(self, workspace, key):
+
+        if key in ("Escape", "Esc", 0x01000000):
+            self.deactivate()

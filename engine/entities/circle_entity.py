@@ -1,5 +1,7 @@
 from engine.entities.entity import Entity
 from engine.geometry import Vector2, BoundingBox
+from PySide6.QtCore import QPointF
+from PySide6.QtGui import QColor, QPen
 
 
 class CircleEntity(Entity):
@@ -14,8 +16,16 @@ class CircleEntity(Entity):
     # --------------------------------
 
     def draw(self, painter):
+        if not self.visible:
+            return
 
-        pass
+        painter.save()
+        pen = QPen(QColor("#4fc3f7" if self.selected else "#e0e0e0"), 2)
+        pen.setCosmetic(True)
+        painter.setPen(pen)
+        painter.setBrush(QColor(0, 0, 0, 0))
+        painter.drawEllipse(QPointF(self.center.x, self.center.y), self.radius, self.radius)
+        painter.restore()
 
     # --------------------------------
 

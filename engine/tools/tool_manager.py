@@ -18,6 +18,9 @@ class ToolManager:
         if self.current is None:
 
             self.current = tool
+            self.current.activate()
+
+        return tool
 
     # --------------------------------
 
@@ -25,8 +28,7 @@ class ToolManager:
 
         if name not in self.tools:
 
-            print("Tool not found:", name)
-            return
+            return False
 
         if self.current:
 
@@ -36,7 +38,7 @@ class ToolManager:
 
         self.current.activate()
 
-        print("Active Tool ->", self.current.name)
+        return True
 
     # --------------------------------
 

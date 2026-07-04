@@ -41,6 +41,12 @@ class Canvas(QWidget):
 
     def mousePressEvent(self, event):
 
+        if event.button() != Qt.LeftButton:
+            event.ignore()
+            return
+
+        self.setFocus()
+
         self.app.tool_manager.mouse_press(
 
             self.app.workspace,
@@ -69,12 +75,27 @@ class Canvas(QWidget):
 
     def mouseReleaseEvent(self, event):
 
+        if event.button() != Qt.LeftButton:
+            event.ignore()
+            return
+
         self.app.tool_manager.mouse_release(
 
             self.app.workspace,
 
             self._world(event.position())
 
+        )
+
+        self.update()
+
+    # ------------------------------------------------
+
+    def keyPressEvent(self, event):
+
+        self.app.tool_manager.key_press(
+            self.app.workspace,
+            event.key()
         )
 
         self.update()

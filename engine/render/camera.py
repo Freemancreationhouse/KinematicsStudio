@@ -20,13 +20,15 @@ class Camera:
 
     def zoom_in(self, factor=1.1):
 
-        self.zoom *= factor
+        if factor > 0:
+            self.zoom = min(self.zoom * factor, 100.0)
 
     # --------------------------------
 
     def zoom_out(self, factor=1.1):
 
-        self.zoom /= factor
+        if factor > 0:
+            self.zoom = max(self.zoom / factor, 0.01)
 
     # --------------------------------
 

@@ -12,6 +12,11 @@ class RectangleTool(Tool):
         self.start = None
         self.preview = None
 
+    def deactivate(self):
+
+        self.start = None
+        self.preview = None
+
     # --------------------------------
 
     def mouse_press(self, workspace, point):
@@ -66,3 +71,8 @@ class RectangleTool(Tool):
         if self.preview:
 
             self.preview.draw(painter)
+
+    def key_press(self, workspace, key):
+
+        if key in ("Escape", "Esc", 0x01000000):
+            self.deactivate()

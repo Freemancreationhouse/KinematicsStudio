@@ -18,6 +18,8 @@ class CADEngine:
 
         self.camera = Camera()
 
+        self.renderer.camera = self.camera
+
         self.view = ViewTransform(self.camera)
 
         self.input = InputManager()

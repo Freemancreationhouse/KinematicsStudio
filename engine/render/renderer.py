@@ -1,3 +1,6 @@
+# CODEX TEST
+
+from PySide6.QtCore import QLineF
 from PySide6.QtGui import QColor, QPen
 
 
@@ -7,6 +10,7 @@ class Renderer:
 
         self.grid = True
         self.grid_size = 25
+        self.camera = None
 
     # ------------------------------------------------
 
@@ -17,33 +21,49 @@ class Renderer:
 
         painter.setPen(QPen(QColor(55, 55, 55), 1))
 
+        spacing = float(self.grid_size)
+        offset_x = 0.0
+        offset_y = 0.0
+
+        if self.camera is not None:
+            spacing *= self.camera.zoom
+
+        # Avoid excessive painting when zoomed far out.
+        while spacing < 8.0:
+            spacing *= 5.0
+
+        if self.camera is not None:
+            offset_x = (-self.camera.position.x * self.camera.zoom) % spacing
+            offset_y = (-self.camera.position.y * self.camera.zoom) % spacing
+
         # Vertical
 
-        x = 0
+        x = offset_x % spacing
 
         while x <= width:
 
-            painter.drawLine(x, 0, x, height)
+            painter.drawLine(QLineF(x, 0, x, height))
 
-            x += self.grid_size
+            x += spacing
 
         # Horizontal
 
-        y = 0
+        y = offset_y % spacing
 
         while y <= height:
 
-            painter.drawLine(0, y, width, y)
+            painter.drawLine(QLineF(0, y, width, y))
 
-            y += self.grid_size
+            y += spacing
 
     # ------------------------------------------------
 
     def draw_entities(self, painter, workspace):
 
-        for entity in workspace.entities:
+        for entity in tuple(workspace.entities):
 
-            entity.draw(painter)
+            if getattr(entity, "visible", True):
+                entity.draw(painter)
 
     # ------------------------------------------------
 
@@ -56,6 +76,7 @@ class Renderer:
     # ------------------------------------------------
 
     def render(self, painter, workspace, tool, width, height):
+        painter.save()
 
         self.draw_grid(
 
@@ -66,6 +87,11 @@ class Renderer:
             height
 
         )
+
+        if self.camera is not None:
+            painter.translate(-self.camera.position.x * self.camera.zoom,
+                              -self.camera.position.y * self.camera.zoom)
+            painter.scale(self.camera.zoom, self.camera.zoom)
 
         self.draw_entities(
 
@@ -82,3 +108,5 @@ class Renderer:
             tool
 
         )
+
+        painter.restore()

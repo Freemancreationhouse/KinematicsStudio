@@ -1,5 +1,7 @@
 from engine.entities.entity import Entity
 from engine.geometry import Vector2, BoundingBox
+from PySide6.QtCore import QRectF
+from PySide6.QtGui import QColor, QPen
 
 
 class RectangleEntity(Entity):
@@ -14,8 +16,19 @@ class RectangleEntity(Entity):
     # --------------------------------
 
     def draw(self, painter):
+        if not self.visible:
+            return
 
-        pass
+        left = min(self.p1.x, self.p2.x)
+        top = min(self.p1.y, self.p2.y)
+
+        painter.save()
+        pen = QPen(QColor("#4fc3f7" if self.selected else "#e0e0e0"), 2)
+        pen.setCosmetic(True)
+        painter.setPen(pen)
+        painter.setBrush(QColor(0, 0, 0, 0))
+        painter.drawRect(QRectF(left, top, self.width, self.height))
+        painter.restore()
 
     # --------------------------------
 
