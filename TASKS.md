@@ -12,5 +12,5 @@
 ## Release 0.2 - Sprint 2: Drawing Tools
 
 - [x] Line Tool
-- [ ] Rectangle Tool
+- [x] Rectangle Tool
 - [ ] Circle Tool
