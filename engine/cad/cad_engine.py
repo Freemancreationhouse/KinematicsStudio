@@ -2,6 +2,7 @@ from engine.workspace import WorkspaceManager
 from engine.tools import ToolManager
 from engine.render import Renderer, Camera, ViewTransform
 from engine.input import InputManager
+from engine.snap import SnapManager
 
 
 class CADEngine:
@@ -23,6 +24,7 @@ class CADEngine:
         self.view = ViewTransform(self.camera)
 
         self.input = InputManager()
+        self.snap_manager = SnapManager()
 
     # -----------------------------------------
 
@@ -40,7 +42,9 @@ class CADEngine:
 
         width,
 
-        height
+        height,
+
+        snap_result=None
 
     ):
 
@@ -54,6 +58,8 @@ class CADEngine:
 
             width,
 
-            height
+            height,
+
+            snap_result
 
         )

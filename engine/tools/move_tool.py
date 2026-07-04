@@ -1,4 +1,5 @@
 from engine.tools.tool import Tool
+from engine.commands import MoveEntityCommand
 
 
 class MoveTool(Tool):
@@ -7,42 +8,117 @@ class MoveTool(Tool):
 
         super().__init__()
 
-        self.entity = None
+        self.entities = []
         self.last = None
+        self.total_dx = 0.0
+        self.total_dy = 0.0
+        self.moving = False
+
+    # --------------------------------
+
+    def deactivate(self):
+
+        self.cancel()
 
     # --------------------------------
 
     def mouse_press(self, workspace, point):
 
-        self.last = point
+        if workspace is None:
+            return
 
-        self.entity = None
+        self.last = point
+        self.total_dx = 0.0
+        self.total_dy = 0.0
+        self.moving = False
+
+        selection = getattr(workspace, "selection", None)
+        selected = list(selection.selected) if selection else []
 
         for entity in reversed(workspace.entities):
 
             if entity.hit_test(point):
 
-                self.entity = entity
+                if selected and entity in selected:
+                    self.entities = selected
+                else:
+                    if selection:
+                        selection.select(entity)
+                    self.entities = [entity]
 
-                break
+                self.moving = True
+                return
+
+        self.entities = []
 
     # --------------------------------
 
     def mouse_move(self, workspace, point):
 
-        if self.entity is None:
+        if not self.moving or not self.entities:
 
             return
 
         dx = point.x - self.last.x
         dy = point.y - self.last.y
 
-        self.entity.move(dx, dy)
+        for entity in self.entities:
+
+            entity.move(dx, dy)
 
         self.last = point
+        self.total_dx += dx
+        self.total_dy += dy
 
     # --------------------------------
 
     def mouse_release(self, workspace, point):
 
-        self.entity = None
+        if (
+            workspace is not None and
+            self.entities and
+            (self.total_dx != 0.0 or self.total_dy != 0.0)
+        ):
+
+            workspace.command_manager.record(
+
+                MoveEntityCommand(
+
+                    list(self.entities),
+
+                    self.total_dx,
+
+                    self.total_dy
+
+                )
+
+            )
+
+        self.entities = []
+        self.last = None
+        self.total_dx = 0.0
+        self.total_dy = 0.0
+        self.moving = False
+
+    # --------------------------------
+
+    def key_press(self, workspace, key):
+
+        if key in ("Escape", "Esc", 0x01000000):
+            self.cancel()
+
+    # --------------------------------
+
+    def cancel(self):
+
+        if self.entities and (self.total_dx != 0.0 or self.total_dy != 0.0):
+
+            for entity in self.entities:
+
+                entity.move(-self.total_dx, -self.total_dy)
+
+        self.entities = []
+        self.last = None
+        self.total_dx = 0.0
+        self.total_dy = 0.0
+        self.moving = False

@@ -76,7 +76,8 @@ class MainWindow(QMainWindow):
         # ---------------------------------
 
         self.explorer_dock = QDockWidget("Explorer", self)
-        self.explorer_dock.setWidget(ExplorerPanel())
+        self.explorer_panel = ExplorerPanel()
+        self.explorer_dock.setWidget(self.explorer_panel)
 
         self.addDockWidget(
             Qt.LeftDockWidgetArea,
@@ -88,7 +89,8 @@ class MainWindow(QMainWindow):
         # ---------------------------------
 
         self.property_dock = QDockWidget("Properties", self)
-        self.property_dock.setWidget(PropertyPanel())
+        self.property_panel = PropertyPanel()
+        self.property_dock.setWidget(self.property_panel)
 
         self.addDockWidget(
             Qt.RightDockWidgetArea,
@@ -99,6 +101,30 @@ class MainWindow(QMainWindow):
         # Status Bar
         # ---------------------------------
 
-        self.setStatusBar(
-            StudioStatusBar()
-        )
+        self.studio_status_bar = StudioStatusBar()
+        self.setStatusBar(self.studio_status_bar)
+
+        self.canvas.property_panel = self.property_panel
+        self.canvas.status_bar = self.studio_status_bar
+
+        tm.on_change = self._tool_changed
+        tm.app = self.canvas.app
+        tm.canvas = self.canvas
+        self.canvas.app.workspace.command_manager.on_change = self._commands_changed
+        self._commands_changed(self.canvas.app.workspace.command_manager)
+
+    # ---------------------------------
+
+    def _tool_changed(self, tool):
+
+        self.studio_status_bar.show_tool(tool)
+        self.canvas._sync_selection_ui()
+
+    # ---------------------------------
+
+    def _commands_changed(self, command_manager):
+
+        self.explorer_panel.show_history(command_manager)
+        self.studio_status_bar.show_command_state(command_manager)
+        self.canvas._sync_selection_ui()
+        self.canvas.update()

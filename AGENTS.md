@@ -76,3 +76,15 @@
 
 ## Release 1.0
 - [ ] Stable Production Release
+
+---
+
+## Engineering Rules
+
+- Prefer extending existing modules over creating new ones.
+- Keep classes focused on a single responsibility.
+- Avoid duplicate logic.
+- Add docstrings to public classes and methods.
+- Keep methods small and readable.
+- Validate every feature before marking a sprint complete.
+- Do not mark a sprint complete unless it has been tested through the UI.

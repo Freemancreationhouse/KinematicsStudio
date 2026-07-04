@@ -8,6 +8,7 @@ class ToolManager:
         self.tools = {}
 
         self.current = None
+        self.on_change = None
 
     # --------------------------------
 
@@ -38,15 +39,21 @@ class ToolManager:
 
         self.current.activate()
 
+        if self.on_change:
+            self.on_change(self.current)
+
         return True
 
     # --------------------------------
 
-    def mouse_press(self, workspace, point):
+    def mouse_press(self, workspace, point, additive=False):
 
         if self.current:
 
-            self.current.mouse_press(workspace, point)
+            try:
+                self.current.mouse_press(workspace, point, additive)
+            except TypeError:
+                self.current.mouse_press(workspace, point)
 
     # --------------------------------
 
@@ -58,11 +65,14 @@ class ToolManager:
 
     # --------------------------------
 
-    def mouse_release(self, workspace, point):
+    def mouse_release(self, workspace, point, additive=False):
 
         if self.current:
 
-            self.current.mouse_release(workspace, point)
+            try:
+                self.current.mouse_release(workspace, point, additive)
+            except TypeError:
+                self.current.mouse_release(workspace, point)
 
     # --------------------------------
 

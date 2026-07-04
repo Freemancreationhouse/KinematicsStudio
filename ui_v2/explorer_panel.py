@@ -24,6 +24,7 @@ class ExplorerPanel(QWidget):
         self.tree.setHeaderHidden(True)
 
         layout.addWidget(self.tree)
+        self.history = None
 
         self.build()
 
@@ -38,6 +39,7 @@ class ExplorerPanel(QWidget):
         assets = QTreeWidgetItem(["Assets"])
 
         history = QTreeWidgetItem(["History"])
+        self.history = history
 
         project.addChild(layers)
 
@@ -48,3 +50,20 @@ class ExplorerPanel(QWidget):
         self.tree.addTopLevelItem(project)
 
         project.setExpanded(True)
+        history.setExpanded(True)
+
+    # ---------------------------------------------
+
+    def show_history(self, command_manager):
+
+        if self.history is None:
+            return
+
+        self.history.takeChildren()
+
+        for index, command in enumerate(command_manager.history(), 1):
+            self.history.addChild(
+                QTreeWidgetItem([f"{index}. {command.name}"])
+            )
+
+        self.history.setExpanded(True)

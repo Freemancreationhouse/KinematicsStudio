@@ -1,6 +1,7 @@
 from engine.tools.tool import Tool
 from engine.entities import LineEntity
 from engine.geometry import Vector2
+from engine.commands import AddEntityCommand
 
 
 class LineTool(Tool):
@@ -37,7 +38,11 @@ class LineTool(Tool):
 
             )
 
-            workspace.add_entity(line)
+            workspace.command_manager.execute(
+
+                AddEntityCommand(workspace.entities, line)
+
+            )
 
             self.start = None
 

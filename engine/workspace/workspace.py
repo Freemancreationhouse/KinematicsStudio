@@ -1,4 +1,5 @@
 from engine.commands import CommandManager
+from engine.workspace.selection_manager import SelectionManager
 
 
 class Workspace:
@@ -8,6 +9,8 @@ class Workspace:
         self.name = name
 
         self.entities = []
+
+        self.selection = SelectionManager()
 
         self.command_manager = CommandManager()
 

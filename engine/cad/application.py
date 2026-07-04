@@ -15,7 +15,7 @@ class CADApplication:
 
     # --------------------------------
 
-    def render(self, painter, width, height):
+    def render(self, painter, width, height, snap_result=None):
 
         self.engine.render(
 
@@ -23,7 +23,9 @@ class CADApplication:
 
             width,
 
-            height
+            height,
+
+            snap_result
 
         )
 
@@ -47,3 +49,10 @@ class CADApplication:
     def camera(self):
 
         return self.engine.camera
+
+    # --------------------------------
+
+    @property
+    def snap_manager(self):
+
+        return self.engine.snap_manager

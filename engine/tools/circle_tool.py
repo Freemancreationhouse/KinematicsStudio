@@ -1,6 +1,7 @@
 from engine.tools.tool import Tool
 from engine.entities import CircleEntity
 from engine.geometry import Vector2
+from engine.commands import AddEntityCommand
 
 
 class CircleTool(Tool):
@@ -39,7 +40,11 @@ class CircleTool(Tool):
 
             )
 
-            workspace.add_entity(circle)
+            workspace.command_manager.execute(
+
+                AddEntityCommand(workspace.entities, circle)
+
+            )
 
             self.center = None
             self.preview = None

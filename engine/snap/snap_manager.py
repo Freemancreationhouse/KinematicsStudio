@@ -1,134 +1,269 @@
 from math import sqrt
 
+from engine.geometry import Vector2
+
+
+class SnapResult:
+
+    def __init__(self, point, mode="OFF", entity=None, distance=float("inf")):
+
+        self.point = point
+        self.mode = mode
+        self.entity = entity
+        self.distance = distance
+
 
 class SnapManager:
 
     def __init__(self):
 
+        self.enabled = True
         self.endpoint = True
         self.midpoint = True
         self.center = True
-        self.intersection = False
+        self.intersection = True
+        self.nearest = True
+        self.quadrant = True
+        self.grid = True
+        self.grid_size = 25
+        self.tolerance = 12
+        self.current = SnapResult(Vector2(), "OFF")
 
     # ------------------------------------------------------------
 
-    def snap(self, point, project):
+    def toggle(self):
 
-        nearest = point
-        best = 12
+        self.enabled = not self.enabled
+        if not self.enabled:
+            self.current = SnapResult(self.current.point, "OFF")
+        return self.enabled
 
-        # ---------------- Endpoint / Midpoint / Center ----------------
+    # ------------------------------------------------------------
 
-        for entity in project.entities:
+    def snap(self, point, workspace, camera=None):
 
-            # -------- LINE --------
+        if not self.enabled:
+            self.current = SnapResult(point.copy(), "OFF")
+            return self.current
 
-            if hasattr(entity, "start"):
+        tolerance = self._world_tolerance(camera)
+        candidates = []
+        entities = [
+            entity for entity in getattr(workspace, "entities", [])
+            if getattr(entity, "visible", True)
+        ]
 
-                if self.endpoint:
-
-                    for p in entity.endpoints():
-
-                        d = sqrt(
-                            (point.x() - p.x()) ** 2 +
-                            (point.y() - p.y()) ** 2
-                        )
-
-                        if d < best:
-                            best = d
-                            nearest = p
-
-                if self.midpoint:
-
-                    p = entity.midpoint()
-
-                    d = sqrt(
-                        (point.x() - p.x()) ** 2 +
-                        (point.y() - p.y()) ** 2
-                    )
-
-                    if d < best:
-                        best = d
-                        nearest = p
-
-            # -------- RECTANGLE --------
-
-            elif hasattr(entity, "p1"):
-
-                if self.endpoint:
-
-                    x1 = entity.p1.x()
-                    y1 = entity.p1.y()
-
-                    x2 = entity.p2.x()
-                    y2 = entity.p2.y()
-
-                    pts = [
-
-                        entity.p1,
-
-                        entity.p2,
-
-                        entity.p1.__class__(x1, y2),
-
-                        entity.p1.__class__(x2, y1)
-
-                    ]
-
-                    for p in pts:
-
-                        d = sqrt(
-                            (point.x() - p.x()) ** 2 +
-                            (point.y() - p.y()) ** 2
-                        )
-
-                        if d < best:
-                            best = d
-                            nearest = p
-
-            # -------- CIRCLE --------
-
-            elif hasattr(entity, "center"):
-
-                if self.center:
-
-                    d = sqrt(
-                        (point.x() - entity.center.x()) ** 2 +
-                        (point.y() - entity.center.y()) ** 2
-                    )
-
-                    if d < best:
-                        best = d
-                        nearest = entity.center
-
-        # ---------------- Intersection ----------------
+        for entity in entities:
+            candidates.extend(self._entity_candidates(entity, point))
 
         if self.intersection:
+            candidates.extend(self._intersection_candidates(entities))
 
-            lines = [
+        if self.grid:
+            candidates.append((self._grid_point(point), "GRID", None))
 
-                e for e in project.entities
+        best = SnapResult(point.copy(), "OFF")
+        best_score = float("inf")
 
-                if hasattr(e, "intersection")
+        for candidate, mode, entity in candidates:
+            distance = point.distance_to(candidate)
+            score = distance + self._priority_offset(mode, tolerance)
 
-            ]
+            if distance <= tolerance and score < best_score:
+                best = SnapResult(candidate.copy(), mode, entity, distance)
+                best_score = score
 
-            for i in range(len(lines)):
+        self.current = best
+        return best
 
-                for j in range(i + 1, len(lines)):
+    # ------------------------------------------------------------
 
-                    p = lines[i].intersection(lines[j])
+    def _entity_candidates(self, entity, point):
 
-                    if p is None:
-                        continue
+        candidates = []
 
-                    d = sqrt(
-                        (point.x() - p.x()) ** 2 +
-                        (point.y() - p.y()) ** 2
-                    )
+        if hasattr(entity, "start") and hasattr(entity, "end"):
+            if self.endpoint:
+                candidates.append((entity.start, "END", entity))
+                candidates.append((entity.end, "END", entity))
 
-                    if d < best:
-                        best = d
-                        nearest = p
+            if self.midpoint:
+                candidates.append((self._midpoint(entity.start, entity.end), "MID", entity))
 
-        return nearest
+            if self.nearest:
+                candidates.append((self._nearest_on_segment(point, entity.start, entity.end), "NEAR", entity))
+
+        elif hasattr(entity, "p1") and hasattr(entity, "p2"):
+            corners = self._rectangle_corners(entity)
+
+            if self.endpoint:
+                for corner in corners:
+                    candidates.append((corner, "END", entity))
+
+            if self.midpoint:
+                for a, b in zip(corners, corners[1:] + corners[:1]):
+                    candidates.append((self._midpoint(a, b), "MID", entity))
+
+            if self.center:
+                candidates.append((self._midpoint(entity.p1, entity.p2), "CENTER", entity))
+
+            if self.nearest:
+                nearest = None
+                best = float("inf")
+                for a, b in zip(corners, corners[1:] + corners[:1]):
+                    candidate = self._nearest_on_segment(point, a, b)
+                    distance = point.distance_to(candidate)
+                    if distance < best:
+                        best = distance
+                        nearest = candidate
+                if nearest:
+                    candidates.append((nearest, "NEAR", entity))
+
+        elif hasattr(entity, "center") and hasattr(entity, "radius"):
+            if self.center:
+                candidates.append((entity.center, "CENTER", entity))
+
+            if self.quadrant:
+                r = entity.radius
+                candidates.extend([
+                    (Vector2(entity.center.x + r, entity.center.y), "QUAD", entity),
+                    (Vector2(entity.center.x - r, entity.center.y), "QUAD", entity),
+                    (Vector2(entity.center.x, entity.center.y + r), "QUAD", entity),
+                    (Vector2(entity.center.x, entity.center.y - r), "QUAD", entity),
+                ])
+
+            if self.nearest and entity.radius > 0:
+                dx = point.x - entity.center.x
+                dy = point.y - entity.center.y
+                length = sqrt(dx * dx + dy * dy)
+                if length:
+                    candidates.append((
+                        Vector2(
+                            entity.center.x + dx / length * entity.radius,
+                            entity.center.y + dy / length * entity.radius
+                        ),
+                        "NEAR",
+                        entity
+                    ))
+
+        return candidates
+
+    # ------------------------------------------------------------
+
+    def _intersection_candidates(self, entities):
+
+        candidates = []
+        lines = [
+            entity for entity in entities
+            if hasattr(entity, "start") and hasattr(entity, "end")
+        ]
+
+        for index, first in enumerate(lines):
+            for second in lines[index + 1:]:
+                point = self._line_intersection(
+                    first.start,
+                    first.end,
+                    second.start,
+                    second.end
+                )
+                if point:
+                    candidates.append((point, "INT", None))
+
+        return candidates
+
+    # ------------------------------------------------------------
+
+    def _line_intersection(self, a1, a2, b1, b2):
+
+        dax = a2.x - a1.x
+        day = a2.y - a1.y
+        dbx = b2.x - b1.x
+        dby = b2.y - b1.y
+        denominator = dax * dby - day * dbx
+
+        if denominator == 0:
+            return None
+
+        dx = b1.x - a1.x
+        dy = b1.y - a1.y
+        t = (dx * dby - dy * dbx) / denominator
+        u = (dx * day - dy * dax) / denominator
+
+        if 0 <= t <= 1 and 0 <= u <= 1:
+            return Vector2(a1.x + t * dax, a1.y + t * day)
+
+        return None
+
+    # ------------------------------------------------------------
+
+    def _grid_point(self, point):
+
+        return Vector2(
+            round(point.x / self.grid_size) * self.grid_size,
+            round(point.y / self.grid_size) * self.grid_size
+        )
+
+    # ------------------------------------------------------------
+
+    def _rectangle_corners(self, entity):
+
+        x1 = entity.p1.x
+        y1 = entity.p1.y
+        x2 = entity.p2.x
+        y2 = entity.p2.y
+
+        return [
+            Vector2(x1, y1),
+            Vector2(x2, y1),
+            Vector2(x2, y2),
+            Vector2(x1, y2),
+        ]
+
+    # ------------------------------------------------------------
+
+    def _midpoint(self, a, b):
+
+        return Vector2((a.x + b.x) * 0.5, (a.y + b.y) * 0.5)
+
+    # ------------------------------------------------------------
+
+    def _nearest_on_segment(self, point, a, b):
+
+        dx = b.x - a.x
+        dy = b.y - a.y
+        length_squared = dx * dx + dy * dy
+
+        if length_squared == 0:
+            return a.copy()
+
+        t = ((point.x - a.x) * dx + (point.y - a.y) * dy) / length_squared
+        t = max(0.0, min(1.0, t))
+
+        return Vector2(a.x + t * dx, a.y + t * dy)
+
+    # ------------------------------------------------------------
+
+    def _world_tolerance(self, camera):
+
+        if camera is None:
+            return self.tolerance
+
+        return self.tolerance / max(camera.zoom, 0.01)
+
+    # ------------------------------------------------------------
+
+    def _priority_offset(self, mode, tolerance):
+
+        if mode == "INT":
+            return -tolerance * 0.1
+
+        if mode in ("END", "MID", "CENTER", "QUAD"):
+            return 0.0
+
+        if mode == "NEAR":
+            return tolerance * 0.25
+
+        if mode == "GRID":
+            return tolerance * 0.5
+
+        return tolerance

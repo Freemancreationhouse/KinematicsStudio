@@ -18,6 +18,10 @@ class ModifyRibbon(QWidget):
         buttons = [
 
             "Move",
+            "Undo",
+            "Redo",
+            "Fit View",
+            "Zoom Extents",
             "Copy",
             "Rotate",
             "Scale",
@@ -38,6 +42,19 @@ class ModifyRibbon(QWidget):
 
             b.setMinimumHeight(42)
 
+            if text == "Move":
+                b.clicked.connect(
+                    lambda checked=False: self.tool_manager.activate("MoveTool")
+                )
+            elif text == "Undo":
+                b.clicked.connect(self._undo)
+            elif text == "Redo":
+                b.clicked.connect(self._redo)
+            elif text == "Fit View":
+                b.clicked.connect(self._fit_view)
+            elif text == "Zoom Extents":
+                b.clicked.connect(self._zoom_extents)
+
             layout.addWidget(
 
                 b,
@@ -56,3 +73,47 @@ class ModifyRibbon(QWidget):
                 row += 1
 
         layout.setRowStretch(row + 1, 1)
+
+    # ---------------------------------------------
+
+    def _undo(self):
+
+        workspace = self._workspace()
+
+        if workspace:
+            workspace.command_manager.undo()
+
+    # ---------------------------------------------
+
+    def _redo(self):
+
+        workspace = self._workspace()
+
+        if workspace:
+            workspace.command_manager.redo()
+
+    # ---------------------------------------------
+
+    def _workspace(self):
+
+        app = getattr(self.tool_manager, "app", None)
+
+        return getattr(app, "workspace", None)
+
+    # ---------------------------------------------
+
+    def _fit_view(self):
+
+        canvas = getattr(self.tool_manager, "canvas", None)
+
+        if canvas:
+            canvas.fit_view()
+
+    # ---------------------------------------------
+
+    def _zoom_extents(self):
+
+        canvas = getattr(self.tool_manager, "canvas", None)
+
+        if canvas:
+            canvas.zoom_extents()

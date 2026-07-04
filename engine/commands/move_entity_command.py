@@ -5,7 +5,10 @@ class MoveEntityCommand(Command):
 
     def __init__(self, entity, dx, dy):
 
-        self.entity = entity
+        if isinstance(entity, (list, tuple)):
+            self.entities = list(entity)
+        else:
+            self.entities = [entity]
 
         self.dx = dx
         self.dy = dy
@@ -14,22 +17,26 @@ class MoveEntityCommand(Command):
 
     def execute(self):
 
-        self.entity.move(
+        for entity in self.entities:
 
-            self.dx,
+            entity.move(
 
-            self.dy
+                self.dx,
 
-        )
+                self.dy
+
+            )
 
     # --------------------------------
 
     def undo(self):
 
-        self.entity.move(
+        for entity in self.entities:
 
-            -self.dx,
+            entity.move(
 
-            -self.dy
+                -self.dx,
 
-        )
+                -self.dy
+
+            )

@@ -1,6 +1,7 @@
 from engine.tools.tool import Tool
 from engine.entities import RectangleEntity
 from engine.geometry import Vector2
+from engine.commands import AddEntityCommand
 
 
 class RectangleTool(Tool):
@@ -37,7 +38,11 @@ class RectangleTool(Tool):
 
             )
 
-            workspace.add_entity(rect)
+            workspace.command_manager.execute(
+
+                AddEntityCommand(workspace.entities, rect)
+
+            )
 
             self.start = None
             self.preview = None
