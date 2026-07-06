@@ -2,6 +2,7 @@ from engine.cad import CADEngine
 
 
 class CADApplication:
+    """Facade used by the UI to access the CAD engine."""
 
     def __init__(self):
 

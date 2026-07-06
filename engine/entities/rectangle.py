@@ -1,3 +1,6 @@
+# DEPRECATED: Legacy rectangle entity retained for backward compatibility.
+# V2 uses engine.entities.rectangle_entity.RectangleEntity.
+
 from PySide6.QtCore import QPoint
 from PySide6.QtGui import QColor, QPen
 

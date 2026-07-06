@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
 
 
 class StudioStatusBar(QStatusBar):
+    """Displays view, tool, selection, snap, command, and machine status."""
 
     def __init__(self):
 
@@ -56,6 +57,12 @@ class StudioStatusBar(QStatusBar):
     def show_selection_count(self, selected):
 
         self.selected.setText(f"Selected: {len(selected)}")
+
+    # -----------------------------------------
+
+    def show_status_text(self, text):
+
+        self.selected.setText(text)
 
     # -----------------------------------------
 

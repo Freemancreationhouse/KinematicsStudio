@@ -1,3 +1,6 @@
+# DEPRECATED: Legacy tool manager retained for backward compatibility.
+# V2 uses engine.tools.tool_manager.ToolManager.
+
 from copy import deepcopy
 
 from PySide6.QtCore import Qt

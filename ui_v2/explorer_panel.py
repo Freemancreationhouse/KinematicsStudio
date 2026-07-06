@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (
 
 
 class ExplorerPanel(QWidget):
+    """Displays project structure and command history."""
 
     def __init__(self):
 
@@ -25,6 +26,7 @@ class ExplorerPanel(QWidget):
 
         layout.addWidget(self.tree)
         self.history = None
+        self._history_count = 0
 
         self.build()
 
@@ -59,11 +61,34 @@ class ExplorerPanel(QWidget):
         if self.history is None:
             return
 
+        commands = command_manager.history()
+
+        if len(commands) == self._history_count + 1:
+            self.history.addChild(
+                QTreeWidgetItem([
+                    f"{len(commands)}. {commands[-1].name}"
+                ])
+            )
+            self._history_count = len(commands)
+            self.history.setExpanded(True)
+            return
+
+        if len(commands) < self._history_count:
+            while self.history.childCount() > len(commands):
+                self.history.takeChild(self.history.childCount() - 1)
+            self._history_count = len(commands)
+            self.history.setExpanded(True)
+            return
+
+        if len(commands) == self._history_count:
+            return
+
         self.history.takeChildren()
 
-        for index, command in enumerate(command_manager.history(), 1):
+        for index, command in enumerate(commands, 1):
             self.history.addChild(
                 QTreeWidgetItem([f"{index}. {command.name}"])
             )
 
+        self._history_count = len(commands)
         self.history.setExpanded(True)

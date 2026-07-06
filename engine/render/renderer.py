@@ -5,12 +5,15 @@ from PySide6.QtGui import QColor, QFont, QPen
 
 
 class Renderer:
+    """Draws the workspace, view grid, previews, and transient feedback."""
 
     def __init__(self):
 
         self.grid = True
         self.grid_size = 25
         self.camera = None
+        self._last_width = 0
+        self._last_height = 0
 
     # ------------------------------------------------
 
@@ -65,11 +68,35 @@ class Renderer:
     # ------------------------------------------------
 
     def draw_entities(self, painter, workspace):
+        visible = (
+            workspace.visible_entities()
+            if hasattr(workspace, "visible_entities")
+            else tuple(workspace.entities)
+        )
 
-        for entity in tuple(workspace.entities):
+        for entity in tuple(visible):
 
-            if getattr(entity, "visible", True):
+            if self._entity_in_view(entity):
                 entity.draw(painter)
+
+    # ------------------------------------------------
+
+    def _entity_in_view(self, entity):
+        if self.camera is None:
+            return True
+
+        box = entity.bounding_box
+        view_left = self.camera.position.x
+        view_top = self.camera.position.y
+        view_right = view_left + self._last_width / self.camera.zoom
+        view_bottom = view_top + self._last_height / self.camera.zoom
+
+        return not (
+            box.max.x < view_left or
+            box.min.x > view_right or
+            box.max.y < view_top or
+            box.min.y > view_bottom
+        )
 
     # ------------------------------------------------
 
@@ -124,6 +151,8 @@ class Renderer:
 
     def render(self, painter, workspace, tool, width, height, snap_result=None):
         painter.save()
+        self._last_width = width
+        self._last_height = height
 
         self.draw_grid(
 

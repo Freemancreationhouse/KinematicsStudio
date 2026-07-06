@@ -1,3 +1,6 @@
+# DEPRECATED: Legacy line entity retained for backward compatibility.
+# V2 uses engine.entities.line_entity.LineEntity.
+
 from engine.entities.entity import Entity
 from engine.geometry import Vector2, BoundingBox
 

@@ -1,4 +1,5 @@
 class CommandManager:
+    """Maintains unlimited undo and redo stacks for command objects."""
 
     def __init__(self):
 

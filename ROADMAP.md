@@ -106,14 +106,24 @@ The architecture is frozen. Future work must extend the existing system without 
 
 ## Release 0.3
 
-- Trim
-- Extend
-- Offset
-- Mirror
-- Rotate
-- Scale
-- Fillet
-- Chamfer
+- [x] Trim
+- [x] Extend
+- [x] Offset
+- [x] Mirror
+- [x] Rotate
+- [x] Scale
+- [x] Copy
+- [x] Rectangular Array
+- [x] Fillet
+- [x] Chamfer
+
+## Release 0.3.1
+
+- [x] Geometry Foundation Maintenance
+
+## Release 0.3.2
+
+- [x] Geometry Maintenance 2
 
 ---
 

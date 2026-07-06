@@ -1,5 +1,8 @@
 from math import atan2, degrees, sqrt
 
+# DEPRECATED: Legacy main window retained for backward compatibility.
+# V2 uses ui_v2.main_window.MainWindow.
+
 from ui.canvas import Canvas
 from ui.layer_panel import LayerPanel
 from ui.command_line import CommandLine

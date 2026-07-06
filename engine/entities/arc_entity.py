@@ -2,6 +2,8 @@ from math import pi
 
 from engine.entities.entity import Entity
 from engine.geometry import Vector2, BoundingBox
+from PySide6.QtCore import QRectF
+from PySide6.QtGui import QColor, QPen
 
 
 class ArcEntity(Entity):
@@ -34,7 +36,28 @@ class ArcEntity(Entity):
 
     def draw(self, painter):
 
-        pass
+        if not self.visible:
+            return
+
+        rect = QRectF(
+            self.center.x - self.radius,
+            self.center.y - self.radius,
+            self.radius * 2.0,
+            self.radius * 2.0
+        )
+        span = self.end_angle - self.start_angle
+
+        if span <= -180.0:
+            span += 360.0
+        elif span > 180.0:
+            span -= 360.0
+
+        painter.save()
+        pen = QPen(QColor("#4fc3f7" if self.selected else "#e0e0e0"), 2)
+        pen.setCosmetic(True)
+        painter.setPen(pen)
+        painter.drawArc(rect, int(-self.start_angle * 16), int(-span * 16))
+        painter.restore()
 
     # --------------------------------
 

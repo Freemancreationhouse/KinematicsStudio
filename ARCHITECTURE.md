@@ -6,11 +6,13 @@ Version: 2.0 (Frozen)
 
 # Overview
 
-Kinematics Studio is an AI-powered CAD/CAM/BIM platform.
+Kinematics Studio is an AI-powered CAD / CAM / BIM / Digital Fabrication platform.
 
 The architecture is frozen.
 
-All future development must extend the existing architecture instead of redesigning it.
+Future work must extend the existing architecture.
+
+Do not redesign.
 
 ---
 
@@ -18,18 +20,19 @@ All future development must extend the existing architecture instead of redesign
 
 ```
 Application
-    │
-    ▼
+        │
+        ▼
 CAD Engine
-    │
-    ├── Workspace
-    ├── Rendering
-    ├── Input
-    ├── Tool System
-    ├── Command System
-    ├── Entity System
-    ├── AI Engine
-    └── Machine Engine
+        │
+        ├── Workspace
+        ├── Rendering
+        ├── Input
+        ├── Tool System
+        ├── Command System
+        ├── Geometry Layer
+        ├── Entity System
+        ├── AI Engine
+        └── Machine Engine
 ```
 
 ---
@@ -45,7 +48,11 @@ Tool
 
 ↓
 
-Entity
+Geometry
+
+↓
+
+Command
 
 ↓
 
@@ -66,71 +73,77 @@ Screen
 
 Entities are never rendered directly.
 
-Every entity must exist inside the Workspace.
+Workspace owns every Entity.
+
+---
+
+# Geometry Layer
+
+The Geometry Layer contains every reusable mathematical algorithm.
+
+Modules include:
+
+- primitives.py
+- transforms.py
+- tolerance.py
+
+Future geometry modules may be added here.
+
+All geometry calculations must go through this layer.
+
+Tools must never implement geometry calculations directly.
 
 ---
 
 # Tool System
 
-Each tool must inherit from Tool.
-
-Responsibilities:
+Responsibilities
 
 - Activate
 - Mouse Press
 - Mouse Move
 - Mouse Release
 - Escape
-- Preview Drawing
+- Live Preview
 
-Tools must never draw permanent geometry.
+Tools never create permanent geometry directly.
 
-Only preview graphics.
-
-Permanent geometry is created as Entities.
+Permanent changes always go through Commands.
 
 ---
 
-# Entity System
+# Command System
 
-Every drawable object is an Entity.
+Every editing operation is represented by a Command.
 
 Examples
 
-- LineEntity
-- RectangleEntity
-- CircleEntity
-- TextEntity
-
-Future
-
-- PolylineEntity
-- ArcEntity
-- SplineEntity
-- ImageEntity
-- MeshEntity
+- AddEntityCommand
+- MoveEntityCommand
+- TrimEntityCommand
+- ExtendEntityCommand
+- OffsetEntityCommand
+- RotateEntityCommand
+- MirrorEntityCommand
+- ScaleEntityCommand
 
 Responsibilities
 
-- Store geometry
-- Store style
-- Draw itself
-- Serialize
+- Execute
+- Undo
+- Redo
 
 ---
 
 # Workspace
 
-Workspace owns every Entity.
+Workspace owns:
 
-Responsibilities
-
-- Add Entity
-- Remove Entity
+- Entities
 - Selection
-- Layers
 - Visibility
-- Serialization
+- Layers
+- Command Manager
 
 Renderer reads only from Workspace.
 
@@ -158,55 +171,20 @@ Canvas
 Qt Painter
 ```
 
-Renderer never edits entities.
+Renderer never edits geometry.
 
-Renderer only displays them.
-
----
-
-# Command System
-
-Every editing operation is a Command.
-
-Examples
-
-- AddEntityCommand
-- RemoveEntityCommand
-- MoveEntityCommand
-- UpdateEntityCommand
-
-Responsibilities
-
-- Execute
-- Undo
-- Redo
-
-All editing operations must support Undo/Redo.
+Renderer only displays.
 
 ---
 
-# Tool Manager
+# Input Pipeline
 
-ToolManager owns all tools.
-
-Responsibilities
-
-- Register Tool
-- Activate Tool
-- Forward Mouse Events
-- Forward Keyboard Events
-
-Only one tool may be active.
-
----
-
-# Input System
-
+```
 Mouse
 
 ↓
 
-Input Manager
+Canvas
 
 ↓
 
@@ -216,21 +194,52 @@ Tool Manager
 
 Current Tool
 
+↓
+
+Geometry Layer
+
+↓
+
+Command
+
+↓
+
+Workspace
+
+↓
+
+Renderer
+```
+
+---
+
+# Tool Manager
+
+Responsibilities
+
+- Register tools
+- Activate tools
+- Forward mouse events
+- Forward keyboard events
+
+Only one tool is active.
+
 ---
 
 # Property Panel
 
-Never stores geometry.
+Displays information from the selected entities.
 
-Reads selected entity only.
-
-Displays
+Examples
 
 - Position
-- Size
-- Radius
 - Length
+- Radius
 - Angle
+- Scale
+- Rotation
+
+Never modifies geometry directly.
 
 ---
 
@@ -238,15 +247,11 @@ Displays
 
 Displays
 
-Project
-
-Workspace
-
-Layers
-
-Assets
-
-History
+- Project
+- Workspace
+- Layers
+- Assets
+- History
 
 ---
 
@@ -254,15 +259,11 @@ History
 
 Displays
 
-Current Tool
-
-Coordinates
-
-Selection Count
-
-Snap Status
-
-Machine Status
+- Current Tool
+- Coordinates
+- Snap Mode
+- Selection Count
+- Machine Status
 
 ---
 
@@ -270,21 +271,25 @@ Machine Status
 
 Responsibilities
 
-Text → CAD
+- Text → CAD
+- Image → CAD
+- Image → 3D
+- Smart Sketch
+- Rendering Assistance
 
-Image → CAD
+AI must communicate through:
 
-Image → 3D
+Geometry
 
-Smart Sketch
+↓
 
-Floor Plan
+Commands
 
-Rendering
+↓
 
-The AI Engine communicates through the CAD Engine.
+Workspace
 
-It must never manipulate the UI directly.
+Never modify UI directly.
 
 ---
 
@@ -292,23 +297,40 @@ It must never manipulate the UI directly.
 
 Responsibilities
 
-GRBL
+- CNC
+- Laser
+- 3D Printing
+- GRBL
+- FluidNC
+- Klipper
+- Marlin
 
-FluidNC
+Machine Engine consumes CAD data.
 
-Klipper
+It never edits CAD geometry.
 
-Marlin
+---
 
-CNC
+# Geometry Rules
 
-Laser
+All reusable mathematics belongs inside:
 
-3D Printing
+- engine.geometry.primitives
+- engine.geometry.transforms
+- engine.geometry.tolerance
 
-The Machine Engine consumes CAD data.
+Never duplicate geometry logic inside:
 
-It never modifies CAD geometry.
+- Tools
+- Commands
+- Renderer
+- Workspace
+
+If new mathematics is required:
+
+Add it to the Geometry Layer.
+
+Reuse it everywhere.
 
 ---
 
@@ -320,28 +342,30 @@ Product Workspace
 
 Fabrication Workspace
 
-Simulation
+Simulation Workspace
 
 Cloud
 
 Plugin System
 
+Image → 3D
+
+Text → CAD
+
+AI Studio
+
 ---
 
-# Engineering Rules
-
-Never redesign architecture.
-
-Never rename folders.
-
-Never rename classes.
+# Engineering Principles
 
 Reuse existing systems.
 
 Avoid duplicate code.
 
-Prefer extension over replacement.
+Keep backward compatibility.
 
-Every sprint must pass validation before completion.
+Keep the architecture frozen.
 
-Always maintain backward compatibility.
+Improve implementation quality.
+
+Never redesign the architecture.

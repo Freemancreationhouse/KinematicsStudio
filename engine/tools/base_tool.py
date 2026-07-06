@@ -1,3 +1,6 @@
+# DEPRECATED: Legacy canvas-event tool base retained for backward compatibility.
+# V2 tools inherit from engine.tools.tool.Tool.
+
 class BaseTool:
 
     def mouse_press(self, canvas, event):

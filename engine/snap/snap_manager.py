@@ -4,6 +4,7 @@ from engine.geometry import Vector2
 
 
 class SnapResult:
+    """Represents the resolved snap point and snap mode."""
 
     def __init__(self, point, mode="OFF", entity=None, distance=float("inf")):
 
@@ -14,6 +15,7 @@ class SnapResult:
 
 
 class SnapManager:
+    """Finds object and grid snap targets for visible workspace entities."""
 
     def __init__(self):
 
@@ -48,10 +50,14 @@ class SnapManager:
 
         tolerance = self._world_tolerance(camera)
         candidates = []
-        entities = [
-            entity for entity in getattr(workspace, "entities", [])
-            if getattr(entity, "visible", True)
-        ]
+        entities = (
+            workspace.snap_candidates()
+            if hasattr(workspace, "snap_candidates")
+            else [
+                entity for entity in getattr(workspace, "entities", [])
+                if getattr(entity, "visible", True)
+            ]
+        )
 
         for entity in entities:
             candidates.extend(self._entity_candidates(entity, point))
@@ -83,70 +89,118 @@ class SnapManager:
         candidates = []
 
         if hasattr(entity, "start") and hasattr(entity, "end"):
-            if self.endpoint:
-                candidates.append((entity.start, "END", entity))
-                candidates.append((entity.end, "END", entity))
-
-            if self.midpoint:
-                candidates.append((self._midpoint(entity.start, entity.end), "MID", entity))
-
-            if self.nearest:
-                candidates.append((self._nearest_on_segment(point, entity.start, entity.end), "NEAR", entity))
+            candidates.extend(self._line_candidates(entity, point))
 
         elif hasattr(entity, "p1") and hasattr(entity, "p2"):
-            corners = self._rectangle_corners(entity)
-
-            if self.endpoint:
-                for corner in corners:
-                    candidates.append((corner, "END", entity))
-
-            if self.midpoint:
-                for a, b in zip(corners, corners[1:] + corners[:1]):
-                    candidates.append((self._midpoint(a, b), "MID", entity))
-
-            if self.center:
-                candidates.append((self._midpoint(entity.p1, entity.p2), "CENTER", entity))
-
-            if self.nearest:
-                nearest = None
-                best = float("inf")
-                for a, b in zip(corners, corners[1:] + corners[:1]):
-                    candidate = self._nearest_on_segment(point, a, b)
-                    distance = point.distance_to(candidate)
-                    if distance < best:
-                        best = distance
-                        nearest = candidate
-                if nearest:
-                    candidates.append((nearest, "NEAR", entity))
+            candidates.extend(self._rectangle_candidates(entity, point))
 
         elif hasattr(entity, "center") and hasattr(entity, "radius"):
-            if self.center:
-                candidates.append((entity.center, "CENTER", entity))
-
-            if self.quadrant:
-                r = entity.radius
-                candidates.extend([
-                    (Vector2(entity.center.x + r, entity.center.y), "QUAD", entity),
-                    (Vector2(entity.center.x - r, entity.center.y), "QUAD", entity),
-                    (Vector2(entity.center.x, entity.center.y + r), "QUAD", entity),
-                    (Vector2(entity.center.x, entity.center.y - r), "QUAD", entity),
-                ])
-
-            if self.nearest and entity.radius > 0:
-                dx = point.x - entity.center.x
-                dy = point.y - entity.center.y
-                length = sqrt(dx * dx + dy * dy)
-                if length:
-                    candidates.append((
-                        Vector2(
-                            entity.center.x + dx / length * entity.radius,
-                            entity.center.y + dy / length * entity.radius
-                        ),
-                        "NEAR",
-                        entity
-                    ))
+            candidates.extend(self._circle_candidates(entity, point))
 
         return candidates
+
+    # ------------------------------------------------------------
+
+    def _line_candidates(self, entity, point):
+
+        candidates = []
+
+        if self.endpoint:
+            candidates.append((entity.start, "END", entity))
+            candidates.append((entity.end, "END", entity))
+
+        if self.midpoint:
+            candidates.append((self._midpoint(entity.start, entity.end), "MID", entity))
+
+        if self.nearest:
+            candidates.append((self._nearest_on_segment(point, entity.start, entity.end), "NEAR", entity))
+
+        return candidates
+
+    # ------------------------------------------------------------
+
+    def _rectangle_candidates(self, entity, point):
+
+        candidates = []
+        corners = self._rectangle_corners(entity)
+
+        if self.endpoint:
+            for corner in corners:
+                candidates.append((corner, "END", entity))
+
+        if self.midpoint:
+            for a, b in zip(corners, corners[1:] + corners[:1]):
+                candidates.append((self._midpoint(a, b), "MID", entity))
+
+        if self.center:
+            candidates.append((self._midpoint(entity.p1, entity.p2), "CENTER", entity))
+
+        if self.nearest:
+            nearest = self._nearest_on_edges(point, corners)
+            if nearest:
+                candidates.append((nearest, "NEAR", entity))
+
+        return candidates
+
+    # ------------------------------------------------------------
+
+    def _circle_candidates(self, entity, point):
+
+        candidates = []
+
+        if self.center:
+            candidates.append((entity.center, "CENTER", entity))
+
+        if self.quadrant:
+            r = entity.radius
+            candidates.extend([
+                (Vector2(entity.center.x + r, entity.center.y), "QUAD", entity),
+                (Vector2(entity.center.x - r, entity.center.y), "QUAD", entity),
+                (Vector2(entity.center.x, entity.center.y + r), "QUAD", entity),
+                (Vector2(entity.center.x, entity.center.y - r), "QUAD", entity),
+            ])
+
+        nearest = self._nearest_on_circle(point, entity)
+
+        if nearest:
+            candidates.append((nearest, "NEAR", entity))
+
+        return candidates
+
+    # ------------------------------------------------------------
+
+    def _nearest_on_edges(self, point, corners):
+
+        nearest = None
+        best = float("inf")
+
+        for a, b in zip(corners, corners[1:] + corners[:1]):
+            candidate = self._nearest_on_segment(point, a, b)
+            distance = point.distance_to(candidate)
+            if distance < best:
+                best = distance
+                nearest = candidate
+
+        return nearest
+
+    # ------------------------------------------------------------
+
+    def _nearest_on_circle(self, point, entity):
+
+        if not self.nearest or entity.radius <= 0:
+            return None
+
+        dx = point.x - entity.center.x
+        dy = point.y - entity.center.y
+        length = sqrt(dx * dx + dy * dy)
+
+        if not length:
+            return None
+
+        return Vector2(
+            entity.center.x + dx / length * entity.radius,
+            entity.center.y + dy / length * entity.radius
+        )
 
     # ------------------------------------------------------------
 

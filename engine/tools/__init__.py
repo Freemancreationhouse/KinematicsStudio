@@ -6,4 +6,14 @@ from .line_tool import LineTool
 from .rectangle_tool import RectangleTool
 from .circle_tool import CircleTool
 from .move_tool import MoveTool
+from .trim_tool import TrimTool
+from .extend_tool import ExtendTool
+from .offset_tool import OffsetTool
+from .rotate_tool import RotateTool
+from .mirror_tool import MirrorTool
+from .scale_tool import ScaleTool
+from .copy_tool import CopyTool
+from .array_tool import ArrayTool
+from .fillet_tool import FilletTool
+from .chamfer_tool import ChamferTool
 from .smart_sketch_tool import SmartSketchTool

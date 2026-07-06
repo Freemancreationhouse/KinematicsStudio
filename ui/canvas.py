@@ -1,3 +1,6 @@
+# DEPRECATED: Legacy canvas retained for backward compatibility.
+# V2 uses ui_v2.canvas.Canvas.
+
 from engine.tool_manager import ToolManager
 from engine.project import Project
 

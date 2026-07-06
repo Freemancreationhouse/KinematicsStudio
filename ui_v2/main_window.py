@@ -19,11 +19,22 @@ from engine.tools import (
     RectangleTool,
     CircleTool,
     MoveTool,
+    TrimTool,
+    ExtendTool,
+    OffsetTool,
+    RotateTool,
+    MirrorTool,
+    ScaleTool,
+    CopyTool,
+    ArrayTool,
+    FilletTool,
+    ChamferTool,
     SmartSketchTool,
 )
 
 
 class MainWindow(QMainWindow):
+    """Main application window for the V2 workspace."""
 
     def __init__(self):
 
@@ -33,76 +44,84 @@ class MainWindow(QMainWindow):
 
         self.resize(1800, 1000)
 
-        # ---------------------------------
-        # Canvas
-        # ---------------------------------
+        self._create_canvas()
+        self._create_central_layout()
+        self._create_docks()
+        self._create_status_bar()
+        self._wire_ui()
+
+    # ---------------------------------
+
+    def _create_canvas(self):
 
         self.canvas = Canvas()
+        self._register_tools(self.canvas.app.tool_manager)
 
-        tm = self.canvas.app.tool_manager
+    # ---------------------------------
 
-        tm.register(SelectTool())
-        tm.register(LineTool())
-        tm.register(RectangleTool())
-        tm.register(CircleTool())
-        tm.register(MoveTool())
-        tm.register(SmartSketchTool())
+    def _register_tools(self, tool_manager):
 
-        # ---------------------------------
-        # Central Widget
-        # ---------------------------------
+        tool_manager.register(SelectTool())
+        tool_manager.register(LineTool())
+        tool_manager.register(RectangleTool())
+        tool_manager.register(CircleTool())
+        tool_manager.register(MoveTool())
+        tool_manager.register(TrimTool())
+        tool_manager.register(ExtendTool())
+        tool_manager.register(OffsetTool())
+        tool_manager.register(RotateTool())
+        tool_manager.register(MirrorTool())
+        tool_manager.register(ScaleTool())
+        tool_manager.register(CopyTool())
+        tool_manager.register(ArrayTool())
+        tool_manager.register(FilletTool())
+        tool_manager.register(ChamferTool())
+        tool_manager.register(SmartSketchTool())
+
+    # ---------------------------------
+
+    def _create_central_layout(self):
 
         central = QWidget()
-
         self.setCentralWidget(central)
 
         layout = QVBoxLayout(central)
-
         layout.setContentsMargins(0, 0, 0, 0)
 
-        # Ribbon
-        self.ribbon = Ribbon(tm)
+        self.ribbon = Ribbon(self.canvas.app.tool_manager)
         layout.addWidget(self.ribbon)
 
-        # Canvas
         layout.addWidget(self.canvas, 1)
 
-        # Command Bar
         self.command_bar = CommandBar()
         layout.addWidget(self.command_bar)
 
-        # ---------------------------------
-        # Explorer Dock
-        # ---------------------------------
+    # ---------------------------------
+
+    def _create_docks(self):
 
         self.explorer_dock = QDockWidget("Explorer", self)
         self.explorer_panel = ExplorerPanel()
         self.explorer_dock.setWidget(self.explorer_panel)
-
-        self.addDockWidget(
-            Qt.LeftDockWidgetArea,
-            self.explorer_dock
-        )
-
-        # ---------------------------------
-        # Property Dock
-        # ---------------------------------
+        self.addDockWidget(Qt.LeftDockWidgetArea, self.explorer_dock)
 
         self.property_dock = QDockWidget("Properties", self)
         self.property_panel = PropertyPanel()
         self.property_dock.setWidget(self.property_panel)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.property_dock)
 
-        self.addDockWidget(
-            Qt.RightDockWidgetArea,
-            self.property_dock
-        )
+    # ---------------------------------
 
-        # ---------------------------------
-        # Status Bar
-        # ---------------------------------
+    def _create_status_bar(self):
 
         self.studio_status_bar = StudioStatusBar()
         self.setStatusBar(self.studio_status_bar)
+
+    # ---------------------------------
+
+    def _wire_ui(self):
+
+        tm = self.canvas.app.tool_manager
 
         self.canvas.property_panel = self.property_panel
         self.canvas.status_bar = self.studio_status_bar

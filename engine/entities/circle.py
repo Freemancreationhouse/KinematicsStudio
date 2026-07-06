@@ -1,3 +1,6 @@
+# DEPRECATED: Legacy circle entity retained for backward compatibility.
+# V2 uses engine.entities.circle_entity.CircleEntity.
+
 from math import sqrt
 
 from PySide6.QtCore import QPoint

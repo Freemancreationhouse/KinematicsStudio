@@ -6,6 +6,7 @@ from engine.snap import SnapManager
 
 
 class CADEngine:
+    """Coordinates workspace, tools, rendering, commands, input, and snapping."""
 
     def __init__(self):
 

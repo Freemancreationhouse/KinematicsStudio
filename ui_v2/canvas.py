@@ -7,6 +7,7 @@ from engine.geometry import Vector2, BoundingBox
 
 
 class Canvas(QWidget):
+    """Interactive drawing viewport for the V2 CAD workspace."""
 
     def __init__(self):
 
@@ -236,7 +237,9 @@ class Canvas(QWidget):
         if self.status_bar:
             current = self.app.tool_manager.current
 
-            if current and current.name == "MoveTool":
+            if current and getattr(current, "status_text", None):
+                self.status_bar.show_status_text(current.status_text)
+            elif current and current.name == "MoveTool":
                 self.status_bar.show_selection_count(selected)
             else:
                 self.status_bar.show_selection(selected)
@@ -268,6 +271,11 @@ class Canvas(QWidget):
         )
         self._sync_snap_ui()
 
+        tool = self.app.tool_manager.current
+
+        if tool and tool.name in ("TrimTool", "ExtendTool"):
+            return raw
+
         if self.snap_result.mode == "OFF":
             return raw
 
@@ -285,7 +293,7 @@ class Canvas(QWidget):
         if tool.name == "SelectTool":
             return False
 
-        if tool.name == "MoveTool" and press:
+        if tool.name in ("MoveTool", "TrimTool", "ExtendTool") and press:
             return False
 
         return True

@@ -1,24 +1,49 @@
-class TrimCommand:
+from engine.commands.command import Command
 
-    def __init__(self, project, old_line, new_lines):
 
-        self.project = project
-        self.old_line = old_line
-        self.new_lines = new_lines
+class TrimEntityCommand(Command):
+    """Replace a trimmed entity with one or more resulting entities."""
+
+    def __init__(self, workspace, target, replacements):
+
+        self.workspace = workspace
+        self.target = target
+        self.replacements = list(replacements)
+        self.index = None
+
+    # --------------------------------
 
     def execute(self):
 
-        if self.old_line in self.project.entities:
-            self.project.remove(self.old_line)
+        entities = self.workspace.entities
 
-        for line in self.new_lines:
-            self.project.add(line)
+        if self.target in entities:
+            self.index = entities.index(self.target)
+            entities.pop(self.index)
+
+        insert_at = self.index if self.index is not None else len(entities)
+
+        for offset, entity in enumerate(self.replacements):
+            if entity not in entities:
+                entities.insert(insert_at + offset, entity)
+
+    # --------------------------------
 
     def undo(self):
 
-        for line in self.new_lines:
+        entities = self.workspace.entities
 
-            if line in self.project.entities:
-                self.project.remove(line)
+        for entity in list(self.replacements):
+            if entity in entities:
+                entities.remove(entity)
 
-        self.project.add(self.old_line)
+        insert_at = self.index if self.index is not None else len(entities)
+
+        if self.target not in entities:
+            entities.insert(insert_at, self.target)
+
+
+class TrimCommand(TrimEntityCommand):
+    """Backward-compatible alias for the V2 trim command."""
+
+    pass
