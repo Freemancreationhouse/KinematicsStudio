@@ -4,7 +4,7 @@ from .command_manager import CommandManager
 from .add_entity_command import AddEntityCommand
 from .remove_entity_command import RemoveEntityCommand
 from .move_entity_command import MoveEntityCommand
-from .update_entity_command import UpdateEntityCommand
+from .update_entity_command import UpdateEntityCommand, UpdateLayerCommand
 from .macro_command import MacroCommand
 from .trim_command import TrimEntityCommand, TrimCommand
 from .extend_command import ExtendEntityCommand, ExtendCommand

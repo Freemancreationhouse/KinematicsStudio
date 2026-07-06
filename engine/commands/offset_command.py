@@ -16,6 +16,10 @@ class OffsetEntityCommand(Command):
 
         for entity in self.offset_entities:
             if entity not in self.workspace.entities:
+                self.workspace.assign_replacement_layer(
+                    self.source,
+                    [entity]
+                )
                 self.workspace.entities.append(entity)
 
     # --------------------------------

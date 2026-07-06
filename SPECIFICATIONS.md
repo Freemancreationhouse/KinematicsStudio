@@ -46,6 +46,160 @@ Every tool must:
 
 ---
 
+# Layer Architecture
+
+Status:
+
+IMPLEMENTED INTERNALLY
+
+Layer System:
+
+1. Workspace owns LayerManager
+2. LayerManager creates default Layer 0
+3. New entities are assigned to the current layer
+4. Layer names are unique
+5. Layers have stable IDs
+6. Layers support visibility, lock, color, line type and line weight
+
+Supports:
+
+Ã¢Å“â€œ Workspace integration
+Ã¢Å“â€œ Entity layer relationship
+Ã¢Å“â€œ Current layer
+Ã¢Å“â€œ Future Groups
+Ã¢Å“â€œ Future Blocks
+Ã¢Å“â€œ Future Dimensions
+Ã¢Å“â€œ Future Text
+Ã¢Å“â€œ Future BIM metadata
+
+Not Implemented:
+
+- None for internal layer architecture
+
+---
+
+# Layer Manager UI
+
+Status:
+
+IMPLEMENTED
+
+Panel:
+
+1. Dockable Layer Manager panel
+2. Displays layer name
+3. Displays current layer
+4. Displays visibility
+5. Displays lock
+6. Displays color
+7. Displays line type
+8. Displays line weight
+
+Toolbar:
+
+Ã¢Å“â€œ New Layer
+Ã¢Å“â€œ Delete Layer
+Ã¢Å“â€œ Rename Layer
+Ã¢Å“â€œ Set Current Layer
+
+Rules:
+
+Ã¢Å“â€œ Layer 0 cannot be deleted
+Ã¢Å“â€œ Layer 0 cannot be renamed
+Ã¢Å“â€œ Current layer affects future entities only
+Ã¢Å“â€œ Hidden layers are not rendered
+Ã¢Å“â€œ Hidden layers cannot be selected
+Ã¢Å“â€œ Locked layers remain visible
+Ã¢Å“â€œ Locked layers cannot be moved through normal tools
+Ã¢Å“â€œ Hidden layers cannot be modified
+Ã¢Å“â€œ Locked layers cannot be modified
+Ã¢Å“â€œ New entities inherit current layer color
+Ã¢Å“â€œ Existing entities display assigned layer color
+Ã¢Å“â€œ Property Panel displays layer color
+
+---
+
+# Object Properties
+
+Status:
+
+IMPLEMENTED
+
+Property Panel:
+
+1. Displays entity type, layer, visibility and lock state
+2. Displays Line start point, end point, length and angle
+3. Displays Rectangle width and height
+4. Displays Circle center, radius and diameter
+5. Displays layer color, line type and line weight
+6. Edits selected entity properties through the Command System
+7. Supports Undo and Redo for property edits
+8. Refreshes immediately when selection changes
+
+Rules:
+
+✓ Property Panel never bypasses the Command System
+✓ Layer assignment stays synchronized with Workspace LayerManager
+✓ Rendering updates after property changes
+
+---
+
+# Block Architecture
+
+Status:
+
+IMPLEMENTED INTERNALLY
+
+Block System:
+
+1. Workspace owns BlockManager
+2. BlockManager owns BlockDefinition objects
+3. Block definitions have unique IDs and unique names
+4. Block definitions store an origin point
+5. Block definitions own reusable entity collections
+6. BlockReference entities point to definitions
+7. BlockReference stores insertion point, rotation and scale transform
+8. Nested blocks are supported by allowing definitions to contain references
+
+Not Implemented:
+
+- Block Manager UI
+- Block insertion UI
+- Explode
+
+---
+
+# Block Manager UI
+
+Status:
+
+IMPLEMENTED
+
+Panel:
+
+1. Dockable Block Manager panel
+2. Displays Block Name
+3. Displays Block ID
+4. Displays Entity Count
+5. Displays Nested Block Indicator
+6. Displays Reference Count
+7. Displays Origin
+8. Handles empty BlockManager state
+
+Toolbar:
+
+✓ New Block button placeholder
+✓ Delete Block button placeholder
+✓ Rename Block button placeholder
+
+Not Implemented:
+
+- Insert Block
+- Edit Block
+- Explode Block
+
+---
+
 # Line Tool
 
 Activation:

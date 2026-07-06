@@ -230,3 +230,109 @@
 - [x] Status Bar updates
 - [x] Escape cancellation
 - [x] Line × Line Chamfer
+
+## Release 0.4 - Sprint 1: Professional Layer Architecture
+
+- [x] Layer class
+- [x] LayerManager
+- [x] Default Layer 0
+- [x] Workspace integration
+- [x] Entity to Layer relationship
+- [x] Current Layer support
+- [x] Unique layer names
+- [x] Layer IDs
+- [x] Visibility flag
+- [x] Lock flag
+- [x] Color property
+- [x] Line type property
+- [x] Line weight property
+- [x] Future-ready layer metadata for Groups / Blocks / Dimensions / Text / BIM
+- [x] No Layer Manager UI added
+
+## Release 0.4 - Sprint 2: Professional Layer Manager
+
+- [x] Dockable Layer Manager panel
+- [x] Display layer name
+- [x] Display current layer
+- [x] Display visibility
+- [x] Display lock
+- [x] Display color
+- [x] Display line type
+- [x] Display line weight
+- [x] New Layer button
+- [x] Delete Layer button
+- [x] Rename Layer button
+- [x] Set Current Layer button
+- [x] Layer 0 cannot be deleted
+- [x] Layer 0 cannot be renamed
+- [x] Current layer affects future entities
+- [x] Hidden layers are not rendered or selected
+- [x] Locked layers remain visible but cannot be moved
+- [x] Reuse Sprint 1 LayerManager
+
+## Release 0.4 - Sprint 5-7: Layer Visibility / Lock / Colors
+
+- [x] Hidden layers are not rendered
+- [x] Hidden layers cannot be selected
+- [x] Hidden layers cannot be modified
+- [x] Visibility changes update canvas immediately
+- [x] Locked layers remain visible
+- [x] Locked layers cannot be edited
+- [x] Locked layers cannot be moved
+- [x] Locked layers cannot be modified
+- [x] Unlock restores normal behavior
+- [x] Layer-owned display color
+- [x] New entities inherit current layer color
+- [x] Existing entities display assigned layer color
+- [x] Layer color edits update existing entity display
+- [x] Property Panel reflects layer color
+- [x] Modify tools respect locked / hidden layer filtering
+
+## Release 0.4 - Sprint 10: Professional Object Properties
+
+- [x] Property Panel displays entity type
+- [x] Property Panel displays and edits entity layer
+- [x] Property Panel displays and edits entity visibility
+- [x] Property Panel displays and edits entity lock state
+- [x] Line start point, end point, length and angle properties
+- [x] Rectangle width and height properties
+- [x] Circle center, radius and diameter properties
+- [x] Layer color, line type and line weight properties
+- [x] Property edits execute through the Command System
+- [x] Undo / Redo support for property edits
+- [x] Selection changes refresh the Property Panel
+
+## Release 0.5 - Sprint 1: Professional Block Architecture
+
+- [x] Block class
+- [x] BlockDefinition
+- [x] BlockReference entity
+- [x] BlockManager
+- [x] Workspace owns BlockManager
+- [x] Unique Block IDs
+- [x] Unique Block names
+- [x] Block origin
+- [x] Definition entity collection
+- [x] Reference transform
+- [x] Nested block architecture support
+- [x] No Block Manager UI added
+- [x] No insertion UI added
+- [x] No explode workflow added
+
+## Release 0.5 - Sprint 2: Professional Block Manager
+
+- [x] Dockable Block Manager panel
+- [x] Display Block Name
+- [x] Display Block ID
+- [x] Display Entity Count
+- [x] Display Nested Block Indicator
+- [x] Display Reference Count
+- [x] Display Origin
+- [x] New Block toolbar button placeholder
+- [x] Delete Block toolbar button placeholder
+- [x] Rename Block toolbar button placeholder
+- [x] Empty state handled
+- [x] Workspace communicates with BlockManager
+- [x] No Insert Block workflow added
+- [x] No Edit Block workflow added
+- [x] No Explode Block workflow added

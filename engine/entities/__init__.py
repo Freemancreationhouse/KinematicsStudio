@@ -6,3 +6,4 @@ from .polyline_entity import PolylineEntity
 from .arc_entity import ArcEntity
 from .text_entity import TextEntity
 from .group_entity import GroupEntity
+from .block_reference import BlockReference

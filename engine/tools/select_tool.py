@@ -91,7 +91,13 @@ class SelectTool(Tool):
 
         selection = self._selection(workspace)
 
-        for entity in reversed(workspace.entities):
+        candidates = (
+            workspace.selectable_entities()
+            if hasattr(workspace, "selectable_entities")
+            else workspace.entities
+        )
+
+        for entity in reversed(candidates):
             if getattr(entity, "visible", True) and entity.hit_test(point):
                 if additive:
                     selection.toggle(entity)
@@ -117,7 +123,13 @@ class SelectTool(Tool):
         top = min(self.start.y, self.current.y)
         bottom = max(self.start.y, self.current.y)
 
-        for entity in workspace.entities:
+        candidates = (
+            workspace.selectable_entities()
+            if hasattr(workspace, "selectable_entities")
+            else workspace.entities
+        )
+
+        for entity in candidates:
             box = entity.bounding_box
 
             if left_to_right:

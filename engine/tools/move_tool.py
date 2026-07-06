@@ -35,7 +35,17 @@ class MoveTool(Tool):
         selection = getattr(workspace, "selection", None)
         selected = list(selection.selected) if selection else []
 
-        for entity in reversed(workspace.entities):
+        candidates = (
+            workspace.selectable_entities()
+            if hasattr(workspace, "selectable_entities")
+            else workspace.entities
+        )
+        selected = [
+            entity for entity in selected
+            if entity in candidates
+        ]
+
+        for entity in reversed(candidates):
 
             if entity.hit_test(point):
 

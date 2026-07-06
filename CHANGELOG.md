@@ -230,3 +230,115 @@ Professional Fillet Tool and Chamfer Tool
 ## Improved
 
 - Existing ArcEntity now renders fillet arcs
+
+---
+
+# Release 0.4 - Sprint 1
+
+Professional Layer Architecture
+
+## Added
+
+- Internal Layer class with ID, name, visibility, lock, color, line type and line weight properties
+- Internal LayerManager with Default Layer 0, unique layer names and current layer support
+- Workspace layer ownership and current-layer assignment for newly stored entities
+- Entity layer metadata using layer object, layer ID and layer name
+- Layer-aware visible/selectable workspace queries
+
+## Not Added
+
+- Layer Manager UI
+
+---
+
+# Release 0.4 - Sprint 2
+
+Professional Layer Manager
+
+## Added
+
+- Dockable Layer Manager panel in the V2 main window
+- Layer table with current, name, visibility, lock, color, line type and line weight columns
+- Toolbar actions for New Layer, Delete Layer, Rename Layer and Set Current Layer
+- Layer 0 delete/rename protection
+- Layer visibility and lock controls wired to workspace rendering and selection behavior
+
+## Improved
+
+- Move Tool now respects workspace layer lock/selectability rules
+- Canvas selection sync now clears entities hidden or locked by layer state
+
+---
+
+# Release 0.4 - Sprint 5-7
+
+Layer Visibility, Layer Lock and Layer Colors
+
+## Improved
+
+- Hidden layers are excluded from rendering, selection and modify workflows
+- Locked layers remain visible but are excluded from selection, move and modify workflows
+- Layer visibility and lock changes refresh canvas selection/rendering immediately
+- Entity rendering now uses assigned layer color
+- Layer color edits update existing entity display color
+- New entities inherit current layer color
+- Property Panel displays entity layer and layer color
+- Layer Manager panel supports direct color, line type and line weight edits
+
+---
+
+# Release 0.4 - Sprint 10
+
+Professional Object Properties
+
+## Added
+
+- Editable Property Panel fields for entity layer, visibility, lock state and geometry
+- Command-driven property updates for Line, Rectangle and Circle entities
+- Undo / Redo support for object property edits
+- Property Panel editing for layer color, line type and line weight
+
+## Improved
+
+- Selection changes refresh object properties immediately
+- Property edits refresh rendering, status and Layer Manager state through the existing UI pipeline
+
+---
+
+# Release 0.5 - Sprint 1
+
+Professional Block Architecture
+
+## Added
+
+- Internal Block, BlockDefinition and BlockManager architecture
+- BlockReference entity for placed definition references
+- Workspace ownership of BlockManager
+- Unique block IDs and names
+- Block origin, definition entity collection and reference transform support
+- Nested block-ready definition architecture
+
+## Not Added
+
+- Block Manager UI
+- Block insertion UI
+- Explode workflow
+
+---
+
+# Release 0.5 - Sprint 2
+
+Professional Block Manager
+
+## Added
+
+- Dockable Block Manager panel in the V2 main window
+- Block definition table with name, ID, entity count, nested block indicator, reference count and origin
+- Toolbar buttons for New Block, Delete Block and Rename Block as deferred workflow placeholders
+- Empty BlockManager state handling
+
+## Not Added
+
+- Insert Block workflow
+- Edit Block workflow
+- Explode Block workflow

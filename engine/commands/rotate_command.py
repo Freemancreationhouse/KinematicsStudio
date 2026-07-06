@@ -24,6 +24,7 @@ class RotateEntityCommand(Command):
                 index = entities.index(source)
                 self.indexes[source] = index
                 entities.pop(index)
+                self.workspace.assign_replacement_layer(source, result)
 
                 for offset, entity in enumerate(result):
                     entities.insert(index + offset, entity)

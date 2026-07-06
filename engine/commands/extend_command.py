@@ -22,6 +22,7 @@ class ExtendEntityCommand(Command):
             entities.pop(self.index)
 
         insert_at = self.index if self.index is not None else len(entities)
+        self.workspace.assign_replacement_layer(self.target, self.replacements)
 
         for offset, entity in enumerate(self.replacements):
             if entity not in entities:

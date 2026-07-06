@@ -28,6 +28,10 @@ class FilletEntityCommand(Command):
                 entities.remove(target)
 
         insert_at = self.index if self.index is not None else len(entities)
+        source = self.targets[0] if self.targets else None
+
+        if source is not None:
+            self.workspace.assign_replacement_layer(source, self.replacements)
 
         for offset, entity in enumerate(self.replacements):
             if entity not in entities:

@@ -225,8 +225,17 @@ class Canvas(QWidget):
         selection = getattr(self.app.workspace, "selection", None)
 
         if selection:
+            selectable = (
+                self.app.workspace.selectable_entities()
+                if hasattr(self.app.workspace, "selectable_entities")
+                else self.app.workspace.entities
+            )
+
             for entity in list(selection.selected):
-                if entity not in self.app.workspace.entities:
+                if (
+                    entity not in self.app.workspace.entities or
+                    entity not in selectable
+                ):
                     selection.deselect(entity)
 
         selected = selection.selected if selection else []

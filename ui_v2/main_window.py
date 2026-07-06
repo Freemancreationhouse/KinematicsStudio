@@ -10,6 +10,8 @@ from ui_v2.canvas import Canvas
 from ui_v2.ribbon import Ribbon
 from ui_v2.explorer_panel import ExplorerPanel
 from ui_v2.property_panel import PropertyPanel
+from ui_v2.layer_manager_panel import LayerManagerPanel
+from ui_v2.block_manager_panel import BlockManagerPanel
 from ui_v2.command_bar import CommandBar
 from ui_v2.status_bar import StudioStatusBar
 
@@ -110,6 +112,22 @@ class MainWindow(QMainWindow):
         self.property_dock.setWidget(self.property_panel)
         self.addDockWidget(Qt.RightDockWidgetArea, self.property_dock)
 
+        self.layer_dock = QDockWidget("Layer Manager", self)
+        self.layer_panel = LayerManagerPanel(
+            self.canvas.app.workspace,
+            self._layers_changed
+        )
+        self.layer_dock.setWidget(self.layer_panel)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.layer_dock)
+
+        self.block_dock = QDockWidget("Block Manager", self)
+        self.block_panel = BlockManagerPanel(
+            self.canvas.app.workspace,
+            self._blocks_changed
+        )
+        self.block_dock.setWidget(self.block_panel)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.block_dock)
+
     # ---------------------------------
 
     def _create_status_bar(self):
@@ -125,6 +143,10 @@ class MainWindow(QMainWindow):
 
         self.canvas.property_panel = self.property_panel
         self.canvas.status_bar = self.studio_status_bar
+        self.property_panel.set_workspace(
+            self.canvas.app.workspace,
+            self._property_changed
+        )
 
         tm.on_change = self._tool_changed
         tm.app = self.canvas.app
@@ -145,5 +167,31 @@ class MainWindow(QMainWindow):
 
         self.explorer_panel.show_history(command_manager)
         self.studio_status_bar.show_command_state(command_manager)
+        self.layer_panel.refresh()
+        self.block_panel.refresh()
+        self.canvas._sync_selection_ui()
+        self.canvas.update()
+
+    # ---------------------------------
+
+    def _layers_changed(self):
+
+        self.canvas._sync_selection_ui()
+        self.canvas.update()
+
+    # ---------------------------------
+
+    def _property_changed(self):
+
+        self.layer_panel.refresh()
+        self.block_panel.refresh()
+        self.canvas._sync_selection_ui()
+        self.canvas.update()
+
+    # ---------------------------------
+
+    def _blocks_changed(self):
+
+        self.block_panel.refresh()
         self.canvas._sync_selection_ui()
         self.canvas.update()

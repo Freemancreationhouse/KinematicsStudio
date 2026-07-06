@@ -23,9 +23,13 @@ class Project:
 
     def add(self, entity):
 
-        if not hasattr(entity, "layer"):
+        layer = self.layer_manager.current
 
-            entity.layer = self.layer_manager.current.name
+        if getattr(entity, "layer", None) is None:
+            entity.layer = layer
+            entity.layer_id = layer.id
+            entity.layer_name = layer.name
+            layer.add(entity)
 
         self.entities.append(entity)
 
@@ -36,6 +40,11 @@ class Project:
         if entity in self.entities:
 
             self.entities.remove(entity)
+
+        layer = getattr(entity, "layer", None)
+
+        if layer is not None and hasattr(layer, "remove"):
+            layer.remove(entity)
 
         if self.selected == entity:
 

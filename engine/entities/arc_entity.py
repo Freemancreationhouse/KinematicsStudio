@@ -53,7 +53,7 @@ class ArcEntity(Entity):
             span -= 360.0
 
         painter.save()
-        pen = QPen(QColor("#4fc3f7" if self.selected else "#e0e0e0"), 2)
+        pen = QPen(QColor("#4fc3f7" if self.selected else self.display_color), 2)
         pen.setCosmetic(True)
         painter.setPen(pen)
         painter.drawArc(rect, int(-self.start_angle * 16), int(-span * 16))

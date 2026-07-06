@@ -129,6 +129,10 @@ The architecture is frozen. Future work must extend the existing system without 
 
 ## Release 0.4
 
+- [x] Professional Layer Architecture
+- [x] Professional Layer Manager
+- [x] Layer Visibility / Lock / Colors
+- [x] Professional Object Properties
 - 3D View
 - Extrude
 - Revolve
@@ -140,6 +144,8 @@ The architecture is frozen. Future work must extend the existing system without 
 
 ## Release 0.5
 
+- [x] Professional Block Architecture
+- [x] Professional Block Manager
 - AI Studio
 - Text → CAD
 - Image → CAD

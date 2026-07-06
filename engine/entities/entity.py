@@ -10,6 +10,10 @@ class Entity(ABC):
         self.selected = False
         self.visible = True
         self.locked = False
+        self.layer = None
+        self.layer_id = None
+        self.layer_name = None
+        self.color = None
 
     # --------------------------------
 
@@ -48,3 +52,19 @@ class Entity(ABC):
     def type_name(self):
 
         return self.__class__.__name__
+
+    # --------------------------------
+
+    @property
+    def display_color(self):
+        """Return the effective display color for this entity."""
+
+        layer = getattr(self, "layer", None)
+
+        if layer is not None and getattr(layer, "color", None):
+            return layer.color
+
+        if self.color:
+            return self.color
+
+        return "#e0e0e0"

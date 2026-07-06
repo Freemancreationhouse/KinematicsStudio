@@ -15,6 +15,7 @@ class CopyEntityCommand(Command):
 
         for entity in self.copied_entities:
             if entity not in self.workspace.entities:
+                self.workspace.assign_layer(entity)
                 self.workspace.entities.append(entity)
 
     # --------------------------------
