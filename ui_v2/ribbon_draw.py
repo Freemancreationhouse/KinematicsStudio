@@ -21,6 +21,18 @@ class DrawRibbon(QWidget):
             ("Line", "LineTool"),
             ("Rectangle", "RectangleTool"),
             ("Circle", "CircleTool"),
+            ("Polyline", "PolylineTool"),
+            ("Closed Poly", "ClosedPolylineTool"),
+            ("Spline", "SplineTool"),
+            ("Text", "TextTool"),
+            ("MText", "MTextTool"),
+            ("Leader", "LeaderTool"),
+            ("Hatch", "HatchTool"),
+            ("Linear Dim", "LinearDimensionTool"),
+            ("Aligned Dim", "AlignedDimensionTool"),
+            ("Radius Dim", "RadiusDimensionTool"),
+            ("Diameter Dim", "DiameterDimensionTool"),
+            ("Angular Dim", "AngularDimensionTool"),
             ("Move", "MoveTool"),
             ("Smart", "SmartSketchTool"),
 
@@ -34,6 +46,7 @@ class DrawRibbon(QWidget):
             button = QPushButton(text)
 
             button.setMinimumHeight(42)
+            button.setToolTip(f"Activate {text}.")
 
             button.clicked.connect(
 

@@ -14,6 +14,8 @@ class ModifyRibbon(QWidget):
         "Redo",
         "Fit View",
         "Zoom Extents",
+        "2D View",
+        "3D View",
         "Copy",
         "Array",
         "Rotate",
@@ -23,7 +25,17 @@ class ModifyRibbon(QWidget):
         "Offset",
         "Extend",
         "Fillet",
-        "Chamfer"
+        "Chamfer",
+        "Cube 3D",
+        "Box 3D",
+        "Plane 3D",
+        "Cylinder 3D",
+        "Cone 3D",
+        "Sphere 3D",
+        "Torus 3D",
+        "Pyramid 3D",
+        "Prism 3D",
+        "Capsule 3D",
     ]
 
     def __init__(self, tool_manager):
@@ -61,8 +73,24 @@ class ModifyRibbon(QWidget):
 
         button = QPushButton(text)
         button.setMinimumHeight(42)
+        button.setToolTip(self._tooltip(text))
         self._connect_button(button, text)
         return button
+
+    # ---------------------------------------------
+
+    def _tooltip(self, text):
+
+        shortcuts = {
+            "Undo": "Undo the previous command (Ctrl+Z).",
+            "Redo": "Redo the next command (Ctrl+Y).",
+            "Fit View": "Fit the visible drawing in the canvas.",
+            "Zoom Extents": "Zoom to the full drawing extents.",
+            "2D View": "Switch to the existing 2D drawing canvas.",
+            "3D View": "Switch to the 3D foundation viewport.",
+        }
+
+        return shortcuts.get(text, f"Activate {text}.")
 
     # ---------------------------------------------
 
@@ -120,6 +148,32 @@ class ModifyRibbon(QWidget):
             button.clicked.connect(self._fit_view)
         elif text == "Zoom Extents":
             button.clicked.connect(self._zoom_extents)
+        elif text == "2D View":
+            button.clicked.connect(self._show_2d_view)
+        elif text == "3D View":
+            button.clicked.connect(self._show_3d_view)
+        elif text in self._primitive_tool_names():
+            button.clicked.connect(
+                lambda checked=False, tool=self._primitive_tool_names()[text]:
+                    self.tool_manager.activate(tool)
+            )
+
+    # ---------------------------------------------
+
+    def _primitive_tool_names(self):
+
+        return {
+            "Cube 3D": "CubePrimitiveTool",
+            "Box 3D": "BoxPrimitiveTool",
+            "Plane 3D": "PlanePrimitiveTool",
+            "Cylinder 3D": "CylinderPrimitiveTool",
+            "Cone 3D": "ConePrimitiveTool",
+            "Sphere 3D": "SpherePrimitiveTool",
+            "Torus 3D": "TorusPrimitiveTool",
+            "Pyramid 3D": "PyramidPrimitiveTool",
+            "Prism 3D": "PrismPrimitiveTool",
+            "Capsule 3D": "CapsulePrimitiveTool",
+        }
 
     # ---------------------------------------------
 
@@ -164,3 +218,21 @@ class ModifyRibbon(QWidget):
 
         if canvas:
             canvas.zoom_extents()
+
+    # ---------------------------------------------
+
+    def _show_2d_view(self):
+
+        main_window = getattr(self.tool_manager, "main_window", None)
+
+        if main_window:
+            main_window.show_2d_view()
+
+    # ---------------------------------------------
+
+    def _show_3d_view(self):
+
+        main_window = getattr(self.tool_manager, "main_window", None)
+
+        if main_window:
+            main_window.show_3d_view()

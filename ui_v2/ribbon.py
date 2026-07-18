@@ -4,8 +4,10 @@ from PySide6.QtWidgets import (
     QTabWidget,
 )
 
+from ui_v2.ribbon_project import ProjectRibbon
 from ui_v2.ribbon_draw import DrawRibbon
 from ui_v2.ribbon_modify import ModifyRibbon
+from ui_v2.ribbon_blocks import BlocksRibbon
 from ui_v2.ribbon_ai import AIRibbon
 from ui_v2.ribbon_machine import MachineRibbon
 
@@ -27,6 +29,11 @@ class Ribbon(QWidget):
         layout.addWidget(self.tabs)
 
         self.tabs.addTab(
+            ProjectRibbon(tool_manager),
+            "Project"
+        )
+
+        self.tabs.addTab(
             DrawRibbon(tool_manager),
             "Draw"
         )
@@ -34,6 +41,11 @@ class Ribbon(QWidget):
         self.tabs.addTab(
             ModifyRibbon(tool_manager),
             "Modify"
+        )
+
+        self.tabs.addTab(
+            BlocksRibbon(tool_manager),
+            "Blocks"
         )
 
         self.tabs.addTab(

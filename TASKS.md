@@ -336,3 +336,5407 @@
 - [x] No Insert Block workflow added
 - [x] No Edit Block workflow added
 - [x] No Explode Block workflow added
+
+## Release 0.5 - Batch A: Professional Block Workflow
+
+- [x] Create Block from selected entities
+- [x] User-defined Block Name
+- [x] User-defined Block Origin
+- [x] Store created blocks as BlockDefinition
+- [x] Replace selected entities with BlockReference
+- [x] Unique block names
+- [x] Unique block IDs
+- [x] CreateBlockCommand
+- [x] Blocks Ribbon Insert activation
+- [x] Insert Block live preview
+- [x] Insert Block confirmation
+- [x] InsertBlockCommand
+- [x] Insert Block Undo / Redo
+- [x] Insert Block Escape cancellation
+- [x] Internal Block Edit Mode
+- [x] EditBlockCommand
+- [x] Save block definition edits
+- [x] Existing BlockReference objects update from edited definitions
+- [x] Nested block compatibility preserved
+
+## Release 0.5 - Batch B: Professional Nested Blocks + Explode
+
+- [x] BlockDefinitions can contain BlockReferences
+- [x] Unlimited nested block architecture
+- [x] Recursive/self-reference prevention
+- [x] Circular reference detection
+- [x] Nested transform preservation
+- [x] Nested layer assignment preservation
+- [x] Nested command history preservation
+- [x] Ribbon Blocks Explode activation
+- [x] ExplodeBlockCommand
+- [x] Explode removes selected BlockReference
+- [x] Explode restores transformed contained entities
+- [x] Explode preserves layers and colors
+- [x] Explode preserves nested BlockReference transforms
+- [x] Explode Undo / Redo
+
+## Release 0.5 - Batch C: Professional Groups
+
+- [x] Group class
+- [x] GroupManager
+- [x] Unique Group IDs
+- [x] Unique Group names
+- [x] Workspace integration
+- [x] Groups reference existing entities without duplication
+- [x] Create Group
+- [x] Ungroup
+- [x] Add Entity to Group
+- [x] Remove Entity from Group
+- [x] Rename Group
+- [x] Group selection mode
+- [x] Selecting one grouped member selects the whole group
+- [x] Group commands support Undo / Redo
+- [x] Dockable Group Manager panel
+- [x] Group Manager displays name, ID and entity count
+- [x] Group Manager Create / Rename / Delete / Ungroup controls
+
+## Release 0.6 - Batch A: Text + MText + Leaders
+
+- [x] TextEntity single-line annotation
+- [x] Text position, height and rotation
+- [x] Text layer support
+- [x] Text property editing
+- [x] MTextEntity multi-line annotation
+- [x] MText bounding box
+- [x] MText alignment state
+- [x] Shared word wrap architecture
+- [x] MText property editing
+- [x] LeaderEntity with arrowhead and landing line
+- [x] Leader attached TextEntity
+- [x] Annotation tool activation from Draw Ribbon
+- [x] Annotation live previews
+- [x] Annotation creation through Command System
+- [x] Annotation Undo / Redo
+- [x] Annotation selection and rendering
+
+## Release 0.6 - Batch B: Dimensions + Dimension Styles + Dimension Manager
+
+- [x] LinearDimensionEntity
+- [x] AlignedDimensionEntity
+- [x] RadiusDimensionEntity
+- [x] DiameterDimensionEntity
+- [x] AngularDimensionEntity
+- [x] Extension lines
+- [x] Dimension lines
+- [x] Arrowheads
+- [x] Dimension text
+- [x] Dimension layer support
+- [x] Dimension property editing
+- [x] Dimension Undo / Redo through Command System
+- [x] Dimension tools with live preview
+- [x] Dimension snap support through Canvas pipeline
+- [x] DimensionStyle
+- [x] DimensionStyleManager
+- [x] Default Standard dimension style
+- [x] Current dimension style support
+- [x] Dockable Dimension Manager panel
+- [x] Dimension Manager style list
+- [x] Dimension Manager New / Rename / Delete / Set Current controls
+
+## Release 0.6 - Batch C: Hatching + Pattern Manager + Associative Hatch
+
+- [x] HatchEntity
+- [x] Closed boundary detection
+- [x] Solid fill hatch
+- [x] ANSI line pattern architecture
+- [x] Pattern scale
+- [x] Pattern angle
+- [x] Hatch layer support
+- [x] Hatch property editing
+- [x] Hatch Undo / Redo through Command System
+- [x] Hatch Tool with live preview
+- [x] PatternManager
+- [x] Workspace-owned default patterns
+- [x] Pattern registration
+- [x] Pattern lookup
+- [x] Current pattern support
+- [x] Dockable Pattern Manager panel
+- [x] Associative hatch boundary references
+- [x] Boundary edits update hatch bounds and rendering
+- [x] Associative hatch preserves command history
+
+## Release 0.7 - Batch A: Save + Open + Auto Save
+
+- [x] Versioned project format
+- [x] Project saving
+- [x] Project loading
+- [x] Backward-compatible version checking
+- [x] Workspace reconstruction
+- [x] LayerManager reconstruction
+- [x] BlockManager reconstruction
+- [x] GroupManager reconstruction
+- [x] PatternManager reconstruction
+- [x] DimensionStyleManager reconstruction
+- [x] Entity property restoration
+- [x] Hatch persistence
+- [x] Dimension persistence
+- [x] Annotation persistence
+- [x] Autosave interval configuration
+- [x] Background autosave manager
+- [x] Recovery file support
+- [x] Crash recovery detection
+- [x] Undo remains functional after loading
+
+## Release 0.7 - Batch B: Recent Files + Project Manager + Templates
+
+- [x] Recent file list
+- [x] Last opened timestamp
+- [x] Pin / unpin support
+- [x] Remove missing files
+- [x] Configurable maximum recent file count
+- [x] Dockable Project Manager panel
+- [x] Project Manager displays current project
+- [x] Project Manager displays file path
+- [x] Project Manager displays project format version
+- [x] Project Manager displays last save time
+- [x] Project Manager displays autosave status
+- [x] Project Manager displays entity count
+- [x] Project Manager displays layer count
+- [x] Project Manager displays block count
+- [x] Project Manager displays group count
+- [x] Blank Project template
+- [x] Architectural Template
+- [x] Mechanical Template
+- [x] Custom Template architecture
+- [x] Templates initialize layers
+- [x] Templates initialize dimension styles
+- [x] Templates initialize hatch patterns
+- [x] Templates initialize project settings
+- [x] New Project actions in the existing Project Ribbon
+- [x] Save / Open compatibility preserved
+
+## Release 0.8 - Batch A: Professional CAD Exchange
+
+- [x] Shared ExportManager
+- [x] ExportContext canonical workspace model
+- [x] Exporter base class
+- [x] Shared entity serialization helpers
+- [x] Shared layer serialization helpers
+- [x] Shared style serialization helpers
+- [x] Export options
+- [x] Version-ready export architecture
+- [x] Single export entity traversal in Export API
+- [x] DXF export
+- [x] SVG export
+- [x] PDF export
+- [x] Line export
+- [x] Rectangle export
+- [x] Circle export
+- [x] Arc export
+- [x] Text export
+- [x] MText export
+- [x] Leader export
+- [x] Dimension export
+- [x] Hatch export
+- [x] BlockReference export
+- [x] Layer export
+- [x] Color export
+- [x] Line type export
+- [x] Line weight export
+- [x] Project Ribbon export actions
+- [x] Related export tests
+- [x] main_v2.py launch validation
+
+## Release 1.4 - Batch C: Professional 2.5 Axis CAM Foundation
+
+- [x] OperationManager extended for 2.5-axis operation definitions
+- [x] MachiningOperation foundation
+- [x] OperationDefinition preserved as reusable CAM operation base
+- [x] OperationParameters extended for milling and hole metadata
+- [x] OperationMetadata extended for enabled state, grouping and ordering
+- [x] OperationStatistics extended for milling, hole and disabled counts
+- [x] Operation ordering
+- [x] Enable / Disable operation
+- [x] Operation naming
+- [x] Operation grouping
+- [x] Future operation sequencing metadata
+- [x] FacingOperation
+- [x] PocketOperation
+- [x] ContourOperation
+- [x] SlotOperation
+- [x] AdaptiveClearingOperation foundation
+- [x] RestMachiningOperation placeholder
+- [x] Depth metadata
+- [x] Step Down metadata
+- [x] Step Over metadata
+- [x] Finish Pass metadata
+- [x] Rough Pass metadata
+- [x] Allowance metadata
+- [x] Lead In placeholder
+- [x] Lead Out placeholder
+- [x] Ramp placeholder
+- [x] Helix placeholder
+- [x] Tool reference metadata
+- [x] Feed/Speed reference metadata
+- [x] DrillOperation
+- [x] PeckDrillOperation
+- [x] BoreOperation
+- [x] CounterBoreOperation
+- [x] CounterSinkOperation
+- [x] TapOperation foundation
+- [x] ThreadMillOperation placeholder
+- [x] Hole depth metadata
+- [x] Retract height metadata
+- [x] Peck depth metadata
+- [x] Coolant placeholder
+- [x] Cycle type metadata
+- [x] DependencyManager integration for operation/tool/setup/feed-speed references
+- [x] ProductManager workspace integration
+- [x] Property Panel 2.5-axis operation metadata display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through CAM operation commands
+- [x] Project Save/Open persistence
+- [x] Renderer3D operation highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate MeshEntity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] No toolpath generation
+- [x] No G-Code generation
+- [x] No slicing
+- [x] No simulation
+- [x] Focused Batch C validation tests
+- [x] Related CAM/tool-library/product/project regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.4 - Batch D: Professional 3 Axis CAM Foundation
+
+- [x] ThreeAxisOperation foundation
+- [x] ThreeAxisOperationManager
+- [x] ThreeAxisStrategy metadata
+- [x] ThreeAxisMetadata
+- [x] ThreeAxisStatistics
+- [x] Operation ordering through existing OperationManager
+- [x] Strategy grouping
+- [x] Operation enable / disable compatibility
+- [x] Future multi-axis compatibility metadata
+- [x] ParallelOperation
+- [x] WaterlineOperation
+- [x] ScallopOperation
+- [x] PencilOperation
+- [x] HorizontalOperation
+- [x] VerticalOperation
+- [x] RestMachining3AxisOperation foundation
+- [x] MorphOperation placeholder
+- [x] FlowOperation placeholder
+- [x] ProjectionOperation placeholder
+- [x] Tolerance metadata
+- [x] Stepover metadata
+- [x] Stepdown metadata
+- [x] Maximum cusp height metadata
+- [x] Boundary mode metadata
+- [x] Cut direction metadata
+- [x] Climb / conventional metadata
+- [x] Tool Library references
+- [x] FeedSpeedProfile references
+- [x] SurfaceSelection
+- [x] MachiningRegion
+- [x] ContainmentBoundary
+- [x] AvoidRegion
+- [x] BoundaryMetadata
+- [x] BoundaryStatistics
+- [x] Selected surface references
+- [x] Selected face references
+- [x] Boundary curve references
+- [x] Keep-out region metadata
+- [x] DependencyManager relationship storage
+- [x] Workspace/ProductManager integration
+- [x] Property Panel compatibility
+- [x] Selection compatibility
+- [x] Layer compatibility
+- [x] Renderer3D read-only compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through AddThreeAxisCAMObjectCommand and existing CAM update command
+- [x] No toolpath generation
+- [x] No G-Code generation
+- [x] No slicing
+- [x] No simulation
+- [x] Focused Batch D validation tests
+- [x] Related CAM/tool-library/product/project regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.4 - Batch E: Professional Laser & Plasma Foundation
+
+- [x] LaserPlasmaManager
+- [x] LaserJob
+- [x] PlasmaJob
+- [x] LaserOperation
+- [x] PlasmaOperation
+- [x] LaserPlasmaMetadata
+- [x] LaserPlasmaStatistics
+- [x] Multiple laser jobs
+- [x] Multiple plasma jobs
+- [x] Operation grouping
+- [x] Enable / Disable operations
+- [x] Future multi-head compatibility metadata
+- [x] VectorCutOperation
+- [x] VectorEngraveOperation
+- [x] RasterEngraveOperation
+- [x] RasterFillOperation
+- [x] ImageEngraveOperation placeholder
+- [x] ScoreOperation
+- [x] MarkOperation
+- [x] Laser power metadata
+- [x] Minimum power metadata
+- [x] Maximum power metadata
+- [x] Cut speed metadata
+- [x] Travel speed metadata
+- [x] Pass count metadata
+- [x] Focus offset metadata
+- [x] Air assist placeholder
+- [x] Tool references through ToolLibraryManager
+- [x] Material profile references
+- [x] PlasmaCutOperation
+- [x] PierceOperation
+- [x] LeadInOperation
+- [x] LeadOutOperation
+- [x] KerfCompensation metadata
+- [x] CutQuality metadata
+- [x] TorchHeightControl placeholder
+- [x] Pierce height metadata
+- [x] Cut height metadata
+- [x] Kerf width metadata
+- [x] Pierce delay metadata
+- [x] Lead radius metadata
+- [x] Lead angle metadata
+- [x] Cut direction metadata
+- [x] MaterialProfile
+- [x] CuttingProfile
+- [x] PowerProfile
+- [x] GasProfile placeholder
+- [x] CoolingProfile placeholder
+- [x] Wood material profile support
+- [x] Acrylic material profile support
+- [x] MDF material profile support
+- [x] Plywood material profile support
+- [x] Paper material profile support
+- [x] Leather material profile support
+- [x] Cardboard material profile support
+- [x] Steel material profile support
+- [x] Stainless Steel material profile support
+- [x] Aluminium material profile support
+- [x] Brass material profile support
+- [x] DependencyManager relationship storage
+- [x] Workspace/ProductManager integration
+- [x] Property Panel compatibility
+- [x] Selection compatibility
+- [x] Layer compatibility
+- [x] Renderer3D read-only compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through AddLaserPlasmaObjectCommand and existing CAM update command
+- [x] No toolpath generation
+- [x] No G-Code generation
+- [x] No nesting
+- [x] No slicing
+- [x] No simulation
+- [x] Focused Batch E validation tests
+- [x] Related CAM/tool-library/product/project regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.4 - Batch F: Professional CNC Router Foundation
+
+- [x] RouterManager
+- [x] RouterJob
+- [x] RouterOperation
+- [x] RouterMetadata
+- [x] RouterStatistics
+- [x] Multiple router jobs
+- [x] Router operation grouping
+- [x] Operation ordering
+- [x] Enable / Disable operations
+- [x] Future multi-spindle compatibility metadata
+- [x] ProfileCutOperation
+- [x] InsideProfileOperation
+- [x] OutsideProfileOperation
+- [x] CenterlineOperation
+- [x] PocketRouterOperation
+- [x] VCarveOperation
+- [x] EngraveRouterOperation
+- [x] ChamferRouterOperation
+- [x] SurfacingOperation
+- [x] AdaptiveRouterOperation foundation
+- [x] Cut Depth metadata
+- [x] Multiple Passes metadata
+- [x] Step Down metadata
+- [x] Step Over metadata
+- [x] Conventional / Climb metadata
+- [x] Tool references through ToolLibraryManager
+- [x] Feed / Speed profile references
+- [x] SafeHeight metadata
+- [x] ClearanceHeight metadata
+- [x] RetractHeight metadata
+- [x] LeadInMetadata
+- [x] LeadOutMetadata
+- [x] RampStrategy metadata
+- [x] PlungeStrategy metadata
+- [x] TabDefinition metadata
+- [x] BridgeDefinition metadata
+- [x] OnionSkinDefinition metadata
+- [x] RouterFixtureDefinition references
+- [x] ClampAvoidanceRegion references
+- [x] DustCollectionProfile placeholder
+- [x] RouterMetadataProfile
+- [x] OperationManager remains the single CAM operation manager
+- [x] ProductManager owns router metadata inside the existing Workspace path
+- [x] DependencyManager relationship storage only
+- [x] AddRouterObjectCommand for undoable router metadata insertion
+- [x] Property Panel router metadata display
+- [x] Renderer3D read-only compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through AddRouterObjectCommand and existing CAM update command
+- [x] No toolpath generation
+- [x] No G-Code generation
+- [x] No nesting
+- [x] No slicing
+- [x] No simulation
+- [x] Focused Batch F validation tests
+- [x] Related CAM foundation, Tool Library, 2.5-axis CAM, 3-axis CAM and Laser/Plasma regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.4 - Batch G: Professional Post Processor Foundation
+
+- [x] PostProcessorManager
+- [x] PostProcessor
+- [x] PostProcessorProfile
+- [x] PostProcessorMetadata
+- [x] PostProcessorStatistics
+- [x] Multiple post processors
+- [x] Default post processor
+- [x] Machine/profile assignment
+- [x] Profile enable / disable
+- [x] Future custom post processor metadata
+- [x] GRBL controller profile placeholder
+- [x] Marlin controller profile placeholder
+- [x] Klipper controller profile placeholder
+- [x] LinuxCNC controller profile placeholder
+- [x] Fanuc controller profile placeholder
+- [x] Haas controller profile placeholder
+- [x] Mach3 controller profile placeholder
+- [x] Mach4 controller profile placeholder
+- [x] Smoothieware controller profile placeholder
+- [x] Duet controller profile placeholder
+- [x] Masso controller profile placeholder
+- [x] GenericGCode controller profile placeholder
+- [x] Controller version metadata
+- [x] Supported G/M code metadata
+- [x] Units metadata
+- [x] Coordinate mode metadata
+- [x] Arc support metadata
+- [x] Feed mode metadata
+- [x] Spindle support metadata
+- [x] Laser / Plasma / Additive mode placeholders
+- [x] OutputConfiguration
+- [x] ProgramHeader
+- [x] ProgramFooter
+- [x] CoordinateConfiguration
+- [x] ToolChangeConfiguration
+- [x] CoolantConfiguration
+- [x] SpindleConfiguration
+- [x] OutputMetadata
+- [x] OutputStatistics
+- [x] Program name metadata
+- [x] Work offset metadata
+- [x] Safe start / safe end block metadata
+- [x] Tool change policy metadata
+- [x] Comment style metadata
+- [x] Line numbering placeholder
+- [x] File extension metadata
+- [x] MachineProfileReference
+- [x] PostProcessSettings
+- [x] OutputTemplate
+- [x] ControllerCapabilities
+- [x] MachineLimitsReference
+- [x] OutputValidationMetadata
+- [x] Axis/travel limit references
+- [x] Controller capability flags
+- [x] Future machine/slicer compatibility metadata
+- [x] CAMManager integration
+- [x] OperationManager relationship compatibility
+- [x] ToolLibraryManager relationship compatibility
+- [x] RouterManager relationship compatibility
+- [x] LaserPlasmaManager relationship compatibility
+- [x] DependencyManager relationship storage only
+- [x] ProductManager owns post processor metadata inside the existing Workspace path
+- [x] AddPostProcessorObjectCommand for undoable post processor metadata insertion
+- [x] Property Panel post processor metadata display
+- [x] Renderer3D read-only compatibility
+- [x] Project Save/Open persistence
+- [x] No G-Code generation
+- [x] No NC file generation
+- [x] No toolpath translation
+- [x] No slicing
+- [x] No simulation
+- [x] Focused Batch G validation tests
+- [x] Related CAM foundation, Tool Library, 2.5-axis CAM, 3-axis CAM, Laser/Plasma and Router regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.4 - Batch B: Professional Tool Library Foundation
+
+- [x] ToolLibraryManager
+- [x] ToolLibrary
+- [x] ToolCategory
+- [x] ToolDefinition
+- [x] ToolMetadata
+- [x] ToolStatistics
+- [x] Create Tool Library
+- [x] Multiple Tool Libraries
+- [x] Tool Categories
+- [x] Tool Search
+- [x] Favorites placeholder
+- [x] Future cloud libraries metadata
+- [x] CuttingTool
+- [x] EndMill
+- [x] BallNose
+- [x] BullNose
+- [x] FaceMill
+- [x] SlotMill
+- [x] ChamferMill
+- [x] VBit
+- [x] EngravingTool
+- [x] Drill
+- [x] CenterDrill
+- [x] SpotDrill
+- [x] Reamer
+- [x] Tap
+- [x] ThreadMill
+- [x] FlyCutter
+- [x] BoringBar
+- [x] RouterBit
+- [x] LaserTool placeholder
+- [x] PlasmaTool placeholder
+- [x] PrinterNozzle placeholder
+- [x] Diameter metadata
+- [x] Flute Length metadata
+- [x] Overall Length metadata
+- [x] Number of Flutes metadata
+- [x] Corner Radius metadata
+- [x] Tip Angle metadata
+- [x] Material metadata
+- [x] Coating metadata
+- [x] Coolant compatibility placeholder metadata
+- [x] ToolHolder
+- [x] Collet
+- [x] HolderDefinition
+- [x] CuttingData
+- [x] FeedSpeedProfile
+- [x] ToolPreset
+- [x] ToolOffset
+- [x] HolderMetadata
+- [x] HolderStatistics
+- [x] Spindle Speed metadata
+- [x] Feed Rate metadata
+- [x] Plunge Rate metadata
+- [x] Step Over metadata
+- [x] Step Down metadata
+- [x] Maximum RPM metadata
+- [x] Tool Number metadata
+- [x] Length Offset metadata
+- [x] Diameter Offset metadata
+- [x] ISO Tool ID placeholder
+- [x] DIN Tool ID placeholder
+- [x] ANSI Tool ID placeholder
+- [x] HSK Holder placeholder
+- [x] BT Holder placeholder
+- [x] CAT Holder placeholder
+- [x] ER Collet placeholder
+- [x] DependencyManager integration for tool/profile/holder/preset references
+- [x] CAMOperation tool preset reference support
+- [x] ProductManager workspace integration
+- [x] Property Panel tool-library metadata display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through AddToolLibraryCommand
+- [x] Project Save/Open persistence
+- [x] Renderer3D tool/holder highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate MeshEntity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] No toolpath generation
+- [x] No G-Code generation
+- [x] No slicing
+- [x] No simulation
+- [x] Focused Batch B validation tests
+- [x] Related CAM/Product/Project regression tests
+- [x] main_v2.py launch validation
+
+## Release 0.8 - Batch B: Professional Graphics Export
+
+- [x] PNG exporter registered with ExportManager
+- [x] EPS exporter registered with ExportManager
+- [x] PSD exporter registered with ExportManager
+- [x] Entity traversal remains centralized in ExportManager
+- [x] PNG transparent background option
+- [x] PNG white background option
+- [x] PNG user-defined resolution support
+- [x] PNG DPI metadata support
+- [x] PNG user-defined image size
+- [x] PNG fit-to-page / current-view / entire-drawing architecture
+- [x] PNG anti-aliasing
+- [x] EPS vector line export
+- [x] EPS vector rectangle export
+- [x] EPS vector circle export
+- [x] EPS vector arc export
+- [x] EPS vector text and mtext export
+- [x] EPS vector leader export
+- [x] EPS vector dimension export
+- [x] EPS vector hatch export
+- [x] EPS expanded block geometry export
+- [x] PSD layered raster export
+- [x] PSD Background Layer
+- [x] PSD Drawing Layer
+- [x] PSD Annotation Layer
+- [x] PSD Dimension Layer
+- [x] PSD Hatch Layer
+- [x] PSD Block Layer
+- [x] PSD transparency, resolution and canvas size preservation
+- [x] Project Ribbon Export PNG command
+- [x] Project Ribbon Export EPS command
+- [x] Project Ribbon Export PSD command
+- [x] Related graphics export tests
+- [x] main_v2.py launch validation
+
+## Release 0.9 - Batch A: Professional Polyline + Spline
+
+- [x] Shared curve geometry helpers
+- [x] PolylineEntity
+- [x] Polyline multiple vertices
+- [x] Polyline open state
+- [x] Polyline closed state
+- [x] Polyline add vertex
+- [x] Polyline remove vertex
+- [x] Polyline move vertex
+- [x] Polyline live preview tool
+- [x] Polyline Undo / Redo through commands
+- [x] Polyline Property Panel editing
+- [x] Polyline snap support
+- [x] SplineEntity
+- [x] Spline control points
+- [x] Spline interpolation
+- [x] Spline live preview tool
+- [x] Spline add control point
+- [x] Spline remove control point
+- [x] Spline move control point
+- [x] Spline Undo / Redo through commands
+- [x] Spline Property Panel editing
+- [x] Spline snap support
+- [x] Project persistence for polylines and splines
+- [x] Layer support
+- [x] Selection and rendering support
+- [x] Runtime validation
+- [x] main_v2.py launch validation
+
+## Release 0.9 - Batch B: Professional Selection System
+
+- [x] Selection filters
+- [x] Window selection
+- [x] Crossing selection
+- [x] Fence selection
+- [x] Lasso selection
+- [x] Selection cycling
+- [x] Previous selection recall
+- [x] Invert selection
+- [x] Select similar
+- [x] Named selection sets
+- [x] Selection Set Manager panel
+- [x] Property Panel compatibility
+- [x] Layer compatibility
+- [x] Group compatibility
+- [x] Block compatibility
+- [x] Undo / Redo compatibility
+- [x] Project Save / Open compatibility
+- [x] Related selection tests
+- [x] main_v2.py launch validation
+
+## Release 0.9 - Batch C: Professional Constraint Framework
+
+- [x] Workspace-owned ConstraintManager
+- [x] Geometric constraint model
+- [x] Dimensional constraint model
+- [x] Horizontal constraint
+- [x] Vertical constraint
+- [x] Parallel constraint
+- [x] Perpendicular constraint
+- [x] Coincident constraint
+- [x] Tangent constraint
+- [x] Equal constraint
+- [x] Concentric constraint
+- [x] Symmetry constraint
+- [x] Midpoint constraint
+- [x] Distance constraint
+- [x] Horizontal Distance constraint
+- [x] Vertical Distance constraint
+- [x] Radius constraint
+- [x] Diameter constraint
+- [x] Angle constraint
+- [x] ConstraintGraph
+- [x] ConstraintSolver
+- [x] Dependency tracking
+- [x] Incremental solving
+- [x] Conflict detection
+- [x] Over-constrained detection
+- [x] Under-constrained detection
+- [x] Constraint validation
+- [x] Constraint command support
+- [x] Undo / Redo support
+- [x] Constraint selection support
+- [x] Constraint Manager panel
+- [x] Property Panel integration
+- [x] Project Save / Open persistence
+- [x] Export compatibility
+- [x] Related constraint tests
+- [x] main_v2.py launch validation
+
+## Release 1.0 - Batch A: Production Stabilization
+
+- [x] Focused regression tests
+- [x] Drawing tools regression
+- [x] Modify tools regression
+- [x] Selection regression
+- [x] Layer regression
+- [x] Block regression
+- [x] Group regression
+- [x] Annotation regression
+- [x] Dimension regression
+- [x] Hatch regression
+- [x] Polyline regression
+- [x] Spline regression
+- [x] Constraint regression
+- [x] Project Save / Open regression
+- [x] Autosave regression
+- [x] Export regression
+- [x] Property Panel regression
+- [x] Undo / Redo regression
+- [x] Command System regression
+- [x] Renderer review
+- [x] Workspace review
+- [x] Selection memory cleanup
+- [x] Snap intersection performance optimization
+- [x] Constraint solver review
+- [x] Export pipeline review
+- [x] Property Panel refresh review
+- [x] Command stack review
+- [x] Large drawing stress test
+- [x] Project compatibility validation
+- [x] main_v2.py launch validation
+
+## Release 1.0 - Batch B: Production Architecture Audit
+
+- [x] Workspace audit
+- [x] Geometry Layer audit
+- [x] Renderer audit
+- [x] SelectionManager audit
+- [x] ConstraintManager audit
+- [x] LayerManager audit
+- [x] BlockManager audit
+- [x] GroupManager audit
+- [x] PatternManager audit
+- [x] Export Framework audit
+- [x] Storage audit
+- [x] Project System audit
+- [x] Command System audit
+- [x] ToolManager audit
+- [x] Property Panel audit
+- [x] Canvas audit
+- [x] Constraint relationship undo/redo compatibility fix
+- [x] Autosave diagnostic error tracking
+- [x] Specification section ordering cleanup
+- [x] Focused audit regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.0 - Batch C: Production Readiness & UX Polish
+
+- [x] Ribbon consistency review
+- [x] Toolbar consistency review
+- [x] Dock behavior review
+- [x] Dock persistence
+- [x] Property Panel usability hints
+- [x] Status Bar wording polish
+- [x] Cursor feedback review
+- [x] Selection highlighting compatibility review
+- [x] Tooltips for production UI surfaces
+- [x] Keyboard shortcut consistency review
+- [x] High DPI startup behavior
+- [x] Dialog consistency review
+- [x] Startup exception handling
+- [x] Shutdown dock-state persistence
+- [x] Project open/save dialog review
+- [x] Export dialog review
+- [x] Compatibility audit for project, export, constraints, layers, blocks, groups and annotation
+- [x] Version 1.0 release notes
+- [x] Focused UX polish regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch A: 3D Foundation
+
+- [x] Vector3
+- [x] Matrix4
+- [x] Quaternion
+- [x] Plane
+- [x] Ray3
+- [x] BoundingBox3D
+- [x] BoundingSphere
+- [x] Frustum
+- [x] Shared 3D math helpers
+- [x] Perspective camera
+- [x] Orthographic camera
+- [x] Camera controller
+- [x] Camera state
+- [x] Near / Far clipping
+- [x] Field of view
+- [x] View matrix
+- [x] Projection matrix
+- [x] Viewport resize support
+- [x] Renderer3D
+- [x] 3D grid
+- [x] World axes
+- [x] Origin indicator
+- [x] Viewport background
+- [x] Basic 3D render pipeline
+- [x] Workspace scene traversal hook
+- [x] Orbit navigation
+- [x] Pan navigation
+- [x] Zoom navigation
+- [x] Fit View
+- [x] Home View
+- [x] Reset View
+- [x] Mouse interaction
+- [x] Keyboard shortcuts
+- [x] Viewport3D
+- [x] MainWindow 2D / 3D view switching
+- [x] 3D camera state project persistence
+- [x] Backward-compatible project loading
+- [x] Focused 3D foundation tests
+- [x] Related project compatibility tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch B: 3D Scene Entities & Picking Foundation
+
+- [x] Entity3D base class
+- [x] Point3D
+- [x] Line3D
+- [x] Polyline3D
+- [x] PlaneEntity
+- [x] ReferenceAxis
+- [x] ReferenceGrid
+- [x] 3D bounding volume support
+- [x] 3D transform support
+- [x] 3D visibility support
+- [x] 3D layer support
+- [x] 3D selection support
+- [x] Property Panel support for 3D entities
+- [x] Scene3D
+- [x] SceneNode
+- [x] Parent / Child hierarchy
+- [x] World transform support
+- [x] Visibility propagation
+- [x] Bounding updates
+- [x] Ray casting
+- [x] PickingManager3D
+- [x] Bounding-box picking
+- [x] Bounding-sphere picking
+- [x] Nearest hit
+- [x] Selection highlighting
+- [x] Hover detection
+- [x] SelectionManager reuse
+- [x] Renderer3D scene entity rendering
+- [x] Reference axes rendering
+- [x] Reference planes rendering
+- [x] Selection highlight rendering
+- [x] Debug bounding volume rendering
+- [x] Scene graph project persistence
+- [x] 3D entity project persistence
+- [x] 3D selection project persistence
+- [x] Backward-compatible project loading
+- [x] Focused 3D scene tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch C: 3D Mesh Foundation & Transform Gizmo
+
+- [x] Mesh
+- [x] MeshData
+- [x] Vertex
+- [x] Edge
+- [x] Face
+- [x] Triangle index buffer
+- [x] Vertex normals
+- [x] Mesh bounding box
+- [x] Mesh bounding sphere
+- [x] Mesh transform support
+- [x] Mesh layer support
+- [x] Mesh visibility support
+- [x] Mesh selection support
+- [x] MeshEntity
+- [x] Static mesh rendering
+- [x] Wireframe mode
+- [x] Shaded mode foundation
+- [x] Bounding volume rendering
+- [x] Mesh property support
+- [x] TransformGizmo
+- [x] Translate gizmo
+- [x] Rotate gizmo
+- [x] Scale gizmo
+- [x] Axis highlighting
+- [x] Gizmo picking support
+- [x] Gizmo mode switching
+- [x] Future-ready command integration hooks
+- [x] Renderer3D mesh rendering
+- [x] Renderer3D wireframe rendering
+- [x] Renderer3D shaded rendering foundation
+- [x] Renderer3D transform gizmo rendering
+- [x] Renderer3D selection highlighting
+- [x] Mesh project persistence
+- [x] Mesh display mode persistence
+- [x] Gizmo state persistence
+- [x] Backward-compatible project loading
+- [x] Focused mesh and gizmo tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch D: Professional 3D Primitive Foundation
+
+- [x] PrimitiveGenerator
+- [x] MeshBuilder
+- [x] Shared vertex generation
+- [x] Shared index generation
+- [x] Shared normal generation through MeshData
+- [x] Shared UV generation
+- [x] Cube primitive
+- [x] Box primitive
+- [x] Plane primitive
+- [x] Cylinder primitive
+- [x] Cone primitive
+- [x] Sphere primitive
+- [x] Torus primitive
+- [x] Pyramid primitive
+- [x] Prism primitive
+- [x] Capsule primitive
+- [x] CreatePrimitiveCommand
+- [x] Undo / Redo support
+- [x] Preview entity support
+- [x] Layer support
+- [x] Selection support
+- [x] Primitive tool registration
+- [x] Interactive primitive placement
+- [x] Numeric dimension input foundation
+- [x] Escape cancellation
+- [x] Renderer3D reuse
+- [x] Property Panel primitive display
+- [x] Primitive project persistence
+- [x] Backward-compatible project loading
+- [x] Focused primitive tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch E: Professional 3D Transform System
+
+- [x] TranslateEntity3DCommand
+- [x] RotateEntity3DCommand
+- [x] ScaleEntity3DCommand
+- [x] Multi-selection transforms
+- [x] Undo / Redo support
+- [x] Preview state support
+- [x] Command history integration
+- [x] Transform gizmo translate mode integration
+- [x] Transform gizmo rotate mode integration
+- [x] Transform gizmo scale mode integration
+- [x] Axis constraints
+- [x] Plane constraints
+- [x] Local / World mode state
+- [x] Pivot selection state
+- [x] Center pivot
+- [x] Origin pivot
+- [x] Individual-origin pivot
+- [x] Bounding-box center pivot
+- [x] Property Panel position editing
+- [x] Property Panel rotation editing
+- [x] Property Panel scale editing
+- [x] Command-driven Property Panel transform updates
+- [x] Renderer3D pivot visualization
+- [x] Renderer3D gizmo mode / constraint labeling
+- [x] Transform persistence
+- [x] Pivot persistence
+- [x] Local / World mode persistence
+- [x] Selection persistence compatibility
+- [x] Backward-compatible project loading
+- [x] Focused 3D transform tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch F: Professional 3D Snapping & Precision Placement
+
+- [x] SnapManager3D
+- [x] Vertex Snap
+- [x] Edge Snap
+- [x] Face Center Snap
+- [x] Face Corner Snap
+- [x] Face Midpoint Snap
+- [x] Object Center Snap
+- [x] Grid Snap
+- [x] Axis Snap
+- [x] Origin Snap
+- [x] Intersection Snap future-ready filter
+- [x] Nearest Snap
+- [x] Dynamic snap preview
+- [x] Snap highlighting
+- [x] Snap priority
+- [x] Snap filtering
+- [x] Snap tolerance
+- [x] World-space precision
+- [x] Camera-independent ray tolerance
+- [x] Translate snapping integration
+- [x] Primitive placement snapping integration
+- [x] Transform Gizmo snap preview integration
+- [x] Property Panel compatibility
+- [x] Renderer3D snap markers
+- [x] Renderer3D snap entity highlighting
+- [x] Renderer3D axis indicators
+- [x] Snap settings persistence
+- [x] Snap enable-state persistence
+- [x] Snap filter persistence
+- [x] Backward-compatible project loading
+- [x] Focused 3D snap tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch G: Professional 3D Construction Planes & Coordinate Systems
+
+- [x] ConstructionPlane
+- [x] ConstructionPlaneManager
+- [x] XY Plane
+- [x] YZ Plane
+- [x] ZX Plane
+- [x] Custom Plane
+- [x] Offset Plane
+- [x] Rotated Plane foundation
+- [x] Active Plane
+- [x] Plane visibility
+- [x] Plane locking
+- [x] World Coordinate System
+- [x] User Coordinate System
+- [x] Local Coordinate System foundation
+- [x] CoordinateSystemManager
+- [x] Create UCS
+- [x] Rename UCS
+- [x] Delete UCS
+- [x] Activate UCS
+- [x] Persist UCS
+- [x] Grid follows active UCS
+- [x] Grid spacing
+- [x] Grid subdivisions
+- [x] Grid visibility
+- [x] Grid snapping
+- [x] Axis labels follow active UCS
+- [x] SnapManager3D UCS integration
+- [x] Primitive placement UCS integration
+- [x] Transform Gizmo compatibility
+- [x] Property Panel active UCS / plane display
+- [x] Camera / Renderer3D compatibility
+- [x] Selection compatibility
+- [x] Construction plane persistence
+- [x] Coordinate system persistence
+- [x] Active UCS persistence
+- [x] Grid settings persistence
+- [x] Backward-compatible project loading
+- [x] Focused construction plane / UCS tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch H: Professional 3D Measurement & Inspection Foundation
+
+- [x] MeasurementManager
+- [x] Measurement base class
+- [x] MeasurementResult
+- [x] MeasurementSettings
+- [x] Persistent measurement entities
+- [x] Shared measurement utilities
+- [x] Point-to-Point Distance
+- [x] Edge Length
+- [x] Polyline Length
+- [x] Surface Area
+- [x] Mesh Area
+- [x] Bounding Box Size
+- [x] Radius
+- [x] Diameter
+- [x] Angle
+- [x] Coordinate Readout
+- [x] XYZ Delta
+- [x] Minimum Distance
+- [x] Maximum Distance
+- [x] Point Inspection
+- [x] Edge Inspection
+- [x] Face Inspection
+- [x] Mesh Statistics
+- [x] Bounding Box Inspection
+- [x] Surface Normal Display foundation
+- [x] Center of Mass foundation
+- [x] Volume placeholder
+- [x] Renderer3D measurement graphics
+- [x] Renderer3D dimension lines
+- [x] Renderer3D measurement labels
+- [x] Renderer3D inspection markers
+- [x] Selection compatibility
+- [x] Property Panel measurement display
+- [x] SnapManager3D compatibility
+- [x] Construction Plane compatibility
+- [x] Coordinate System compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo for persistent measurements
+- [x] Measurement settings persistence
+- [x] Inspection settings persistence
+- [x] Measurement visibility persistence
+- [x] Backward-compatible project loading
+- [x] Focused measurement / inspection tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch I: Professional 3D Section, Clipping & Analysis Foundation
+
+- [x] SectionPlane
+- [x] SectionManager
+- [x] Multiple section planes
+- [x] Section visibility
+- [x] Section enable / disable
+- [x] Section lock
+- [x] Section color
+- [x] Active section
+- [x] Global clipping settings
+- [x] Local clipping state
+- [x] Plane clipping
+- [x] Box clipping
+- [x] Section preview
+- [x] Clip toggle
+- [x] Bounding box overlay
+- [x] Face normal display
+- [x] Vertex display
+- [x] Wireframe overlay
+- [x] Edge overlay
+- [x] Back-face visualization foundation
+- [x] Object bounds
+- [x] Selection bounds
+- [x] Future-ready heatmap placeholder
+- [x] Renderer3D section rendering
+- [x] Renderer3D clipping integration
+- [x] Renderer3D analysis overlays
+- [x] Overlay toggles
+- [x] Selection compatibility
+- [x] MeasurementManager compatibility
+- [x] Property Panel section display
+- [x] Construction Plane compatibility
+- [x] Coordinate System compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo for section planes
+- [x] Backward-compatible project loading
+- [x] Focused section / clipping / analysis tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch J: Professional 3D View States, Display Modes & Visual Styles Foundation
+
+- [x] ViewState
+- [x] ViewStateManager
+- [x] Save View
+- [x] Restore View
+- [x] Rename View
+- [x] Delete View
+- [x] Current View
+- [x] Named Views
+- [x] Camera persistence
+- [x] Wireframe display mode
+- [x] Hidden Line display mode
+- [x] Shaded display mode
+- [x] Shaded With Edges display mode
+- [x] X-Ray display mode
+- [x] Bounding Box display mode
+- [x] Analysis Overlay mode
+- [x] Display mode switching
+- [x] VisualStyle
+- [x] VisualStyleManager
+- [x] Background setting
+- [x] Grid visibility
+- [x] Axis visibility
+- [x] Lighting placeholder
+- [x] Edge visibility
+- [x] Face visibility
+- [x] Selection colors
+- [x] Future-ready material support
+- [x] Renderer3D named view compatibility
+- [x] Renderer3D display mode support
+- [x] Renderer3D visual style support
+- [x] Overlay rendering compatibility
+- [x] Selection compatibility
+- [x] Property Panel view/display/style display
+- [x] Camera3D integration
+- [x] SectionManager compatibility
+- [x] MeasurementManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo for view/display/style changes
+- [x] Backward-compatible project loading
+- [x] Focused view / display / visual style tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch K: Professional 3D Scene Organization, View Filters & Display Presets
+
+- [x] SceneCollection
+- [x] SceneCollectionManager
+- [x] Create Collection
+- [x] Rename Collection
+- [x] Delete Collection
+- [x] Move Entity
+- [x] Nested Collections
+- [x] Collection visibility
+- [x] Collection lock
+- [x] Collection isolation
+- [x] Collection color tag
+- [x] ViewFilter
+- [x] ViewFilterManager
+- [x] Filter by Layer
+- [x] Filter by Entity Type
+- [x] Filter by Collection
+- [x] Filter by Visibility
+- [x] Filter by Selection
+- [x] Filter by Locked State
+- [x] Filter by Measurement
+- [x] Filter by Section
+- [x] Runtime custom filter hook
+- [x] DisplayPreset
+- [x] DisplayPresetManager
+- [x] Save Preset
+- [x] Rename Preset
+- [x] Delete Preset
+- [x] Restore Preset
+- [x] Persist Presets
+- [x] Renderer3D collection visibility support
+- [x] Renderer3D view filter support
+- [x] Renderer3D display preset compatibility
+- [x] Selection compatibility
+- [x] Property Panel collection / filter / preset display
+- [x] ViewStateManager compatibility
+- [x] VisualStyleManager compatibility
+- [x] DisplayModeManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo for collection, filter and preset changes
+- [x] Backward-compatible project loading
+- [x] Focused scene organization / filter / preset tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch L: Professional 3D Annotation, Markups & Review Foundation
+
+- [x] Annotation3D
+- [x] AnnotationManager3D
+- [x] Persistent annotations
+- [x] Screen-space annotations
+- [x] World-space annotations
+- [x] Annotation visibility
+- [x] Annotation layer support
+- [x] Annotation selection support
+- [x] Annotation property support
+- [x] Text Note markup
+- [x] Callout markup
+- [x] Arrow markup
+- [x] Cloud markup
+- [x] Highlight markup
+- [x] Freehand Sketch markup
+- [x] Marker markup
+- [x] Pinned Note markup
+- [x] Revision Marker markup
+- [x] Review Tag markup
+- [x] ReviewManager
+- [x] ReviewItem
+- [x] Review status
+- [x] Review priority
+- [x] Review author
+- [x] Review timestamp
+- [x] Resolved / unresolved state
+- [x] Review category
+- [x] Review comments
+- [x] Linked annotations
+- [x] Renderer3D annotation rendering
+- [x] Renderer3D markup rendering
+- [x] Renderer3D review overlays
+- [x] Selection highlighting
+- [x] Visibility filtering
+- [x] Property Panel annotation / review display
+- [x] SelectionManager compatibility
+- [x] MeasurementManager compatibility
+- [x] SectionManager compatibility
+- [x] Scene Collection compatibility
+- [x] View Filter compatibility
+- [x] Display Preset compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo for annotations and review items
+- [x] Backward-compatible project loading
+- [x] Focused annotation / markup / review tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch M: Professional 3D Collaboration, Review Sessions & Issue Tracking Foundation
+
+- [x] CollaborationManager
+- [x] Session
+- [x] Participant
+- [x] SessionMetadata
+- [x] SessionSettings
+- [x] Session owner
+- [x] Review session lifecycle
+- [x] Future-ready networking metadata without networking implementation
+- [x] Issue
+- [x] IssueManager
+- [x] IssueStatus
+- [x] IssuePriority
+- [x] IssueCategory
+- [x] Reporter
+- [x] Assignee
+- [x] Created date
+- [x] Modified date
+- [x] Resolved date
+- [x] Due date
+- [x] Linked Entity metadata
+- [x] Linked Annotation metadata
+- [x] Linked Review Item metadata
+- [x] Attachments metadata placeholder
+- [x] Tags
+- [x] Issue search
+- [x] Issue filtering
+- [x] Create Session
+- [x] Rename Session
+- [x] Archive Session
+- [x] Restore Session
+- [x] Duplicate Session
+- [x] Session Notes
+- [x] Session History
+- [x] Session Status
+- [x] Session Tags
+- [x] Session Search
+- [x] Session Filtering
+- [x] Renderer3D issue markers
+- [x] Renderer3D review overlays
+- [x] Renderer3D session overlays
+- [x] Selection compatibility
+- [x] Visibility filtering
+- [x] Property Panel issue/session display
+- [x] AnnotationManager3D compatibility
+- [x] ReviewManager compatibility
+- [x] MeasurementManager compatibility
+- [x] SectionManager compatibility
+- [x] Scene Collection compatibility
+- [x] View Filter compatibility
+- [x] Display Preset compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo for sessions and issues
+- [x] Backward-compatible project loading
+- [x] Focused collaboration / issue tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch N: Professional 3D Import References, External Links & Model Coordination Foundation
+
+- [x] ReferenceModel
+- [x] ReferenceManager
+- [x] ReferenceInstance
+- [x] ReferenceMetadata
+- [x] ReferenceStatus
+- [x] ReferenceVisibility
+- [x] ReferenceLock
+- [x] ReferenceTransform
+- [x] ReferenceReload
+- [x] ReferenceUnload
+- [x] ReferencePath
+- [x] Reference UUID
+- [x] Future-ready live reload metadata without live synchronization
+- [x] CoordinationManager
+- [x] CoordinationRule
+- [x] Model Alignment
+- [x] Origin Alignment
+- [x] Coordinate Mapping
+- [x] Shared Coordinate System
+- [x] Reference Offset
+- [x] Reference Rotation
+- [x] Reference Scale
+- [x] Conflict placeholder
+- [x] Reference Groups
+- [x] Reference Categories
+- [x] Reference Filters
+- [x] Reference Search
+- [x] Reference Isolation
+- [x] Reference Selection
+- [x] Reference Statistics
+- [x] Renderer3D reference model rendering
+- [x] Renderer3D reference overlays
+- [x] Renderer3D reference visibility
+- [x] Renderer3D reference isolation
+- [x] Selection compatibility
+- [x] Property Panel reference display
+- [x] Scene Collection compatibility
+- [x] View Filter compatibility
+- [x] Display Preset compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo for references and coordination rules
+- [x] Backward-compatible project loading
+- [x] Focused reference / coordination tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch O: Professional 3D Import Format Adapters & Reference File Readers Foundation
+
+- [x] ImportAdapter
+- [x] ImportManager
+- [x] ImportContext
+- [x] ImportResult
+- [x] ImportSettings
+- [x] ImportStatistics
+- [x] ImportRegistry
+- [x] Adapter registration
+- [x] Future-ready plugin architecture
+- [x] OBJ adapter foundation
+- [x] STL adapter foundation
+- [x] PLY adapter foundation
+- [x] OFF adapter foundation
+- [x] GLTF adapter foundation
+- [x] GLB adapter foundation
+- [x] FBX metadata-only adapter
+- [x] 3DS metadata-only adapter
+- [x] STEP metadata-only adapter
+- [x] IGES metadata-only adapter
+- [x] Common MeshData result pipeline
+- [x] Import reference workflow
+- [x] Reload reference workflow
+- [x] Unload reference compatibility
+- [x] Replace reference workflow
+- [x] Import statistics
+- [x] Import validation
+- [x] Import warnings
+- [x] Import errors
+- [x] Future-ready progress reporting
+- [x] Renderer3D integration through ReferenceManager
+- [x] Property Panel import metadata display
+- [x] Selection compatibility
+- [x] Scene Collection compatibility
+- [x] View Filter compatibility
+- [x] Display Preset compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo for import, reload and replace
+- [x] Backward-compatible project loading
+- [x] Focused import adapter / workflow tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch P: Professional 3D Import UI, Reference Browser & Import Options Panel
+
+- [x] Reference Browser Dock
+- [x] Reference Tree
+- [x] Reference Groups
+- [x] Reference Search
+- [x] Reference Filter
+- [x] Reference Statistics
+- [x] Reference Status
+- [x] Reference Path
+- [x] Reference Type
+- [x] Reference Reload
+- [x] Reference Replace
+- [x] Reference Unload
+- [x] Reference Remove
+- [x] Reference Properties
+- [x] Import Dialog
+- [x] Import Options
+- [x] Units
+- [x] Scale
+- [x] Up Axis
+- [x] Forward Axis
+- [x] Center Model
+- [x] Merge Meshes
+- [x] Keep Hierarchy
+- [x] Generate Normals
+- [x] Generate Bounds
+- [x] Import Hidden Objects
+- [x] Preview Metadata
+- [x] Remember Settings
+- [x] ReferenceManager integration
+- [x] Reload support
+- [x] Replace support
+- [x] Unload support
+- [x] Visibility support
+- [x] Lock support
+- [x] Isolation support
+- [x] Selection support
+- [x] Layer assignment compatibility
+- [x] Scene Collection compatibility
+- [x] View Filter compatibility
+- [x] Display Preset compatibility
+- [x] Undo / Redo
+- [x] Renderer3D remains read-only
+- [x] Property Panel compatibility
+- [x] Project Save/Open persistence
+- [x] Focused import UI tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch Q: Professional 3D Reference Layers, Reference Styling & Coordination UI
+
+- [x] Reference Layer Mapping
+- [x] Reference Layer Browser
+- [x] Reference Layer Visibility
+- [x] Reference Layer Lock
+- [x] Reference Layer Isolation
+- [x] Reference Layer Color Override
+- [x] Reference Layer Statistics
+- [x] Reference Layer Search
+- [x] Reference Layer Filter
+- [x] Reference Display Color
+- [x] Transparency
+- [x] Wireframe Override
+- [x] Hidden Line Override
+- [x] Shaded Override
+- [x] X-Ray Override
+- [x] Display Mode Override
+- [x] Selection Highlight Override
+- [x] Reference Display Presets
+- [x] Coordination Panel
+- [x] Reference Alignment
+- [x] Reference Origin Mapping
+- [x] Reference Coordinate Display
+- [x] Reference Offset Editor
+- [x] Reference Rotation Editor
+- [x] Reference Scale Editor
+- [x] Reference Validation Status
+- [x] Reference Conflict Placeholder
+- [x] Renderer3D reference style override consumption
+- [x] Renderer3D layer visibility consumption
+- [x] Display override compatibility
+- [x] Selection compatibility
+- [x] Property Panel compatibility
+- [x] Import Browser compatibility
+- [x] Scene Collection compatibility
+- [x] View Filter compatibility
+- [x] Display Preset compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo
+- [x] Focused reference layer / styling / coordination tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch R: Professional 3D Clash Detection Foundation
+
+- [x] ClashManager
+- [x] ClashResult
+- [x] ClashGroup
+- [x] ClashSettings
+- [x] ClashStatistics
+- [x] Persistent clash storage
+- [x] Future-ready clash architecture
+- [x] Hard Clash
+- [x] Clearance Clash
+- [x] Duplicate Geometry
+- [x] Bounding Box Clash
+- [x] Reference Clash
+- [x] Category Clash filter support
+- [x] Rule-based clash placeholders
+- [x] Bounding volume filtering
+- [x] Broad-phase detection
+- [x] Narrow-phase placeholder metadata
+- [x] Reference vs Reference
+- [x] Reference vs Native
+- [x] Collection filtering
+- [x] Layer filtering
+- [x] Category filtering
+- [x] Selection filtering
+- [x] Incremental recheck setting
+- [x] Renderer3D clash markers
+- [x] Renderer3D clash highlights
+- [x] Renderer3D clash overlays
+- [x] Visibility filtering
+- [x] Selection compatibility
+- [x] Property Panel compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] MeasurementManager compatibility
+- [x] SectionManager compatibility
+- [x] Scene Collection compatibility
+- [x] View Filter compatibility
+- [x] Display Preset compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo
+- [x] Focused clash detection tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch S: Professional Clash Manager UI, Clash Reports & Clash Review Workflow
+
+- [x] Clash Manager Dock
+- [x] Clash tree view
+- [x] Clash grouping
+- [x] Clash search
+- [x] Clash filtering
+- [x] Clash sorting
+- [x] Severity display
+- [x] Status display
+- [x] Selection synchronization
+- [x] Expand / Collapse
+- [x] Statistics summary
+- [x] Open Clash
+- [x] Previous / Next Clash
+- [x] Focus Camera
+- [x] Zoom To Clash
+- [x] Highlight Clash
+- [x] Review Status
+- [x] Assigned Reviewer
+- [x] Priority
+- [x] Comments
+- [x] Resolution Notes
+- [x] History placeholder
+- [x] Summary Report
+- [x] Detailed Report
+- [x] Grouping by Severity
+- [x] Grouping by Category
+- [x] Grouping by Reference
+- [x] Grouping by Collection
+- [x] PDF report export
+- [x] CSV report export
+- [x] Renderer3D current clash focus
+- [x] Renderer3D remains read-only
+- [x] Property Panel compatibility
+- [x] SelectionManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo
+- [x] Focused clash manager UI tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch T: Professional Clash Dashboard, Assignment Workflow & Report Templates
+
+- [x] Dashboard Dock
+- [x] Overall Statistics
+- [x] Severity Charts
+- [x] Status Summary
+- [x] Assigned Summary
+- [x] Resolved Summary
+- [x] Open Summary
+- [x] Discipline Summary
+- [x] Reference Summary
+- [x] Recent Activity
+- [x] Saved Dashboard Filters
+- [x] Assign Clash
+- [x] Reassign Clash
+- [x] Owner
+- [x] Due Date
+- [x] Priority
+- [x] Status
+- [x] Resolution Category
+- [x] Approval State
+- [x] Watch List
+- [x] Review Queue
+- [x] Batch Assignment
+- [x] Reusable Report Templates
+- [x] Executive Report
+- [x] Coordination Report
+- [x] Discipline Report
+- [x] Summary Report
+- [x] Detailed Report
+- [x] Scheduled Report Settings
+- [x] Renderer3D dashboard selection focus
+- [x] Renderer3D assignment highlighting
+- [x] Renderer3D current review highlighting
+- [x] Selection compatibility
+- [x] Property Panel compatibility
+- [x] Clash Manager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo
+- [x] Focused clash dashboard tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch U: Professional Clash Analytics, Coordination KPIs & Issue/Review Integration
+
+- [x] AnalyticsManager behavior through ClashManager analytics layer
+- [x] Clash Trends
+- [x] Severity Distribution
+- [x] Discipline Statistics
+- [x] Reference Statistics
+- [x] Resolution Statistics
+- [x] Review Progress
+- [x] Open vs Closed
+- [x] Historical Snapshots
+- [x] Saved Analytics Views
+- [x] Coordination KPI Manager behavior through ClashManager KPI layer
+- [x] Project Health Score
+- [x] Completion Percentage
+- [x] Review Coverage
+- [x] Outstanding Issues
+- [x] Resolved Issues
+- [x] Critical Clash Count
+- [x] Clearance Statistics
+- [x] Reference Health
+- [x] Coordination Summary
+- [x] Link Clash to Issue
+- [x] Link Clash to Review
+- [x] Issue Navigation
+- [x] Review Navigation
+- [x] Linked Object Navigation
+- [x] Related Clash Navigation
+- [x] Review Status Synchronization
+- [x] Issue Status Synchronization
+- [x] Dashboard analytics widgets
+- [x] KPI cards
+- [x] Trend chart data
+- [x] Review Progress display
+- [x] Issue Summary display
+- [x] Recent Activity reuse
+- [x] Saved Dashboard Layouts
+- [x] Renderer3D analytics selection focus
+- [x] Renderer3D issue highlighting
+- [x] Renderer3D review highlighting
+- [x] Dashboard selection compatibility
+- [x] Property Panel compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo
+- [x] Focused clash analytics tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch V: Professional BCF Coordination Exchange & Professional CAD Exchange Foundation
+
+- [x] BCFManager
+- [x] BCFProject
+- [x] BCFTopic
+- [x] BCFViewpoint
+- [x] BCFComment
+- [x] BCFSnapshot
+- [x] BCFMetadata
+- [x] Persistent BCF storage
+- [x] BCF Export
+- [x] BCF Import
+- [x] Topic Export
+- [x] Topic Import
+- [x] Viewpoint Export
+- [x] Comment Export
+- [x] Attachment placeholders
+- [x] Version compatibility placeholders
+- [x] Existing Export Framework reuse
+- [x] Issue to BCF Topic integration
+- [x] Review to BCF Topic integration
+- [x] Clash to BCF Topic integration
+- [x] Reference to BCF Topic integration
+- [x] Selection synchronization
+- [x] Camera viewpoint synchronization
+- [x] Renderer3D BCF viewpoint marker rendering
+- [x] Renderer3D remains read-only
+- [x] Property Panel BCF topic display
+- [x] SelectionManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] IssueManager compatibility
+- [x] ReviewManager compatibility
+- [x] ClashManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through BCF commands
+- [x] SKP Import Adapter foundation
+- [x] SKP Export Adapter foundation with STEP fallback metadata
+- [x] 3DM Import Adapter foundation
+- [x] 3DM Export Adapter foundation with STEP fallback metadata
+- [x] STEP Import Adapter foundation
+- [x] STEP Export Adapter foundation
+- [x] IGES Import Adapter foundation
+- [x] IGES Export Adapter foundation
+- [x] SAT Import Adapter foundation
+- [x] SAT Export Adapter foundation
+- [x] STL Fusion compatibility through existing mesh pipeline
+- [x] OBJ Fusion compatibility through existing mesh pipeline
+- [x] FBX future adapter placeholder
+- [x] Alembic future adapter placeholder
+- [x] Existing ImportManager adapter registry reuse
+- [x] Existing ExportManager adapter registry reuse
+- [x] MeshEntity / Scene3D exchange reuse
+- [x] ReferenceManager import compatibility
+- [x] Adapter settings project persistence
+- [x] Focused BCF tests
+- [x] Focused CAD exchange adapter tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch W: Professional BCF Topic Browser, CAD Exchange UI & Exchange Validation
+
+- [x] BCF Topic Browser Dock
+- [x] Project Tree
+- [x] Topic Tree
+- [x] Topic Search
+- [x] Topic Filter
+- [x] Topic Grouping
+- [x] Topic Status
+- [x] Topic Priority
+- [x] Topic Assignment
+- [x] Topic Comments
+- [x] Topic Viewpoints
+- [x] Topic Navigation
+- [x] Selection Synchronization
+- [x] Import Dialog
+- [x] Export Dialog
+- [x] Exchange Options
+- [x] Exchange Profiles
+- [x] Units
+- [x] Axis Mapping
+- [x] Scale
+- [x] Reference Import
+- [x] Merge Options
+- [x] Metadata Preview
+- [x] Exchange Summary
+- [x] Remember Last Settings
+- [x] Validation Manager
+- [x] Validation Report
+- [x] Missing Geometry validation
+- [x] Unsupported Entities validation
+- [x] Unit Mismatch validation
+- [x] Axis Mismatch validation
+- [x] Missing References validation
+- [x] Metadata Validation
+- [x] Import Warnings
+- [x] Export Warnings
+- [x] Validation Summary
+- [x] Renderer3D validation highlights
+- [x] Renderer3D remains read-only
+- [x] Property Panel compatibility
+- [x] SelectionManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] IssueManager compatibility
+- [x] ReviewManager compatibility
+- [x] ClashManager compatibility
+- [x] BCFManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo for exchange profiles, settings and reports
+- [x] Focused Batch W validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch X: Professional Model Compare, Model Diff & Change Tracking Foundation
+
+- [x] ModelCompareManager
+- [x] CompareSession
+- [x] CompareSettings
+- [x] CompareResult
+- [x] CompareStatistics
+- [x] Persistent compare sessions
+- [x] Added object detection
+- [x] Removed object detection
+- [x] Modified object detection
+- [x] Moved object detection
+- [x] Renamed object detection
+- [x] Layer change detection
+- [x] Metadata change detection
+- [x] Reference change detection
+- [x] Geometry change placeholder markers
+- [x] Compare Current vs Reference workflow foundation
+- [x] Compare Reference vs Reference workflow foundation
+- [x] Saved Compare Sessions
+- [x] Re-run Comparison
+- [x] Compare Filters
+- [x] Compare Search
+- [x] Compare Grouping
+- [x] Compare Summary statistics
+- [x] Renderer3D compare overlays
+- [x] Renderer3D remains read-only
+- [x] Property Panel compare result display
+- [x] SelectionManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] IssueManager compatibility
+- [x] ReviewManager compatibility
+- [x] ClashManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through model compare commands
+- [x] Focused Batch X validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch Y: Professional Model Coordination Timeline, Revision History & Change Review
+
+- [x] RevisionManager
+- [x] Revision
+- [x] RevisionMetadata
+- [x] RevisionTimeline
+- [x] RevisionStatistics
+- [x] Persistent revision history
+- [x] Revision Compare
+- [x] Revision Navigation
+- [x] Revision Filters
+- [x] Revision Search
+- [x] Revision Grouping
+- [x] Revision Summary
+- [x] Added Objects review
+- [x] Removed Objects review
+- [x] Modified Objects review
+- [x] Moved Objects review
+- [x] Metadata Changes review
+- [x] Reference Changes review
+- [x] Timeline Manager
+- [x] Revision Timeline
+- [x] Session Timeline
+- [x] Compare Timeline
+- [x] Jump To Revision
+- [x] Restore Viewpoint foundation
+- [x] Timeline Filters
+- [x] Timeline Bookmarks
+- [x] Renderer3D revision overlays
+- [x] Renderer3D timeline highlighting
+- [x] Renderer3D compare highlighting compatibility
+- [x] Renderer3D remains read-only
+- [x] Property Panel revision display
+- [x] SelectionManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] IssueManager compatibility
+- [x] ReviewManager compatibility
+- [x] ClashManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through revision history commands
+- [x] Focused Batch Y validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.1 - Batch Z: Professional Coordination Package, Project Archive & Delivery Foundation
+
+- [x] CoordinationPackageManager
+- [x] CoordinationPackage
+- [x] PackageMetadata
+- [x] PackageManifest
+- [x] PackageStatistics
+- [x] PackageValidation
+- [x] Persistent package storage
+- [x] Future-ready package architecture
+- [x] Create Delivery Package
+- [x] Package References
+- [x] Package BCF
+- [x] Package Clash Reports
+- [x] Package Revision History
+- [x] Package Compare Sessions
+- [x] Package Review Data
+- [x] Package Issue Data
+- [x] Package Metadata
+- [x] Package Summary
+- [x] Archive Manager
+- [x] Archive Validation
+- [x] Dependency Validation
+- [x] Missing Reference Detection
+- [x] Package Integrity Check
+- [x] Package Version Check
+- [x] Archive Summary
+- [x] Archive Search
+- [x] Renderer3D package viewpoints foundation
+- [x] Renderer3D package review overlays foundation
+- [x] Renderer3D remains read-only
+- [x] Property Panel package display
+- [x] SelectionManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] IssueManager compatibility
+- [x] ReviewManager compatibility
+- [x] ClashManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] RevisionManager compatibility
+- [x] TimelineManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through coordination package commands
+- [x] Focused Batch Z validation tests
+- [x] main_v2.py launch validation
+- [x] Release 1.1 roadmap complete
+
+## Release 1.2 - Batch A: Professional BIM Foundation
+
+- [x] BIMManager
+- [x] BIMProject
+- [x] Building
+- [x] Site
+- [x] Level
+- [x] GridSystem
+- [x] BuildingMetadata
+- [x] BIMSettings
+- [x] Persistent BIM storage
+- [x] Future-ready BIM core architecture
+- [x] BIMObject base class
+- [x] BIMCategory
+- [x] BIMType
+- [x] BIMInstance
+- [x] Object GUID support
+- [x] Classification placeholders
+- [x] Property Set placeholders
+- [x] Relationship placeholders
+- [x] Existing Entity / MeshEntity reuse
+- [x] Project Browser foundation hierarchy
+- [x] Building hierarchy
+- [x] Site hierarchy
+- [x] Level hierarchy
+- [x] Grid hierarchy
+- [x] Object hierarchy
+- [x] Selection synchronization
+- [x] Renderer3D level visualization
+- [x] Renderer3D grid visualization
+- [x] Renderer3D BIM object highlighting
+- [x] Renderer3D remains read-only
+- [x] Property Panel BIM display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] RevisionManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through BIM commands
+- [x] Focused Batch A validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.2 - Batch B: Professional BIM Families, Types & Property Sets Foundation
+
+- [x] BIMFamily
+- [x] BIMFamilyLibrary
+- [x] FamilyCategory
+- [x] FamilyMetadata
+- [x] FamilyStatistics
+- [x] Persistent family storage
+- [x] Future-ready family architecture
+- [x] BIMType family relationship
+- [x] TypeParameters
+- [x] TypeDefaults
+- [x] InstanceParameters
+- [x] InstanceOverrides
+- [x] Family / Type / Instance relationships
+- [x] Existing MeshEntity reuse
+- [x] PropertySet
+- [x] PropertyDefinition
+- [x] PropertyValue
+- [x] PropertyGroup
+- [x] Classification placeholders
+- [x] IFC PropertySet placeholders
+- [x] Custom Property Sets
+- [x] Renderer3D family highlighting
+- [x] Renderer3D type highlighting
+- [x] Renderer3D instance highlighting
+- [x] Renderer3D remains read-only
+- [x] Property Panel family/type/property display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] RevisionManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through BIM family/property commands
+- [x] Focused Batch B validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.2 - Batch C: Professional BIM Elements Library Foundation
+
+- [x] Wall element definition
+- [x] Door element definition
+- [x] Window element definition
+- [x] Column element definition
+- [x] Beam element definition
+- [x] Slab element definition
+- [x] Roof element definition
+- [x] Stair element definition
+- [x] Railing element definition
+- [x] Floor element definition
+- [x] Ceiling element definition
+- [x] Curtain Wall element definition
+- [x] Foundation element definition
+- [x] Opening element definition
+- [x] Room element definition
+- [x] Space element definition
+- [x] Zone element definition
+- [x] ElementMetadata
+- [x] ElementCategoryMetadata
+- [x] LibraryStatistics
+- [x] ElementParameters
+- [x] ElementRelationships
+- [x] Host relationships
+- [x] Parent relationships
+- [x] Child relationships
+- [x] Contained relationships
+- [x] Adjacent relationships
+- [x] Connection placeholders
+- [x] Existing BIM object framework reuse
+- [x] Existing MeshEntity reuse
+- [x] Renderer3D element highlighting
+- [x] Renderer3D category highlighting
+- [x] Renderer3D relationship highlighting
+- [x] Renderer3D remains read-only
+- [x] Property Panel element/relationship display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] RevisionManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through BIM element commands
+- [x] Focused Batch C validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.2 - Batch D: Professional BIM Materials, Assemblies & Quantity Foundation
+
+- [x] MaterialLibrary
+- [x] BIMMaterial
+- [x] MaterialCategory
+- [x] MaterialMetadata
+- [x] MaterialStatistics
+- [x] MaterialAssignment
+- [x] MaterialLayer
+- [x] MaterialLayerSet
+- [x] MaterialAsset placeholders
+- [x] Persistent material storage
+- [x] Physical property placeholders
+- [x] Appearance placeholders
+- [x] Thermal placeholders
+- [x] Structural placeholders
+- [x] Cost placeholders
+- [x] Manufacturer placeholders
+- [x] Existing PropertySet infrastructure reuse
+- [x] Assembly
+- [x] AssemblyType
+- [x] AssemblyMember
+- [x] CompositeAssembly
+- [x] AssemblyMetadata
+- [x] AssemblyStatistics
+- [x] Nested assemblies foundation
+- [x] Reusable assemblies
+- [x] Assembly templates
+- [x] Assembly relationships
+- [x] Existing BIMInstance reference reuse
+- [x] QuantityManager
+- [x] QuantityItem
+- [x] QuantityRule
+- [x] QuantitySummary
+- [x] QuantityStatistics
+- [x] Length aggregation
+- [x] Area aggregation
+- [x] Volume aggregation
+- [x] Count aggregation
+- [x] Weight placeholder
+- [x] Cost placeholder
+- [x] Material quantities
+- [x] Assembly quantities
+- [x] Element quantities
+- [x] Future-ready quantity rule architecture
+- [x] Renderer3D material highlighting
+- [x] Renderer3D assembly highlighting
+- [x] Renderer3D quantity visualization placeholders
+- [x] Renderer3D remains read-only
+- [x] Property Panel material/assembly/quantity display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] RevisionManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through BIM material/assembly/quantity commands
+- [x] Focused Batch D validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.2 - Batch E: Professional BIM Levels, Grids, Views & Documentation Foundation
+
+- [x] LevelManager
+- [x] LevelDefinition
+- [x] LevelGroup
+- [x] GridManager
+- [x] GridLine
+- [x] GridIntersection
+- [x] GridGroup
+- [x] GridMetadata
+- [x] GridStatistics
+- [x] Level elevation support
+- [x] Level and grid naming support
+- [x] Visibility support
+- [x] Locking support
+- [x] Grouping support
+- [x] Future-ready level/grid architecture
+- [x] ViewManager
+- [x] FloorPlanView
+- [x] CeilingPlanView
+- [x] ElevationView
+- [x] SectionView
+- [x] DetailView
+- [x] 3D View
+- [x] ViewTemplate
+- [x] ViewMetadata
+- [x] ViewStatistics
+- [x] Views reference existing BIM data
+- [x] No duplicated geometry
+- [x] SheetManager
+- [x] DrawingSheet
+- [x] ViewportReference
+- [x] TitleBlock placeholder
+- [x] DrawingScale
+- [x] ViewPlacement
+- [x] DocumentationSettings
+- [x] Future-ready schedules / legends / detail sheets / construction documents architecture
+- [x] Renderer3D level highlighting
+- [x] Renderer3D grid highlighting
+- [x] Renderer3D view highlighting
+- [x] Renderer3D documentation placeholders
+- [x] Renderer3D remains read-only
+- [x] Property Panel view/sheet/level/grid display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] RevisionManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through BIM documentation commands
+- [x] Focused Batch E validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.2 - Batch F: Professional BIM Scheduling, Classification & IFC Foundation
+
+- [x] ScheduleManager
+- [x] ScheduleDefinition
+- [x] ScheduleField
+- [x] ScheduleFilter
+- [x] ScheduleSort
+- [x] ScheduleGroup
+- [x] ScheduleRow
+- [x] ScheduleColumn
+- [x] ScheduleMetadata
+- [x] ScheduleStatistics
+- [x] Door Schedule support
+- [x] Window Schedule support
+- [x] Room Schedule support
+- [x] Material Schedule support
+- [x] Quantity Schedule support
+- [x] Custom Schedule support
+- [x] Future-ready schedule architecture
+- [x] ClassificationManager
+- [x] ClassificationSystem
+- [x] ClassificationCode
+- [x] ClassificationMapping
+- [x] ClassificationMetadata
+- [x] ClassificationStatistics
+- [x] IFC Classification placeholder
+- [x] OmniClass placeholder
+- [x] UniClass placeholder
+- [x] MasterFormat placeholder
+- [x] Custom Classification support
+- [x] Multiple classifications per BIM element
+- [x] IFCManager
+- [x] IFCProject
+- [x] IFCSite
+- [x] IFCBuilding
+- [x] IFCStorey
+- [x] IFCElement
+- [x] IFCRelationship
+- [x] IFCPropertySet
+- [x] IFCExportSettings
+- [x] IFCImportSettings
+- [x] IFCMetadata
+- [x] IFC metadata and relationship foundation only
+- [x] No full IFC parser/exporter introduced
+- [x] IFC objects reference existing BIM entities and MeshEntity geometry
+- [x] Renderer3D classification highlighting
+- [x] Renderer3D schedule highlighting
+- [x] Renderer3D IFC status placeholders
+- [x] Renderer3D remains read-only
+- [x] Property Panel schedule/classification/IFC display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] RevisionManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through BIM schedule/classification/IFC commands
+- [x] Focused Batch F validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.2 - Batch G: Professional BIM Relationships, Hosts, Openings & Connectivity Foundation
+
+- [x] RelationshipManager
+- [x] RelationshipType
+- [x] RelationshipMetadata
+- [x] RelationshipStatistics
+- [x] Parent relationship support
+- [x] Child relationship support
+- [x] Host relationship support
+- [x] Hosted relationship support
+- [x] Contained relationship support
+- [x] Container relationship support
+- [x] Adjacent relationship support
+- [x] Connected relationship support
+- [x] Dependent relationship support
+- [x] Reference relationship support
+- [x] Aggregation relationship support
+- [x] Grouping relationship support
+- [x] Future-ready relationship graph
+- [x] HostObject
+- [x] HostedObject
+- [x] Opening
+- [x] Void
+- [x] CutRelationship
+- [x] HostMetadata
+- [x] OpeningMetadata
+- [x] Doors hosted by walls support
+- [x] Windows hosted by walls support
+- [x] Openings in slabs support
+- [x] Openings in roofs support
+- [x] Hosted element lookup
+- [x] Opening lookup
+- [x] Relationship validation
+- [x] Existing BIMInstance reference reuse
+- [x] No duplicated geometry
+- [x] ConnectivityManager
+- [x] Connection
+- [x] ConnectionType
+- [x] ConnectionMetadata
+- [x] ConnectionStatistics
+- [x] Wall connection support
+- [x] Beam connection support
+- [x] Column connection support
+- [x] Foundation connection support
+- [x] Generic element connectivity support
+- [x] Future-ready topology graph
+- [x] Renderer3D relationship highlighting
+- [x] Renderer3D host highlighting
+- [x] Renderer3D opening highlighting
+- [x] Renderer3D connectivity highlighting
+- [x] Renderer3D remains read-only
+- [x] Property Panel relationship/host/opening/connectivity display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] RevisionManager compatibility
+- [x] ScheduleManager compatibility
+- [x] ClassificationManager compatibility
+- [x] IFCManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through BIM relationship/connectivity commands
+- [x] Focused Batch G validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.2 - Batch H: Professional BIM Design Options, Phasing & Lifecycle Foundation
+
+- [x] DesignOptionManager
+- [x] DesignOptionSet
+- [x] DesignOption
+- [x] PrimaryOption
+- [x] SecondaryOption
+- [x] OptionMembership
+- [x] OptionMetadata
+- [x] OptionStatistics
+- [x] Design option create support
+- [x] Design option rename-ready metadata
+- [x] Design option delete support through existing BIM removal command
+- [x] Design option activate support
+- [x] Design option deactivate support
+- [x] BIM element option assignment
+- [x] Future-ready design option architecture
+- [x] PhaseManager
+- [x] ProjectPhase
+- [x] PhaseSequence
+- [x] PhaseFilter
+- [x] PhaseMetadata
+- [x] PhaseStatistics
+- [x] Existing phase support
+- [x] Demolition phase support
+- [x] New Construction phase support
+- [x] Future phase support
+- [x] Element phase assignment
+- [x] Phase visibility support
+- [x] Future-ready phase architecture
+- [x] LifecycleManager
+- [x] LifecycleState
+- [x] LifecycleEvent
+- [x] LifecycleMetadata
+- [x] LifecycleStatistics
+- [x] Planned lifecycle state support
+- [x] Designed lifecycle state support
+- [x] Constructed lifecycle state support
+- [x] Commissioned lifecycle state support
+- [x] Operational lifecycle state support
+- [x] Renovated lifecycle state support
+- [x] Demolished lifecycle state support
+- [x] Lifecycle history support
+- [x] Lifecycle placeholders
+- [x] Renderer3D design option highlighting
+- [x] Renderer3D phase highlighting
+- [x] Renderer3D lifecycle state highlighting
+- [x] Renderer3D remains read-only
+- [x] Property Panel design option/phase/lifecycle display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] RelationshipManager compatibility
+- [x] ConnectivityManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] RevisionManager compatibility
+- [x] ScheduleManager compatibility
+- [x] ClassificationManager compatibility
+- [x] IFCManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through BIM design option/phase/lifecycle commands
+- [x] Focused Batch H validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.2 - Batch I: Professional BIM Rooms, Spaces, Zones & Area Analysis Foundation
+
+- [x] RoomManager
+- [x] Room
+- [x] RoomBoundary
+- [x] RoomMetadata
+- [x] RoomStatistics
+- [x] Room Number support
+- [x] Room Name support
+- [x] Room Department support
+- [x] Occupancy placeholder
+- [x] Finish placeholder
+- [x] Volume placeholder
+- [x] Automatic room boundary references
+- [x] Future-ready room architecture
+- [x] SpaceManager
+- [x] Space
+- [x] SpaceBoundary
+- [x] SpaceMetadata
+- [x] SpaceStatistics
+- [x] MEP-ready spaces
+- [x] Analytical spaces
+- [x] Volume references
+- [x] Height references
+- [x] Future-ready space architecture
+- [x] ZoneManager
+- [x] Zone
+- [x] ZoneGroup
+- [x] ZoneMetadata
+- [x] ZoneStatistics
+- [x] AreaAnalysisManager
+- [x] AreaRegion
+- [x] AreaBoundary
+- [x] AreaSummary
+- [x] AreaStatistics
+- [x] Gross Area support
+- [x] Net Area support
+- [x] Usable Area support
+- [x] Rentable Area support
+- [x] Area aggregation
+- [x] Zone aggregation
+- [x] Future-ready analysis framework
+- [x] Renderer3D room highlighting
+- [x] Renderer3D space highlighting
+- [x] Renderer3D zone highlighting
+- [x] Renderer3D area analysis overlays
+- [x] Renderer3D remains read-only
+- [x] Property Panel room/space/zone/area display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] RelationshipManager compatibility
+- [x] ConnectivityManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] RevisionManager compatibility
+- [x] ScheduleManager compatibility
+- [x] ClassificationManager compatibility
+- [x] IFCManager compatibility
+- [x] DesignOptionManager compatibility
+- [x] PhaseManager compatibility
+- [x] LifecycleManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through BIM room/space/zone/area commands
+- [x] Focused Batch I validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.2 - Batch J: Professional BIM MEP Coordination Foundation
+
+- [x] MEPManager
+- [x] MEPSystem
+- [x] MEPSystemType
+- [x] MEPNetwork
+- [x] MEPComponent
+- [x] MEPConnector
+- [x] MEPPort
+- [x] MEPMetadata
+- [x] MEPStatistics
+- [x] Mechanical system support
+- [x] Electrical system support
+- [x] Plumbing system support
+- [x] Fire Protection system support
+- [x] Communication system support
+- [x] Future-ready MEP architecture
+- [x] ConnectorManager
+- [x] Connector
+- [x] ConnectorType
+- [x] ConnectionRule
+- [x] NetworkMembership
+- [x] SystemMembership
+- [x] ConnectorMetadata
+- [x] Equipment connection support
+- [x] Pipe placeholders
+- [x] Duct placeholders
+- [x] Cable tray placeholders
+- [x] Conduit placeholders
+- [x] Device placeholders
+- [x] Future-ready topology
+- [x] Existing BIMInstance reference reuse
+- [x] No duplicated geometry
+- [x] CoordinationRule
+- [x] ClearanceRequirement
+- [x] ServiceZone
+- [x] MEPCoordinationSettings
+- [x] MEPCoordinationMetadata
+- [x] MEPCoordinationStatistics
+- [x] System grouping
+- [x] Coordination metadata
+- [x] Future clash integration placeholders
+- [x] Future routing placeholders
+- [x] Renderer3D MEP system highlighting
+- [x] Renderer3D connector highlighting
+- [x] Renderer3D network highlighting
+- [x] Renderer3D coordination overlays
+- [x] Renderer3D remains read-only
+- [x] Property Panel MEP coordination display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] RelationshipManager compatibility
+- [x] ConnectivityManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] RevisionManager compatibility
+- [x] ScheduleManager compatibility
+- [x] ClassificationManager compatibility
+- [x] IFCManager compatibility
+- [x] DesignOptionManager compatibility
+- [x] PhaseManager compatibility
+- [x] LifecycleManager compatibility
+- [x] RoomManager compatibility
+- [x] SpaceManager compatibility
+- [x] ZoneManager compatibility
+- [x] AreaAnalysisManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through BIM MEP/connector commands
+- [x] Focused Batch J validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.2 - Batch K: Professional BIM Interoperability, Validation & Model Checking Foundation
+
+- [x] ValidationManager
+- [x] ValidationRule
+- [x] ValidationCategory
+- [x] ValidationResult
+- [x] ValidationSeverity
+- [x] ValidationStatistics
+- [x] ValidationProfile
+- [x] ValidationMetadata
+- [x] Required Property validation
+- [x] Missing Data validation
+- [x] Relationship validation
+- [x] Host/Opening validation
+- [x] Classification validation
+- [x] IFC readiness validation
+- [x] Schedule validation
+- [x] Future-ready validation architecture
+- [x] ModelCheckManager
+- [x] ModelCheckRule
+- [x] ModelCheckProfile
+- [x] ModelCheckResult
+- [x] ModelCheckStatistics
+- [x] Duplicate element detection
+- [x] Orphan element detection
+- [x] Invalid references checks
+- [x] Invalid relationships checks
+- [x] Missing materials checks
+- [x] Missing classifications checks
+- [x] Missing levels checks
+- [x] Missing rooms checks
+- [x] Future-ready model checking architecture
+- [x] InteroperabilityManager
+- [x] ExchangeProfile
+- [x] ExchangeRule
+- [x] ExchangeMetadata
+- [x] ExchangeStatistics
+- [x] IFC readiness
+- [x] BCF readiness
+- [x] Reference model readiness
+- [x] CAD exchange readiness
+- [x] Import/Export validation readiness
+- [x] Future interoperability framework
+- [x] Renderer3D validation highlighting
+- [x] Renderer3D model check highlighting
+- [x] Renderer3D interoperability status overlays
+- [x] Renderer3D remains read-only
+- [x] Property Panel validation/model check/interoperability display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] RelationshipManager compatibility
+- [x] ConnectivityManager compatibility
+- [x] ReferenceManager compatibility
+- [x] CoordinationManager compatibility
+- [x] BCFManager compatibility
+- [x] ClashManager compatibility
+- [x] ModelCompareManager compatibility
+- [x] RevisionManager compatibility
+- [x] ScheduleManager compatibility
+- [x] ClassificationManager compatibility
+- [x] IFCManager compatibility
+- [x] MEPManager compatibility
+- [x] ImportManager compatibility
+- [x] ExportManager compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through BIM validation/model-check/interoperability commands
+- [x] Focused Batch K validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.2 - Batch L: Professional BIM Production Readiness, Performance Optimization & Architecture Audit
+
+- [x] Complete BIM architecture audit
+- [x] No duplicated managers verified
+- [x] No duplicated geometry verified
+- [x] No duplicated property systems verified
+- [x] No duplicated render paths verified
+- [x] No duplicated persistence verified
+- [x] Workspace ownership verified
+- [x] Renderer3D read-only behavior verified
+- [x] MeshEntity geometry ownership verified
+- [x] Relationship query compatibility hardened
+- [x] MEP connector query compatibility hardened
+- [x] Batch K Property Panel compatibility hardened
+- [x] Renderer3D Batch K overlay compatibility hardened
+- [x] Null safety and invalid reference handling reviewed
+- [x] Persistence compatibility reviewed
+- [x] Command validation reviewed
+- [x] 2D CAD compatibility regression tested
+- [x] 3D CAD compatibility regression tested
+- [x] Import compatibility regression tested
+- [x] Export compatibility regression tested
+- [x] Reference compatibility regression tested
+- [x] BCF compatibility regression tested
+- [x] Coordination compatibility regression tested
+- [x] Clash compatibility regression tested
+- [x] Model Compare compatibility regression tested
+- [x] Revision History compatibility regression tested
+- [x] Selection compatibility regression tested
+- [x] Scene Collection compatibility regression tested
+- [x] Display Preset compatibility regression tested
+- [x] View Filter compatibility regression tested
+- [x] Project persistence regression tested
+- [x] All BIM regression tests passed
+- [x] main_v2.py launch validation
+- [x] Release 1.2 marked complete
+
+## Release 1.3 - Batch A: Professional Product Design Foundation
+
+- [x] ProductManager
+- [x] ProductDocument
+- [x] ProductPart
+- [x] ProductMetadata
+- [x] ProductStatistics
+- [x] Single-part project support
+- [x] Multi-part project support
+- [x] Product metadata support
+- [x] Units support
+- [x] Precision support
+- [x] Future-ready Product Design architecture
+- [x] ComponentManager
+- [x] Component
+- [x] ComponentType
+- [x] ComponentCategory
+- [x] ComponentMetadata
+- [x] ComponentStatistics through ProductStatistics
+- [x] Mechanical Parts category support
+- [x] Purchased Parts category support
+- [x] Custom Parts category support
+- [x] Standard Parts category support
+- [x] Reference Parts category support
+- [x] Workspace integration
+- [x] Property Panel integration
+- [x] Selection integration
+- [x] Layer System integration
+- [x] View States compatibility
+- [x] Display Presets compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through Product commands
+- [x] Renderer3D product highlighting
+- [x] Renderer3D component highlighting
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry reuse
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] Focused Batch A validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.3 - Batch B: Product Part Parameters, Materials & Mechanical Metadata Foundation
+
+- [x] ParameterManager
+- [x] PartParameter
+- [x] ParameterGroup
+- [x] ParameterSet
+- [x] ParameterMetadata
+- [x] ParameterStatistics
+- [x] Parameter name, value and unit support
+- [x] Parameter expression placeholder support
+- [x] Parameter description support
+- [x] Parameter read-only flag support
+- [x] Future parametric compatibility
+- [x] EngineeringMaterialManager
+- [x] EngineeringMaterial
+- [x] MaterialCategory
+- [x] MaterialGrade
+- [x] MaterialSpecification
+- [x] MaterialMetadata
+- [x] MaterialStatistics
+- [x] Steel material category support
+- [x] Aluminium material category support
+- [x] Copper material category support
+- [x] Brass material category support
+- [x] Titanium material category support
+- [x] Plastic material category support
+- [x] Wood material category support
+- [x] Composite material category support
+- [x] Glass material category support
+- [x] Custom Material category support
+- [x] Existing Material System reuse
+- [x] No duplicate material framework
+- [x] MechanicalMetadata
+- [x] MechanicalProperties
+- [x] MassProperties
+- [x] ManufacturingMetadata
+- [x] ToleranceMetadata
+- [x] FinishMetadata
+- [x] Mass placeholder support
+- [x] Volume placeholder support
+- [x] Density placeholder support
+- [x] Center of Gravity placeholder support
+- [x] Moment of Inertia placeholder support
+- [x] Surface Finish placeholder support
+- [x] Tolerance Class placeholder support
+- [x] Manufacturing Process placeholder support
+- [x] Part Number support
+- [x] Revision support
+- [x] Supplier support
+- [x] Lifecycle support
+- [x] Workspace integration
+- [x] Property Panel integration
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Display Presets compatibility
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through Product commands
+- [x] Renderer3D material highlighting
+- [x] Renderer3D component highlighting
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry reuse
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] Focused Batch B validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.3 - Batch C: Professional Sketch Environment & Constraint Foundation
+
+- [x] SketchManager
+- [x] Sketch
+- [x] SketchPlane
+- [x] SketchProfile
+- [x] SketchLoop
+- [x] SketchRegion
+- [x] SketchMetadata
+- [x] SketchStatistics
+- [x] Create Sketch support
+- [x] Rename Sketch data support
+- [x] Delete Sketch through Product commands
+- [x] Activate Sketch command support
+- [x] Deactivate Sketch command support
+- [x] Multiple sketches per ProductPart
+- [x] Sketch visibility support
+- [x] SketchPoint
+- [x] SketchLine
+- [x] SketchArc
+- [x] SketchCircle
+- [x] SketchEllipse
+- [x] SketchSpline
+- [x] SketchPolyline
+- [x] SketchRectangle
+- [x] SketchPolygon
+- [x] ConstructionGeometry
+- [x] Centerline
+- [x] ConstructionPoint
+- [x] ConstructionCircle
+- [x] ConstructionArc
+- [x] Sketch geometry remains sketch-owned
+- [x] No MeshEntity creation from sketch geometry
+- [x] Sketch ConstraintManager helper
+- [x] Constraint
+- [x] ConstraintType
+- [x] ConstraintGroup
+- [x] ConstraintMetadata
+- [x] ConstraintStatistics
+- [x] Coincident constraint type support
+- [x] Parallel constraint type support
+- [x] Perpendicular constraint type support
+- [x] Horizontal constraint type support
+- [x] Vertical constraint type support
+- [x] Equal constraint type support
+- [x] Tangent constraint type support
+- [x] Concentric constraint type support
+- [x] Collinear constraint type support
+- [x] Midpoint constraint type support
+- [x] Symmetric constraint type support
+- [x] Fixed constraint type support
+- [x] Future-ready solver architecture without numerical solving
+- [x] DimensionManager
+- [x] SketchDimension
+- [x] DimensionType
+- [x] DimensionMetadata
+- [x] DimensionStatistics
+- [x] Linear dimension support
+- [x] Aligned dimension support
+- [x] Horizontal dimension support
+- [x] Vertical dimension support
+- [x] Angular dimension support
+- [x] Radius dimension support
+- [x] Diameter dimension support
+- [x] Arc Length placeholder support
+- [x] Ordinate placeholder support
+- [x] Driven / Driving placeholder support
+- [x] Workspace integration
+- [x] Product Workspace integration
+- [x] Property Panel integration
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Construction Plane reference compatibility
+- [x] Coordinate System reference compatibility
+- [x] SnapManager3D compatibility
+- [x] Undo / Redo through Product commands
+- [x] Project Save/Open persistence
+- [x] Renderer3D sketch highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Renderer2D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] Focused Batch C validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.3 - Batch D: Professional Feature-Based Solid Modeling Foundation
+
+- [x] FeatureManager
+- [x] FeatureTree
+- [x] FeatureNode
+- [x] FeatureHistory
+- [x] FeatureMetadata
+- [x] FeatureStatistics
+- [x] Ordered feature history
+- [x] Suppress feature support
+- [x] Unsuppress feature support
+- [x] Rename feature support
+- [x] Reorder placeholder support through FeatureNode order
+- [x] Rollback placeholder support through FeatureTree and FeatureHistory
+- [x] Future dependency graph compatibility
+- [x] ExtrudeFeature
+- [x] RevolveFeature
+- [x] SweepFeature
+- [x] LoftFeature
+- [x] ThinFeature
+- [x] FeatureDefinition
+- [x] FeatureResult
+- [x] FeatureOptions
+- [x] Join operation support
+- [x] Cut operation support
+- [x] Intersect operation support
+- [x] New Body operation support
+- [x] Mid Plane option support
+- [x] Direction option support
+- [x] Distance option support
+- [x] Angle option support
+- [x] Draft placeholder support
+- [x] Merge result placeholder support
+- [x] Existing SketchProfile consumption
+- [x] Existing MeshEntity geometry update support
+- [x] No duplicate geometry system
+- [x] BodyManager
+- [x] SolidBody
+- [x] BodyMetadata
+- [x] BodyStatistics
+- [x] Single Body support
+- [x] Multiple Bodies support
+- [x] Body visibility support
+- [x] Body naming support
+- [x] Body selection support
+- [x] Future body operations compatibility
+- [x] Bodies reference existing MeshEntity geometry
+- [x] Workspace integration
+- [x] Product Workspace integration
+- [x] Feature Tree data integration
+- [x] Property Panel integration
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through Product commands
+- [x] Project Save/Open persistence
+- [x] Renderer3D body highlighting through existing product overlay path
+- [x] Renderer3D feature highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] Focused Batch D validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.3 - Batch E: Professional Parametric Feature Editing & Dependency Update Foundation
+
+- [x] FeatureEditor
+- [x] FeatureParameterSet
+- [x] FeatureEditSession
+- [x] FeatureState
+- [x] FeatureVersion
+- [x] FeatureMetadata reuse
+- [x] FeatureStatistics compatibility
+- [x] Extrude editing support
+- [x] Revolve editing support
+- [x] Sweep editing support
+- [x] Loft editing support
+- [x] Thin Feature editing support
+- [x] Distance editing support
+- [x] Angle editing support
+- [x] Direction editing support
+- [x] Operation Type editing support
+- [x] Merge Result editing support
+- [x] Visibility editing support
+- [x] Suppression editing support
+- [x] Rename editing support
+- [x] Features remain editable after creation
+- [x] DependencyManager
+- [x] DependencyNode
+- [x] DependencyEdge
+- [x] DependencyMetadata
+- [x] DependencyStatistics
+- [x] Sketch → Feature dependency storage
+- [x] Feature → Body dependency storage
+- [x] Feature → Feature dependency storage
+- [x] Parameter → Feature dependency storage readiness
+- [x] Future dependency graph compatibility
+- [x] Future node-system compatibility
+- [x] No Release 1.5 dependency solver implementation
+- [x] RegenerationManager
+- [x] RegenerationRequest
+- [x] RegenerationContext
+- [x] RegenerationResult
+- [x] RegenerationStatistics
+- [x] Rebuild single feature support
+- [x] Rebuild downstream features support
+- [x] Mark dirty support
+- [x] Clear dirty support
+- [x] Partial rebuild support
+- [x] Full rebuild support
+- [x] Future solver compatibility
+- [x] MeshEntity remains geometry owner
+- [x] UpdateManager
+- [x] UpdateQueue
+- [x] UpdateContext
+- [x] UpdateMetadata
+- [x] Sketch change update metadata
+- [x] Parameter change update metadata
+- [x] Feature change update metadata
+- [x] Body update metadata
+- [x] Selection synchronization compatibility
+- [x] Future Live Solver compatibility
+- [x] Workspace integration
+- [x] Product Workspace integration
+- [x] Feature Tree compatibility
+- [x] Property Panel dirty/dependency display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through Product commands
+- [x] Project Save/Open persistence
+- [x] Renderer3D dirty feature highlighting through existing product state
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] Focused Batch E validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.3 - Batch F: Professional Fillet, Chamfer & Pattern Foundation
+
+- [x] FilletFeature
+- [x] ChamferFeature
+- [x] EdgeModificationManager
+- [x] EdgeSelection
+- [x] EdgeChain
+- [x] EdgeModificationMetadata
+- [x] EdgeModificationStatistics
+- [x] Constant Radius Fillet support
+- [x] Variable Radius placeholder support
+- [x] Face Fillet placeholder support
+- [x] Constant Distance Chamfer support
+- [x] Distance-Angle Chamfer placeholder support
+- [x] Distance-Distance Chamfer placeholder support
+- [x] Multiple edge selection support
+- [x] Tangent edge chain placeholder support
+- [x] Feature suppression compatibility
+- [x] Feature editing compatibility
+- [x] Future-ready edge modification architecture
+- [x] PatternManager
+- [x] PatternFeature
+- [x] PatternInstance
+- [x] PatternDefinition
+- [x] PatternMetadata
+- [x] PatternStatistics
+- [x] Linear Pattern support
+- [x] Circular Pattern support
+- [x] Mirror Pattern support
+- [x] Curve Pattern placeholder support
+- [x] Table Pattern placeholder support
+- [x] Body Pattern placeholder support
+- [x] Feature Pattern support
+- [x] Spacing support
+- [x] Count support
+- [x] Direction support
+- [x] Pattern dependency tracking
+- [x] Pattern regeneration support
+- [x] Feature references
+- [x] Body references
+- [x] Future solver compatibility
+- [x] Workspace integration
+- [x] Product Workspace integration
+- [x] Feature Tree compatibility
+- [x] Property Panel integration
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through Product commands
+- [x] Project Save/Open persistence
+- [x] Renderer3D fillet highlighting through existing product overlay path
+- [x] Renderer3D chamfer highlighting through existing product overlay path
+- [x] Renderer3D pattern highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] Pattern instances reference Features/Bodies without geometry ownership
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] Focused Batch F validation tests
+- [x] main_v2.py launch validation
+
+## Release 1.3 - Batch G: Professional Surface Modeling Foundation
+
+- [x] SurfaceManager
+- [x] SurfaceBody
+- [x] SurfaceDefinition
+- [x] SurfaceMetadata
+- [x] SurfaceStatistics
+- [x] Surface body creation
+- [x] Surface visibility support
+- [x] Surface naming support
+- [x] Surface grouping support
+- [x] Surface selection support
+- [x] Surface bodies reference existing MeshEntity geometry
+- [x] LoftSurfaceFeature
+- [x] SweepSurfaceFeature
+- [x] BoundarySurfaceFeature
+- [x] RuledSurfaceFeature
+- [x] OffsetSurfaceFeature
+- [x] FillSurfaceFeature
+- [x] SurfaceFeatureDefinition
+- [x] SurfaceFeatureResult
+- [x] SurfaceFeatureOptions
+- [x] Multiple profile loft foundation
+- [x] Guide curve placeholder support
+- [x] Sweep profile and path foundation
+- [x] Boundary curve foundation
+- [x] Ruled surface foundation
+- [x] Offset distance support
+- [x] Fill boundary foundation
+- [x] Future continuity settings support
+- [x] TrimSurfaceFeature
+- [x] ExtendSurfaceFeature
+- [x] KnitSurfaceFeature
+- [x] SplitSurfaceFeature
+- [x] SurfaceOperationManager
+- [x] SurfaceOperationMetadata
+- [x] SurfaceOperationStatistics
+- [x] Surface dependency tracking
+- [x] Surface regeneration compatibility
+- [x] FeatureManager integration
+- [x] FeatureTree compatibility
+- [x] RegenerationManager compatibility
+- [x] UpdateManager readiness
+- [x] Workspace integration
+- [x] Product Workspace integration
+- [x] Property Panel integration
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through Product commands
+- [x] Project Save/Open persistence
+- [x] Renderer3D surface highlighting through existing product overlay path
+- [x] Renderer3D surface operation highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate MeshEntity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] Focused Batch G validation tests
+- [x] Related product/scene/project regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.3 - Batch H: Professional Curves, Reference Geometry & Construction Tools Foundation
+
+- [x] CurveManager
+- [x] CurveDefinition
+- [x] CurveMetadata
+- [x] CurveStatistics
+- [x] SplineCurve foundation
+- [x] BezierCurve foundation
+- [x] NURBSCurve foundation
+- [x] PolylineCurve foundation
+- [x] CompositeCurve foundation
+- [x] HelixCurve foundation
+- [x] SpiralCurve foundation
+- [x] IntersectionCurve placeholder
+- [x] ProjectedCurve placeholder
+- [x] Curves reference existing ProductPart and Sketch data
+- [x] No MeshEntity ownership for curves
+- [x] ReferenceGeometryManager
+- [x] ReferencePlane
+- [x] ReferenceAxis
+- [x] ReferencePoint
+- [x] ReferenceCoordinateSystem
+- [x] ReferenceGeometryGroup
+- [x] ReferenceGeometryMetadata
+- [x] ReferenceGeometryStatistics
+- [x] Offset Plane metadata
+- [x] Mid Plane metadata
+- [x] Plane at Angle metadata
+- [x] Plane through 3 Points metadata
+- [x] Axis through Edge metadata
+- [x] Axis through Two Points metadata
+- [x] Point on Curve metadata
+- [x] Point on Face placeholder
+- [x] Point at Intersection placeholder
+- [x] ConstructionGeometryManager
+- [x] ConstructionPlane
+- [x] ConstructionAxis
+- [x] Product construction point metadata
+- [x] ConstructionSketchReference
+- [x] ConstructionMetadata
+- [x] ConstructionStatistics
+- [x] Construction visibility
+- [x] Construction grouping
+- [x] Construction locking
+- [x] Construction naming
+- [x] Construction references
+- [x] DependencyManager relationship storage
+- [x] FeatureManager compatibility
+- [x] SurfaceManager compatibility
+- [x] BodyManager compatibility
+- [x] RegenerationManager compatibility
+- [x] UpdateManager readiness
+- [x] Workspace integration
+- [x] Product Workspace integration
+- [x] Property Panel integration
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] ConstructionPlaneManager compatibility
+- [x] CoordinateSystemManager compatibility
+- [x] Undo / Redo through Product commands
+- [x] Project Save/Open persistence
+- [x] Renderer3D curve highlighting through existing product overlay path
+- [x] Renderer3D reference geometry highlighting through existing product overlay path
+- [x] Renderer3D construction geometry highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate MeshEntity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] Focused Batch H validation tests
+- [x] Related product/scene/project regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.3 - Batch I: Professional Assemblies Foundation
+
+- [x] AssemblyManager
+- [x] AssemblyDocument
+- [x] Assembly
+- [x] AssemblyMetadata
+- [x] AssemblyStatistics
+- [x] AssemblySettings
+- [x] Create Assembly
+- [x] Rename Assembly
+- [x] Delete Assembly
+- [x] Open Assembly
+- [x] Active Assembly
+- [x] Multiple assemblies per project
+- [x] AssemblyComponent
+- [x] AssemblyInstance
+- [x] ComponentOccurrence
+- [x] OccurrenceMetadata
+- [x] OccurrenceStatistics
+- [x] Insert Part
+- [x] Insert Subassembly
+- [x] Multiple instances
+- [x] Instance naming
+- [x] Instance visibility
+- [x] Instance suppression
+- [x] Instance locking
+- [x] Instance configuration placeholder
+- [x] Existing ProductPart references only
+- [x] No MeshEntity duplication
+- [x] MateManager
+- [x] Mate
+- [x] MateGroup
+- [x] MateDefinition
+- [x] MateMetadata
+- [x] MateStatistics
+- [x] Coincident mate relationship storage
+- [x] Concentric mate relationship storage
+- [x] Distance mate relationship storage
+- [x] Angle mate relationship storage
+- [x] Parallel mate relationship storage
+- [x] Perpendicular mate relationship storage
+- [x] Tangent mate relationship storage
+- [x] Lock mate relationship storage
+- [x] Limit placeholder
+- [x] Gear placeholder
+- [x] Cam placeholder
+- [x] No mate solving
+- [x] ExplodedViewManager
+- [x] ExplodedView
+- [x] ExplodedStep
+- [x] ExplodedMetadata
+- [x] ExplodedStatistics
+- [x] Step ordering
+- [x] Offsets
+- [x] Rotation placeholder
+- [x] Animation placeholder
+- [x] Exploded visibility
+- [x] ConfigurationManager
+- [x] AssemblyConfiguration
+- [x] ConfigurationMetadata
+- [x] ConfigurationStatistics
+- [x] Suppression states
+- [x] Visibility states
+- [x] Active configuration
+- [x] DependencyManager assembly relationship storage
+- [x] FeatureManager compatibility
+- [x] BodyManager compatibility
+- [x] SurfaceManager compatibility
+- [x] RegenerationManager compatibility
+- [x] UpdateManager compatibility
+- [x] Workspace integration
+- [x] Product Workspace integration
+- [x] Property Panel assembly display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through Product command system
+- [x] Project Save/Open persistence
+- [x] Renderer3D assembly highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate MeshEntity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] Focused Batch I validation tests
+- [x] Related product/scene/project regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.3 - Batch J: Professional Mechanical Library & Sheet Metal Foundation
+
+- [x] MechanicalLibraryManager
+- [x] MechanicalLibrary
+- [x] MechanicalCategory
+- [x] MechanicalComponent
+- [x] MechanicalFamily
+- [x] MechanicalStandard
+- [x] MechanicalMetadata reuse through existing Product Design metadata
+- [x] MechanicalStatistics
+- [x] Fasteners category support
+- [x] Bolts category support
+- [x] Nuts category support
+- [x] Washers category support
+- [x] Screws category support
+- [x] Pins category support
+- [x] Bearings category support
+- [x] Bushings category support
+- [x] Keys category support
+- [x] Retaining Rings category support
+- [x] Springs category support
+- [x] Gears category support
+- [x] Pulleys category support
+- [x] Belts category support
+- [x] Chains category support
+- [x] Sprockets category support
+- [x] Shafts category support
+- [x] Couplings category support
+- [x] Standard Hardware category support
+- [x] ISO placeholder
+- [x] DIN placeholder
+- [x] ANSI placeholder
+- [x] Future supplier library readiness
+- [x] Mechanical components reference ProductPart only
+- [x] SheetMetalManager
+- [x] SheetMetalPart
+- [x] SheetMetalBody
+- [x] SheetMetalMetadata
+- [x] SheetMetalStatistics
+- [x] Convert to Sheet Metal foundation
+- [x] Base Flange foundation
+- [x] Edge Flange foundation
+- [x] Bend foundation
+- [x] Hem placeholder
+- [x] Jog placeholder
+- [x] Corner Relief foundation
+- [x] Rip placeholder
+- [x] Unfold placeholder
+- [x] Flat Pattern metadata foundation
+- [x] Future bend table compatibility
+- [x] SheetMetalRuleManager
+- [x] SheetMetalRule
+- [x] SheetMetalGauge
+- [x] BendAllowance
+- [x] BendDeduction
+- [x] KFactor
+- [x] ReliefRule
+- [x] RuleMetadata
+- [x] RuleStatistics
+- [x] Material thickness
+- [x] Inside radius
+- [x] Default K-Factor
+- [x] Gauge table placeholder
+- [x] Relief settings
+- [x] DependencyManager mechanical and sheet metal relationship storage
+- [x] FeatureManager compatibility
+- [x] AssemblyManager compatibility
+- [x] BodyManager compatibility
+- [x] RegenerationManager compatibility
+- [x] UpdateManager compatibility
+- [x] Workspace integration
+- [x] Product Workspace integration
+- [x] Property Panel mechanical and sheet metal display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through Product command system
+- [x] Project Save/Open persistence
+- [x] Renderer3D mechanical library highlighting through existing product overlay path
+- [x] Renderer3D sheet metal highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate MeshEntity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] Focused Batch J validation tests
+- [x] Related product/scene/project regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.3 - Batch K: Professional Product Validation & Manufacturing Readiness
+
+- [x] ValidationManager
+- [x] ValidationSession
+- [x] ValidationRule
+- [x] ValidationResult
+- [x] ValidationCategory
+- [x] ValidationMetadata
+- [x] ValidationStatistics
+- [x] Create Validation Session
+- [x] Run Validation foundation
+- [x] Store Results
+- [x] Filter Results
+- [x] Validation History
+- [x] AnalysisManager
+- [x] Existing MassProperties reuse
+- [x] PhysicalProperties
+- [x] ManufacturingProperties
+- [x] AnalysisMetadata
+- [x] AnalysisStatistics
+- [x] Mass metadata
+- [x] Volume metadata
+- [x] Surface Area metadata
+- [x] Center of Gravity metadata
+- [x] Bounding Box metadata
+- [x] Principal Axes placeholder
+- [x] Moment of Inertia placeholder
+- [x] Material Usage metadata
+- [x] ManufacturingValidationManager
+- [x] ManufacturingRule
+- [x] ManufacturingReport
+- [x] Existing ManufacturingMetadata reuse
+- [x] ManufacturingStatistics
+- [x] Minimum Wall Thickness
+- [x] Draft Angle placeholder
+- [x] Undercut placeholder
+- [x] Sharp Edge Detection
+- [x] Small Feature Detection
+- [x] Hole Validation
+- [x] Thread Placeholder
+- [x] Tolerance Validation
+- [x] Material Compatibility
+- [x] Sheet Metal Rule Validation
+- [x] ProductReportManager
+- [x] ValidationReport
+- [x] AnalysisReport
+- [x] ReportMetadata
+- [x] ReportStatistics
+- [x] Summary Reports foundation
+- [x] Detailed Reports foundation
+- [x] CSV placeholder
+- [x] PDF placeholder
+- [x] DependencyManager validation relationship storage
+- [x] DependencyManager analysis relationship storage
+- [x] DependencyManager manufacturing relationship storage
+- [x] DependencyManager report relationship storage
+- [x] FeatureManager compatibility
+- [x] AssemblyManager compatibility
+- [x] SheetMetalManager compatibility
+- [x] BodyManager compatibility
+- [x] RegenerationManager compatibility
+- [x] UpdateManager compatibility
+- [x] Workspace integration
+- [x] Product Workspace integration
+- [x] Property Panel validation/manufacturing display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through Product command system
+- [x] Project Save/Open persistence
+- [x] Renderer3D validation highlighting through existing product overlay path
+- [x] Renderer3D analysis highlighting through existing product overlay path
+- [x] Renderer3D manufacturing issue highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate MeshEntity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] No FEA
+- [x] No CFD
+- [x] No Motion Simulation
+- [x] No CAM generation
+- [x] No manufacturing simulation
+- [x] Focused Batch K validation tests
+- [x] Related product/scene/project regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.3 - Batch L: Production Readiness, Performance Optimization & Architecture Audit
+
+- [x] Product Design architecture audit
+- [x] Workspace single-source-of-truth verification
+- [x] Renderer3D read-only verification
+- [x] MeshEntity-only geometry ownership verification
+- [x] ProductManager singleton product architecture verification
+- [x] AssemblyManager duplication audit
+- [x] MechanicalLibraryManager duplication audit
+- [x] SheetMetalManager duplication audit
+- [x] ValidationManager duplication audit
+- [x] AnalysisManager duplication audit
+- [x] ManufacturingValidationManager duplication audit
+- [x] ProductReportManager duplication audit
+- [x] Property Panel single-path audit
+- [x] Project persistence single-path audit
+- [x] Renderer3D product overlay path audit
+- [x] Command System path audit
+- [x] ProductPart reference ownership audit
+- [x] Assembly reference ownership audit
+- [x] SolidBody / SurfaceBody MeshEntity reference audit
+- [x] SheetMetalPart reference ownership audit
+- [x] MechanicalLibrary reference ownership audit
+- [x] Validation / Analysis / Report reference audit
+- [x] ProductManager performance review
+- [x] FeatureManager performance review
+- [x] DependencyManager performance review
+- [x] RegenerationManager performance review
+- [x] SurfaceManager performance review
+- [x] AssemblyManager performance review
+- [x] ValidationManager performance review
+- [x] Renderer3D read-only consumption review
+- [x] Project Save/Open performance review
+- [x] Selection synchronization review
+- [x] Property Panel refresh review
+- [x] Product Foundation regression tests
+- [x] Parameters / Materials / Mechanical Metadata regression tests
+- [x] Sketch / Constraints / Dimensions regression tests
+- [x] Feature Modeling regression tests
+- [x] Feature Editing / Dependency / Regeneration regression tests
+- [x] Fillet / Chamfer / Pattern regression tests
+- [x] Surface Modeling regression tests
+- [x] Curves / Reference Geometry / Construction regression tests
+- [x] Assemblies regression tests
+- [x] Mechanical Library / Sheet Metal regression tests
+- [x] Validation / Manufacturing Readiness regression tests
+- [x] Project Persistence regression tests
+- [x] Scene Persistence regression tests
+- [x] Renderer compatibility regression tests
+- [x] Selection / Display Preset / Property Panel compatibility tests
+- [x] Undo / Redo command regression tests
+- [x] main_v2.py launch validation
+- [x] ROADMAP.md updated after successful validation
+- [x] TASKS.md updated after successful validation
+- [x] CHANGELOG.md updated after successful validation
+- [x] SPECIFICATIONS.md updated after successful validation
+- [x] Release 1.3 marked COMPLETE
+
+## Release 1.4 - Batch H: Professional Machine Library Foundation
+
+- [x] MachineLibraryManager
+- [x] MachineLibrary
+- [x] MachineDefinition
+- [x] MachineProfile
+- [x] MachineMetadata
+- [x] MachineStatistics
+- [x] CNCMachine metadata profile
+- [x] RouterMachine metadata profile
+- [x] LaserMachine metadata profile
+- [x] PlasmaMachine metadata profile
+- [x] PrinterMachine profile-only placeholder
+- [x] GenericMachine metadata profile
+- [x] MachineCapabilities
+- [x] WorkEnvelope
+- [x] AxisConfiguration
+- [x] TravelLimits
+- [x] HomeConfiguration
+- [x] SpindleConfiguration reused and extended for machine RPM/feed metadata
+- [x] ToolChangerConfiguration
+- [x] RotaryAxisConfiguration placeholder
+- [x] CapabilityMetadata
+- [x] CapabilityStatistics
+- [x] MachineAssignment
+- [x] MachineProfileReference reused for CAM job/profile references
+- [x] MachineLimitReference
+- [x] ControllerReference
+- [x] FixtureReference
+- [x] MachineValidationMetadata
+- [x] CAM Job to Machine profile relationship storage
+- [x] Machine to Post Processor relationship storage
+- [x] Machine to Controller relationship storage
+- [x] Machine to Tool Library relationship storage
+- [x] Machine to Manufacturing Setup relationship storage
+- [x] DependencyManager integration for machine relationships only
+- [x] ProductManager workspace integration
+- [x] Property Panel machine library, machine definition and machine profile display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through AddMachineLibraryObjectCommand
+- [x] Project Save/Open persistence
+- [x] Renderer3D machine highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] Machine profiles reference existing CAM jobs, post processors, controllers, tool libraries and manufacturing setups only
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate MeshEntity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] No toolpath generation
+- [x] No G-Code generation
+- [x] No NC file generation
+- [x] No slicing
+- [x] No machine simulation
+- [x] Focused Batch H validation tests
+- [x] Related CAM regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.4 - Batch I: Professional Additive Manufacturing & 3D Printing Slicer Foundation
+
+- [x] SlicerManager
+- [x] SliceJob
+- [x] SliceOperation
+- [x] SliceProfile
+- [x] SliceMetadata
+- [x] SliceStatistics
+- [x] Multiple slice jobs
+- [x] Multiple slice profiles
+- [x] Job enable / disable metadata
+- [x] Profile assignment metadata
+- [x] Future background slicing placeholder
+- [x] FDMPrinterProfile through MachineLibraryManager
+- [x] SLAPrinterProfile through MachineLibraryManager
+- [x] SLSPrinterProfile through MachineLibraryManager
+- [x] DLPPrinterProfile placeholder through MachineLibraryManager
+- [x] BinderJetProfile placeholder through MachineLibraryManager
+- [x] MetalAMProfile placeholder through MachineLibraryManager
+- [x] PrinterProfileMetadata
+- [x] Nozzle diameter metadata
+- [x] Layer height range metadata
+- [x] Maximum temperature metadata
+- [x] Bed temperature metadata
+- [x] Build volume references MachineLibrary capabilities
+- [x] Firmware profile metadata
+- [x] Extruder count metadata
+- [x] Heated chamber placeholder
+- [x] Resin vat placeholder
+- [x] Laser power placeholder
+- [x] PrintProfile
+- [x] MaterialProfileReference
+- [x] QualityProfile
+- [x] LayerProfile
+- [x] InfillProfile
+- [x] SupportProfile
+- [x] AdhesionProfile
+- [x] CoolingProfile reused for additive cooling metadata
+- [x] RetractionProfile
+- [x] SeamProfile
+- [x] ShellProfile
+- [x] IroningProfile placeholder
+- [x] BridgeProfile
+- [x] LayerDefinition
+- [x] LayerCollection
+- [x] LayerRange
+- [x] LayerStatistics
+- [x] EstimatedPrintTime
+- [x] MaterialUsage
+- [x] FilamentEstimate
+- [x] ResinEstimate
+- [x] WeightEstimate
+- [x] CAMManager integration
+- [x] MachineLibraryManager integration
+- [x] PostProcessorManager integration
+- [x] ToolLibraryManager compatibility
+- [x] DependencyManager integration for relationship storage only
+- [x] ProductManager workspace integration
+- [x] Property Panel slice job, slice profile, slice operation and printer profile display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through AddSlicerObjectCommand
+- [x] Project Save/Open persistence
+- [x] Renderer3D additive metadata highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] Slicer data references existing ProductPart, MeshEntity, machine profiles and post processor profiles only
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate MeshEntity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] No sliced layer generation
+- [x] No extrusion path generation
+- [x] No support generation
+- [x] No toolpath generation
+- [x] No G-Code generation
+- [x] No simulation
+- [x] Focused Batch I validation tests
+- [x] Related CAM / Machine / Post / Tool regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.4 - Batch J: Professional Manufacturing Simulation Foundation
+
+- [x] SimulationManager
+- [x] SimulationJob
+- [x] SimulationProfile
+- [x] SimulationMetadata
+- [x] SimulationStatistics
+- [x] SimulationResult
+- [x] Multiple simulation jobs
+- [x] Simulation enable / disable metadata
+- [x] Simulation profile assignment
+- [x] Future background simulation placeholder
+- [x] CNCSimulation metadata profile
+- [x] RouterSimulation metadata profile
+- [x] LaserSimulation metadata profile
+- [x] PlasmaSimulation metadata profile
+- [x] PrintSimulation metadata profile
+- [x] GenericSimulation metadata profile
+- [x] CollisionMetadata
+- [x] MachineMotionMetadata
+- [x] ToolMotionMetadata
+- [x] HeadMotionMetadata
+- [x] StockRemovalMetadata
+- [x] LayerSimulationMetadata
+- [x] TravelMetadata
+- [x] FixtureMetadata
+- [x] SafetyMetadata
+- [x] SimulationEstimate
+- [x] SimulationValidation
+- [x] CollisionReference
+- [x] LimitReference
+- [x] ClearanceReference
+- [x] MachineReference
+- [x] ToolReference
+- [x] Existing FixtureReference reused
+- [x] StockReference
+- [x] WarningMetadata
+- [x] SimulationReadiness
+- [x] CAMManager integration
+- [x] SlicerManager integration
+- [x] MachineLibraryManager integration
+- [x] PostProcessorManager compatibility
+- [x] ToolLibraryManager integration
+- [x] DependencyManager integration for relationship storage only
+- [x] ProductManager workspace integration
+- [x] Property Panel simulation job and profile display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through AddSimulationObjectCommand
+- [x] Project Save/Open persistence
+- [x] Renderer3D simulation metadata highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] Simulation data references existing CAM jobs, Slice jobs, Machine profiles, Tool libraries, ProductPart and MeshEntity only
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate MeshEntity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] No machining simulation
+- [x] No printing simulation
+- [x] No physics simulation
+- [x] No collision algorithms
+- [x] No stock removal algorithms
+- [x] No slicing
+- [x] No toolpath generation
+- [x] No G-Code generation
+- [x] No animation
+- [x] Focused Batch J validation tests
+- [x] Related CAM / Slicer / Machine / Post / Tool regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.4 - Batch K: Professional Nesting & Fabrication Foundation
+
+- [x] NestingManager
+- [x] NestingJob
+- [x] NestingProfile
+- [x] NestingMetadata
+- [x] NestingStatistics
+- [x] NestingResult
+- [x] StockLibrary
+- [x] Reused existing StockDefinition naming without creating duplicate stock geometry
+- [x] StockProfile
+- [x] StockMaterialReference using EngineeringMaterialManager references
+- [x] StockMetadata
+- [x] FabricationPlan
+- [x] FabricationJob
+- [x] FabricationGroup
+- [x] CutList
+- [x] PartPlacement metadata
+- [x] StockAssignment metadata
+- [x] PanelLayout metadata
+- [x] NestingEstimate
+- [x] MaterialUsageEstimate
+- [x] WasteEstimate
+- [x] YieldEstimate
+- [x] PanelStatistics
+- [x] CutStatistics
+- [x] FabricationEstimate
+- [x] DependencyManager relationship storage for stock, nesting, fabrication, CAM, machine and setup references
+- [x] ProductManager integration
+- [x] Workspace-visible selection integration
+- [x] Property Panel integration
+- [x] Renderer3D compatibility through existing ProductManager visible objects
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through AddNestingObjectCommand
+- [x] Backward compatibility for projects without Batch K metadata
+- [x] No nesting algorithms
+- [x] No packing algorithms
+- [x] No layout optimization
+- [x] No cutting path generation
+- [x] No toolpath generation
+- [x] No G-Code generation
+- [x] No NC generation
+- [x] No slicing
+- [x] No simulation
+- [x] Focused Batch K validation tests
+- [x] Related CAM / Machine / Slicer / Simulation regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.4 - Batch L: Professional Manufacturing Validation & Job Management
+
+- [x] ManufacturingJobManager
+- [x] ManufacturingJob
+- [x] ManufacturingJobCollection
+- [x] ManufacturingJobProfile
+- [x] ManufacturingJobMetadata
+- [x] ManufacturingJobStatistics
+- [x] Existing ManufacturingValidationManager reused and extended
+- [x] ValidationProfile
+- [x] ManufacturingValidationResult
+- [x] ManufacturingValidationIssue
+- [x] ValidationWarning
+- [x] ValidationError
+- [x] Existing ValidationMetadata reused
+- [x] Existing ValidationStatistics reused
+- [x] SetupSheet
+- [x] SetupSheetCollection
+- [x] SetupInstruction
+- [x] ToolList
+- [x] FixtureList
+- [x] MaterialList
+- [x] MachineSetup
+- [x] OperationSummary
+- [x] Existing SetupMetadata reused
+- [x] ManufacturingDashboard
+- [x] ManufacturingBrowser
+- [x] ProductionQueue
+- [x] JobQueue
+- [x] JobHistory
+- [x] ProductionReport
+- [x] ShopFloorDocument
+- [x] ReadinessReport
+- [x] ManufacturingMetrics
+- [x] DependencyManager relationship storage for jobs, validation, setup sheets and reports
+- [x] ProductManager integration
+- [x] Workspace-visible selection integration
+- [x] Property Panel integration
+- [x] Renderer3D compatibility through existing ProductManager visible objects
+- [x] Project Save/Open persistence
+- [x] Undo / Redo through AddManufacturingJobObjectCommand and existing AddManufacturingValidationCommand
+- [x] Backward compatibility for projects without Batch L metadata
+- [x] No toolpath generation
+- [x] No G-Code generation
+- [x] No NC generation
+- [x] No collision algorithms
+- [x] No simulation
+- [x] No slicing
+- [x] No nesting optimization
+- [x] Focused Batch L validation tests
+- [x] Related CAM / Machine / Slicer / Simulation / Nesting regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.4 - Batch A: Professional CAM Foundation
+
+- [x] CAMManager
+- [x] CAMDocument
+- [x] CAMJob
+- [x] CAMOperation alias foundation
+- [x] CAMSetup alias foundation
+- [x] CAMMetadata
+- [x] CAMStatistics
+- [x] Create CAM Job
+- [x] Rename CAM Job
+- [x] Delete CAM Job
+- [x] Activate CAM Job
+- [x] Multiple CAM jobs per project
+- [x] ManufacturingSetup
+- [x] StockDefinition
+- [x] WorkCoordinateSystem
+- [x] FixtureDefinition placeholder
+- [x] OriginDefinition
+- [x] SetupMetadata
+- [x] SetupStatistics
+- [x] Stock Box support
+- [x] Stock Cylinder placeholder support
+- [x] Stock Offset metadata
+- [x] Work Origin metadata
+- [x] Machine Origin placeholder
+- [x] Fixture placeholder
+- [x] Material assignment reference
+- [x] OperationManager
+- [x] OperationDefinition
+- [x] OperationParameters
+- [x] OperationMetadata
+- [x] OperationStatistics
+- [x] Facing operation definition placeholder
+- [x] Pocket operation definition placeholder
+- [x] Contour operation definition placeholder
+- [x] Drill operation definition placeholder
+- [x] Adaptive operation definition placeholder
+- [x] Parallel operation definition placeholder
+- [x] Waterline operation definition placeholder
+- [x] Laser operation definition placeholder
+- [x] Plasma operation definition placeholder
+- [x] Router operation definition placeholder
+- [x] 3D Printing operation definition placeholder
+- [x] DependencyManager integration for CAM job/setup/operation references
+- [x] ProductManager workspace integration
+- [x] Property Panel CAM metadata display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through AddCAMObjectCommand
+- [x] Project Save/Open persistence
+- [x] Renderer3D stock/setup/operation highlighting through existing product overlay path
+- [x] Renderer3D remains read-only
+- [x] Existing MeshEntity geometry ownership preserved
+- [x] CAM references existing ProductPart, Body, Surface, Assembly and MeshEntity data only
+- [x] No duplicate Workspace
+- [x] No duplicate Entity system
+- [x] No duplicate MeshEntity system
+- [x] No duplicate Property Panel
+- [x] No alternate render path
+- [x] No toolpath generation
+- [x] No G-Code generation
+- [x] No slicing
+- [x] No machine simulation
+- [x] Focused Batch A validation tests
+- [x] Related product/scene/project regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.4 - Batch M: Production Readiness, Performance Optimization & Architecture Audit
+
+- [x] Complete Manufacturing architecture audit
+- [x] Workspace single source of truth verified
+- [x] ProductManager manufacturing ownership verified
+- [x] CAMManager reuse verified
+- [x] ToolLibraryManager reuse verified
+- [x] MachineLibraryManager reuse verified
+- [x] PostProcessorManager reuse verified
+- [x] SlicerManager reuse verified
+- [x] SimulationManager reuse verified
+- [x] NestingManager reuse verified
+- [x] ManufacturingJobManager reuse verified
+- [x] ManufacturingValidationManager reuse verified
+- [x] DependencyManager relationship-storage integration verified
+- [x] SelectionManager integration verified
+- [x] LayerManager integration verified
+- [x] Renderer2D and Renderer3D read-only status verified
+- [x] MeshEntity sole geometry ownership verified
+- [x] Command System integration verified
+- [x] Project Persistence integration verified
+- [x] Property Panel integration verified
+- [x] DisplayPresetManager and ViewManager compatibility verified
+- [x] No duplicate managers found
+- [x] No duplicate geometry ownership found
+- [x] No duplicate render paths found
+- [x] No duplicate persistence systems found
+- [x] No circular ownership found
+- [x] No hidden architecture violations found
+- [x] Reference lookup paths audited
+- [x] Manager indexing and dictionary access audited
+- [x] Serialization performance audited
+- [x] Undo/Redo performance audited
+- [x] Project loading and saving audited
+- [x] Renderer refreshes audited
+- [x] Selection refreshes audited
+- [x] Property refreshes audited
+- [x] Manufacturing reference integrity verified
+- [x] Manufacturing dependency integrity verified
+- [x] Manufacturing persistence integrity verified
+- [x] Manufacturing command integrity verified
+- [x] No orphan references found in validated manufacturing paths
+- [x] No duplicate IDs found in validated manufacturing paths
+- [x] No invalid manufacturing relationships found in validated paths
+- [x] Manufacturing metadata consistency verified
+- [x] Complete Release 1.4 manufacturing regression suite passed
+- [x] main_v2.py launch validation passed
+- [x] ROADMAP.md updated
+- [x] TASKS.md updated
+- [x] CHANGELOG.md updated
+- [x] SPECIFICATIONS.md updated
+- [x] Release 1.4 marked COMPLETE
+
+## Release 1.5 - Batch A: Professional Parametric Engine Foundation
+
+- [x] ParametricEngine metadata foundation
+- [x] ParametricManager as a ProductManager-scoped helper
+- [x] ParametricDocument metadata
+- [x] ParametricWorkspace metadata without duplicating Workspace
+- [x] ParametricSession metadata
+- [x] ParametricContext relationship storage
+- [x] ParametricMetadata
+- [x] ParametricStatistics
+- [x] EngineState
+- [x] SessionState
+- [x] EvaluationState placeholder
+- [x] DirtyState
+- [x] FreezeState
+- [x] EngineFlags
+- [x] Multiple parametric documents
+- [x] Multiple parametric sessions
+- [x] ProductDocument references
+- [x] ProductPart references
+- [x] Assembly references
+- [x] Feature Tree references
+- [x] Body references
+- [x] Surface references
+- [x] Curve references
+- [x] MeshEntity references
+- [x] Existing DependencyManager relationship storage integration
+- [x] Existing ParameterManager reuse preserved
+- [x] Workspace integration through ProductManager
+- [x] Property Panel parametric metadata display
+- [x] SelectionManager compatibility
+- [x] LayerManager compatibility
+- [x] Undo / Redo through AddParametricObjectCommand
+- [x] Project Save/Open persistence
+- [x] Renderer2D read-only status preserved
+- [x] Renderer3D parametric highlighting through existing ProductManager visible-object path
+- [x] Renderer3D remains read-only
+- [x] MeshEntity geometry ownership preserved
+- [x] No solver
+- [x] No node graph
+- [x] No parameter evaluation
+- [x] No dependency solving
+- [x] No geometry generation
+- [x] No MeshEntity modification
+- [x] No duplicate Workspace
+- [x] No duplicate DependencyManager
+- [x] No duplicate Parameter system
+- [x] No duplicate render path
+- [x] Focused Batch A validation tests
+- [x] Related Product/parametric regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.5 - Batch B: Professional Parameter Architecture, Expression Metadata & Binding Foundation
+
+- [x] Existing ParameterManager extended
+- [x] Parameter metadata foundation
+- [x] GlobalParameter metadata
+- [x] LocalParameter metadata
+- [x] DocumentParameter metadata
+- [x] FeatureParameter metadata
+- [x] ConfigurationParameter metadata
+- [x] ReferenceParameter metadata
+- [x] ComputedParameter metadata only
+- [x] ParameterGroup compatibility preserved
+- [x] ParameterCategory metadata
+- [x] ParameterStatistics extended
+- [x] Boolean parameter type metadata support
+- [x] Integer parameter type metadata support
+- [x] Float parameter type metadata support
+- [x] Double parameter type metadata support
+- [x] Length parameter type metadata support
+- [x] Angle parameter type metadata support
+- [x] Distance parameter type metadata support
+- [x] Area parameter type metadata support
+- [x] Volume parameter type metadata support
+- [x] Mass parameter type metadata support
+- [x] Density parameter type metadata support
+- [x] String parameter type metadata support
+- [x] Color parameter type metadata support
+- [x] Material Reference parameter type metadata support
+- [x] Object Reference parameter type metadata support
+- [x] Enum parameter type metadata support
+- [x] List parameter type metadata support
+- [x] Matrix metadata placeholder
+- [x] Vector metadata placeholder
+- [x] Transform metadata placeholder
+- [x] Expression metadata
+- [x] ExpressionTree placeholder metadata
+- [x] ExpressionReference metadata
+- [x] ExpressionBinding metadata
+- [x] ExpressionContext metadata
+- [x] ExpressionStatistics
+- [x] ExpressionFlags
+- [x] ExpressionHistory metadata
+- [x] Expression text storage
+- [x] Referenced parameter storage
+- [x] Referenced object storage
+- [x] Units metadata
+- [x] Validation state metadata
+- [x] Evaluation state placeholder metadata
+- [x] Parameter to Parameter binding metadata
+- [x] Parameter to Feature binding metadata
+- [x] Parameter to Body binding metadata
+- [x] Parameter to Surface binding metadata
+- [x] Parameter to Curve binding metadata
+- [x] Parameter to Assembly binding metadata
+- [x] Parameter to Document binding metadata
+- [x] Parameter to Configuration binding metadata
+- [x] Parameter to Expression binding metadata
+- [x] Existing DependencyManager relationship storage integration
+- [x] Future solver reference metadata
+- [x] Future graph reference metadata
+- [x] ParametricEngine integration
+- [x] Workspace integration through ProductManager
+- [x] Property Panel parameter/expression display
+- [x] SelectionManager compatibility
+- [x] Undo / Redo through AddParametricParameterCommand
+- [x] Project Save/Open persistence
+- [x] Renderer2D read-only status preserved
+- [x] Renderer3D parameter highlighting through existing ProductManager visible-object path
+- [x] Renderer3D remains read-only
+- [x] MeshEntity geometry ownership preserved
+- [x] No parameter evaluation
+- [x] No expression execution
+- [x] No dependency solving
+- [x] No graph algorithms
+- [x] No geometry generation
+- [x] No MeshEntity modification
+- [x] No duplicate ParameterManager
+- [x] No duplicate DependencyManager
+- [x] No duplicate Workspace
+- [x] No duplicate render path
+- [x] Focused Batch B validation tests
+- [x] Related parameter and parametric regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.5 - Batch C: Professional Dependency Graph Metadata & Relationship Topology Foundation
+
+- [x] Existing DependencyManager extended
+- [x] DependencyGraph metadata foundation
+- [x] DependencyNode metadata extended
+- [x] DependencyEdge metadata extended
+- [x] DependencyPath metadata
+- [x] DependencyTopology metadata
+- [x] DependencyMetadata reused
+- [x] DependencyStatistics extended
+- [x] DependencyFlags metadata
+- [x] Parameter to Parameter relationship metadata
+- [x] Parameter to Expression relationship metadata
+- [x] Expression to Parameter relationship metadata
+- [x] Feature to Parameter relationship metadata
+- [x] Feature to Feature relationship metadata
+- [x] Body to Feature relationship metadata
+- [x] Surface to Feature relationship metadata
+- [x] Curve to Feature relationship metadata
+- [x] Assembly to Part relationship metadata
+- [x] Document to Configuration relationship metadata
+- [x] Future Node to Parameter placeholder metadata
+- [x] Future Node to Geometry placeholder metadata
+- [x] Parent relationship metadata
+- [x] Child relationship metadata
+- [x] Incoming edge metadata
+- [x] Outgoing edge metadata
+- [x] Dependency level metadata
+- [x] Graph group metadata
+- [x] Graph identifier metadata
+- [x] Traversal metadata storage
+- [x] Cycle detection status metadata only
+- [x] Dirty state metadata only
+- [x] Evaluation order placeholder metadata
+- [x] Modified object metadata
+- [x] Affected object metadata
+- [x] Dirty reference metadata
+- [x] Pending evaluation metadata
+- [x] Update request metadata
+- [x] Regeneration request metadata
+- [x] Timestamp history metadata
+- [x] Version metadata
+- [x] Existing ParameterManager integration preserved
+- [x] ParametricEngine integration preserved
+- [x] Workspace integration through ProductManager
+- [x] Property Panel dependency graph display
+- [x] SelectionManager compatibility
+- [x] Undo / Redo through AddDependencyGraphCommand
+- [x] Project Save/Open persistence
+- [x] Renderer2D read-only status preserved
+- [x] Renderer3D dependency highlighting through existing ProductManager visible-object path
+- [x] Renderer3D remains read-only
+- [x] MeshEntity geometry ownership preserved
+- [x] No dependency solving
+- [x] No graph traversal
+- [x] No cycle detection algorithm
+- [x] No evaluation order execution
+- [x] No parameter propagation
+- [x] No geometry generation
+- [x] No MeshEntity modification
+- [x] No duplicate DependencyManager
+- [x] No duplicate ParameterManager
+- [x] No duplicate Workspace
+- [x] No duplicate render path
+- [x] Focused Batch C validation tests
+- [x] Related dependency, parameter and parametric regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.5 - Batch D: Professional Live Solver Foundation
+
+- [x] ParametricEngine extended with LiveSolver metadata
+- [x] LiveSolver metadata foundation
+- [x] SolverSession metadata
+- [x] SolverContext metadata
+- [x] SolverState metadata
+- [x] SolverStatistics metadata
+- [x] SolverFlags metadata
+- [x] SolverMetadata metadata
+- [x] SolverHistory metadata
+- [x] SolverQueue metadata
+- [x] No SolverManager introduced
+- [x] EvaluationRequest metadata
+- [x] EvaluationBatch metadata
+- [x] EvaluationContext metadata
+- [x] EvaluationResult metadata
+- [x] EvaluationStatistics metadata
+- [x] EvaluationHistory metadata
+- [x] EvaluationFlags metadata
+- [x] EvaluationPriority metadata
+- [x] EvaluationGroup metadata
+- [x] Waiting state metadata
+- [x] Queued state metadata
+- [x] Evaluating state metadata
+- [x] Completed state metadata
+- [x] Skipped state metadata
+- [x] Blocked state metadata
+- [x] Failed state metadata
+- [x] Dirty state metadata
+- [x] Clean state metadata
+- [x] Frozen state metadata
+- [x] Suppressed state metadata
+- [x] Pending state metadata
+- [x] Evaluation Queue metadata
+- [x] Update Queue metadata
+- [x] Regeneration Queue metadata
+- [x] Execution Queue placeholder metadata
+- [x] Priority Queue metadata
+- [x] Timestamp Queue metadata
+- [x] Grouped Request metadata
+- [x] Batch Request metadata
+- [x] Cancellation State metadata
+- [x] Pause State metadata
+- [x] Resume State metadata
+- [x] Parameter Changed metadata
+- [x] Feature Changed metadata
+- [x] Body Changed metadata
+- [x] Assembly Changed metadata
+- [x] Configuration Changed metadata
+- [x] Workspace Changed metadata
+- [x] Pending Updates metadata
+- [x] Affected Objects metadata
+- [x] Affected Parameters metadata
+- [x] Affected Features metadata
+- [x] Affected Assemblies metadata
+- [x] Affected Documents metadata
+- [x] Affected Configurations metadata
+- [x] Visual Node Graph extension placeholders
+- [x] CAD Node extension placeholders
+- [x] BIM Node extension placeholders
+- [x] Manufacturing Node extension placeholders
+- [x] AI Node extension placeholders
+- [x] Simulation extension placeholders
+- [x] Live Preview extension placeholders
+- [x] Geometry Regeneration extension placeholders
+- [x] Existing DependencyManager integration preserved
+- [x] Existing ParameterManager integration preserved
+- [x] Workspace integration through ProductManager
+- [x] Property Panel live solver display
+- [x] SelectionManager compatibility
+- [x] Undo / Redo through AddLiveSolverCommand
+- [x] Project Save/Open persistence
+- [x] Renderer2D read-only status preserved
+- [x] Renderer3D live solver highlighting through existing ProductManager visible-object path
+- [x] Renderer3D remains read-only
+- [x] MeshEntity geometry ownership preserved
+- [x] No dependency traversal algorithm
+- [x] No expression execution
+- [x] No parameter solving
+- [x] No geometry generation
+- [x] No feature regeneration
+- [x] No BIM regeneration
+- [x] No manufacturing execution
+- [x] No node execution
+- [x] No MeshEntity mutation
+- [x] No duplicate managers
+- [x] No duplicate Workspace
+- [x] No duplicate render path
+- [x] Focused Batch D validation tests
+- [x] Related solver, dependency, parameter and parametric regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.5 - Batch E: Professional Visual Node Graph Foundation
+
+- [x] ParametricEngine extended with Visual Node Graph metadata
+- [x] VisualNodeGraph metadata foundation
+- [x] VisualNodeGraphDocument metadata
+- [x] VisualNodeGraphWorkspace metadata
+- [x] VisualNodeGraphSession metadata
+- [x] VisualNodeGraphMetadata
+- [x] VisualNodeGraphStatistics
+- [x] VisualNodeGraphFlags
+- [x] VisualNodeGraphHistory
+- [x] No NodeManager introduced
+- [x] VisualNode metadata
+- [x] NodeDefinition metadata
+- [x] NodeCategory metadata
+- [x] NodeType metadata
+- [x] NodeMetadata
+- [x] NodeFlags
+- [x] NodeStatistics
+- [x] NodeState
+- [x] NodeHistory
+- [x] Unique Node Identifier metadata
+- [x] Display Name metadata
+- [x] Description metadata
+- [x] Version metadata
+- [x] Author metadata
+- [x] Tags metadata
+- [x] InputPort metadata
+- [x] OutputPort metadata
+- [x] PortMetadata
+- [x] PortFlags
+- [x] PortStatistics
+- [x] PortDirection metadata
+- [x] PortCapacity metadata
+- [x] PortVisibility metadata
+- [x] PortGrouping metadata
+- [x] Placeholder Data Type metadata
+- [x] NodeConnection metadata
+- [x] ConnectionMetadata
+- [x] ConnectionFlags
+- [x] ConnectionStatistics
+- [x] Source Node metadata
+- [x] Destination Node metadata
+- [x] Source Port metadata
+- [x] Destination Port metadata
+- [x] Connection Group metadata
+- [x] Connection Identifier metadata
+- [x] Validation Status metadata only
+- [x] Node Groups metadata
+- [x] Frames metadata
+- [x] Comments metadata
+- [x] Bookmarks metadata
+- [x] Graph Categories metadata
+- [x] Graph Templates metadata
+- [x] Graph Versions metadata
+- [x] Graph Statistics metadata
+- [x] Graph History metadata
+- [x] Graph Tags metadata
+- [x] CAD Node extension placeholders
+- [x] BIM Node extension placeholders
+- [x] Manufacturing Node extension placeholders
+- [x] Simulation Node extension placeholders
+- [x] AI Node extension placeholders
+- [x] Python Script Node extension placeholders
+- [x] Custom Plugin Node extension placeholders
+- [x] Live Preview extension placeholders
+- [x] Node Execution extension placeholders
+- [x] Geometry Regeneration extension placeholders
+- [x] Existing LiveSolver integration preserved
+- [x] Existing DependencyManager integration preserved
+- [x] Existing ParameterManager integration preserved
+- [x] Workspace integration through ProductManager
+- [x] Property Panel visual node graph display
+- [x] SelectionManager compatibility
+- [x] Undo / Redo through AddVisualNodeGraphCommand
+- [x] Project Save/Open persistence
+- [x] Renderer2D read-only status preserved
+- [x] Renderer3D visual node graph highlighting through existing ProductManager visible-object path
+- [x] Renderer3D remains read-only
+- [x] MeshEntity geometry ownership preserved
+- [x] No node execution
+- [x] No graph evaluation
+- [x] No dependency traversal
+- [x] No expression execution
+- [x] No parameter solving
+- [x] No geometry generation
+- [x] No feature regeneration
+- [x] No BIM regeneration
+- [x] No manufacturing execution
+- [x] No AI execution
+- [x] No MeshEntity mutation
+- [x] No duplicate managers
+- [x] No duplicate Workspace
+- [x] No duplicate render path
+- [x] Focused Batch E validation tests
+- [x] Related visual node graph, solver, dependency, parameter and parametric regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.5 - Batch F: Professional Data Trees & Data Flow Foundation
+
+- [x] ParametricEngine extended with Data Tree metadata
+- [x] DataTree metadata foundation
+- [x] DataBranch metadata
+- [x] DataPath metadata
+- [x] DataItem metadata
+- [x] DataContainer metadata
+- [x] DataFlow metadata
+- [x] DataTreeMetadata
+- [x] DataTreeFlags
+- [x] DataTreeStatistics
+- [x] DataTreeHistory
+- [x] Branch identifier metadata
+- [x] Branch parent metadata
+- [x] Branch child metadata
+- [x] Branch depth metadata
+- [x] Branch index metadata
+- [x] Branch tags metadata
+- [x] Data identifier metadata
+- [x] Data type placeholder metadata
+- [x] Source node reference metadata
+- [x] Destination node reference metadata
+- [x] Parameter reference metadata
+- [x] Dependency reference metadata
+- [x] Feature reference metadata
+- [x] Body reference metadata
+- [x] Assembly reference metadata
+- [x] Document reference metadata
+- [x] Workspace reference metadata
+- [x] Object reference metadata
+- [x] MeshEntity reference metadata
+- [x] Data source metadata
+- [x] Data destination metadata
+- [x] Flow identifier metadata
+- [x] Flow direction metadata
+- [x] Flow priority metadata
+- [x] Flow group metadata
+- [x] Flow channel metadata
+- [x] Flow tags metadata
+- [x] Flow history metadata
+- [x] Flow validation status metadata only
+- [x] Visual Node Graph integration through references only
+- [x] Existing LiveSolver integration preserved
+- [x] Existing DependencyManager integration preserved
+- [x] Existing ParameterManager integration preserved
+- [x] Workspace integration through ProductManager
+- [x] Property Panel Data Tree display
+- [x] SelectionManager compatibility
+- [x] Undo / Redo through AddDataTreeCommand
+- [x] Project Save/Open persistence
+- [x] Renderer2D read-only status preserved
+- [x] Renderer3D Data Tree highlighting through existing ProductManager visible-object path
+- [x] Renderer3D remains read-only
+- [x] MeshEntity geometry ownership preserved
+- [x] No DataTreeManager introduced
+- [x] No node execution
+- [x] No graph evaluation
+- [x] No solver execution
+- [x] No dependency traversal
+- [x] No expression execution
+- [x] No parameter solving
+- [x] No geometry generation
+- [x] No feature regeneration
+- [x] No BIM regeneration
+- [x] No manufacturing execution
+- [x] No AI execution
+- [x] No MeshEntity mutation
+- [x] No duplicate managers
+- [x] No duplicate Workspace
+- [x] No duplicate render path
+- [x] Focused Batch F validation tests
+- [x] Related data tree, visual node graph, solver, dependency, parameter and parametric regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.5 - Batch G: Professional CAD Nodes Foundation
+
+- [x] ParametricEngine extended with CAD Node metadata
+- [x] CADNodeLibrary metadata
+- [x] CADNodeCategory metadata
+- [x] CADNodeDefinition metadata
+- [x] CADNodeMetadata
+- [x] CADNodeFlags
+- [x] CADNodeStatistics
+- [x] CADNodeHistory
+- [x] CADNodeVersion
+- [x] CADNodeTemplate
+- [x] No CADNodeManager introduced
+- [x] Sketch Node metadata definitions
+- [x] Point Node metadata
+- [x] Line Node metadata
+- [x] Polyline Node metadata placeholder
+- [x] Arc Node metadata placeholder
+- [x] Circle Node metadata
+- [x] Ellipse Node metadata placeholder
+- [x] Rectangle Node metadata placeholder
+- [x] Polygon Node metadata placeholder
+- [x] Spline Node metadata placeholder
+- [x] Bezier Node metadata placeholder
+- [x] Construction Geometry Node metadata placeholder
+- [x] Reference Geometry Node metadata placeholder
+- [x] Profile Node metadata placeholder
+- [x] Sketch Container Node metadata placeholder
+- [x] Extrude Node metadata
+- [x] Revolve Node metadata placeholder
+- [x] Sweep Node metadata
+- [x] Loft Node metadata placeholder
+- [x] Boundary Node metadata placeholder
+- [x] Thicken Node metadata placeholder
+- [x] Shell Node metadata placeholder
+- [x] Offset Node metadata placeholder
+- [x] Draft Node metadata placeholder
+- [x] Boolean Node metadata placeholder
+- [x] Fillet Node metadata
+- [x] Chamfer Node metadata placeholder
+- [x] Mirror Node metadata placeholder
+- [x] Pattern Node metadata placeholder
+- [x] Transform Node metadata placeholder
+- [x] Scale Node metadata placeholder
+- [x] Move Node metadata placeholder
+- [x] Rotate Node metadata placeholder
+- [x] Parameter reference metadata
+- [x] Expression reference metadata
+- [x] Dependency Graph reference metadata
+- [x] Data Tree reference metadata
+- [x] Input Port reference metadata
+- [x] Output Port reference metadata
+- [x] LiveSolver reference metadata
+- [x] FeatureManager reference metadata
+- [x] BodyManager reference metadata
+- [x] SurfaceManager reference metadata
+- [x] CurveManager reference metadata
+- [x] AssemblyManager reference metadata
+- [x] ProductManager reference metadata
+- [x] Workspace reference metadata
+- [x] MeshEntity reference metadata only
+- [x] Node name metadata
+- [x] Display name metadata
+- [x] Description metadata
+- [x] Version metadata
+- [x] Category metadata
+- [x] Subcategory metadata
+- [x] Icon placeholder metadata
+- [x] Color placeholder metadata
+- [x] Input definition metadata
+- [x] Output definition metadata
+- [x] Parameter definition metadata
+- [x] Default value metadata
+- [x] Visibility metadata
+- [x] Tags metadata
+- [x] Author metadata
+- [x] Documentation placeholder metadata
+- [x] Execution status metadata only
+- [x] Existing VisualNodeGraph integration preserved
+- [x] Existing DataTree integration preserved
+- [x] Existing LiveSolver integration preserved
+- [x] Existing DependencyManager integration preserved
+- [x] Existing ParameterManager integration preserved
+- [x] Workspace integration through ProductManager
+- [x] Property Panel CAD Node display
+- [x] SelectionManager compatibility
+- [x] Undo / Redo through AddCADNodeCommand
+- [x] Project Save/Open persistence
+- [x] Renderer2D read-only status preserved
+- [x] Renderer3D CAD Node highlighting through existing ProductManager visible-object path
+- [x] Renderer3D remains read-only
+- [x] MeshEntity geometry ownership preserved
+- [x] No node execution
+- [x] No graph execution
+- [x] No solver execution
+- [x] No sketch solving
+- [x] No constraint solving
+- [x] No feature execution
+- [x] No geometry generation
+- [x] No B-Rep generation
+- [x] No MeshEntity mutation
+- [x] No duplicate managers
+- [x] No duplicate Workspace
+- [x] No duplicate render path
+- [x] Focused Batch G validation tests
+- [x] Related CAD node, data tree, visual node graph, solver, dependency, parameter and parametric regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.5 - Batch H: Professional BIM Nodes Foundation
+
+- [x] ParametricEngine extended with BIM Node metadata
+- [x] BIMNodeLibrary metadata
+- [x] BIMNodeCategory metadata
+- [x] BIMNodeDefinition metadata
+- [x] BIMNodeMetadata
+- [x] BIMNodeFlags
+- [x] BIMNodeStatistics
+- [x] BIMNodeHistory
+- [x] BIMNodeVersion
+- [x] BIMNodeTemplate
+- [x] No BIMNodeManager introduced
+- [x] Project Node metadata
+- [x] Site Node metadata placeholder
+- [x] Building Node metadata placeholder
+- [x] Level Node metadata
+- [x] Grid Node metadata placeholder
+- [x] Axis Node metadata placeholder
+- [x] Reference Plane Node metadata placeholder
+- [x] Room Node metadata placeholder
+- [x] Space Node metadata placeholder
+- [x] Zone Node metadata placeholder
+- [x] Wall Node metadata
+- [x] Curtain Wall Node metadata placeholder
+- [x] Floor Node metadata placeholder
+- [x] Roof Node metadata placeholder
+- [x] Ceiling Node metadata placeholder
+- [x] Foundation Node metadata placeholder
+- [x] Column Node metadata placeholder
+- [x] Beam Node metadata placeholder
+- [x] Brace Node metadata placeholder
+- [x] Slab Node metadata placeholder
+- [x] Door Node metadata
+- [x] Window Node metadata placeholder
+- [x] Opening Node metadata placeholder
+- [x] Stair Node metadata placeholder
+- [x] Ramp Node metadata placeholder
+- [x] Railing Node metadata placeholder
+- [x] Balcony Node metadata placeholder
+- [x] Facade Node metadata placeholder
+- [x] Material Node metadata placeholder
+- [x] Layer Node metadata placeholder
+- [x] Assembly Node metadata placeholder
+- [x] Family Node metadata placeholder
+- [x] Type Node metadata placeholder
+- [x] Instance Node metadata placeholder
+- [x] Classification Node metadata placeholder
+- [x] Property Set Node metadata placeholder
+- [x] Parameter Set Node metadata placeholder
+- [x] Schedule Node metadata
+- [x] Quantity Node metadata
+- [x] Cost Node metadata placeholder
+- [x] Phase Node metadata placeholder
+- [x] Workset Node metadata placeholder
+- [x] View Node metadata placeholder
+- [x] Sheet Node metadata placeholder
+- [x] Annotation Node metadata placeholder
+- [x] Tag Node metadata placeholder
+- [x] Dimension Node metadata placeholder
+- [x] Parameter reference metadata
+- [x] Expression reference metadata
+- [x] Dependency Graph reference metadata
+- [x] Data Tree reference metadata
+- [x] Visual Node reference metadata
+- [x] CAD Node reference metadata
+- [x] LiveSolver reference metadata
+- [x] FeatureManager reference metadata
+- [x] BodyManager reference metadata
+- [x] SurfaceManager reference metadata
+- [x] CurveManager reference metadata
+- [x] AssemblyManager reference metadata
+- [x] ProductManager reference metadata
+- [x] Workspace reference metadata
+- [x] MeshEntity reference metadata only
+- [x] Node name metadata
+- [x] Display name metadata
+- [x] Description metadata
+- [x] Version metadata
+- [x] Category metadata
+- [x] Discipline metadata
+- [x] Classification metadata
+- [x] Default parameter metadata
+- [x] Property set metadata
+- [x] Input definition metadata
+- [x] Output definition metadata
+- [x] Visibility metadata
+- [x] Documentation placeholder metadata
+- [x] Author metadata
+- [x] Tags metadata
+- [x] Execution status metadata only
+- [x] Existing VisualNodeGraph integration preserved
+- [x] Existing CAD Node integration preserved
+- [x] Existing DataTree integration preserved
+- [x] Existing LiveSolver integration preserved
+- [x] Existing DependencyManager integration preserved
+- [x] Existing ParameterManager integration preserved
+- [x] Workspace integration through ProductManager
+- [x] Property Panel BIM Node display
+- [x] SelectionManager compatibility
+- [x] Undo / Redo through AddBIMNodeCommand
+- [x] Project Save/Open persistence
+- [x] Renderer2D read-only status preserved
+- [x] Renderer3D BIM Node highlighting through existing ProductManager visible-object path
+- [x] Renderer3D remains read-only
+- [x] MeshEntity geometry ownership preserved
+- [x] No node execution
+- [x] No graph execution
+- [x] No solver execution
+- [x] No BIM generation
+- [x] No IFC generation
+- [x] No quantity calculations
+- [x] No scheduling
+- [x] No geometry generation
+- [x] No MeshEntity mutation
+- [x] No duplicate managers
+- [x] No duplicate Workspace
+- [x] No duplicate render path
+- [x] Focused Batch H validation tests
+- [x] Related BIM node, CAD node, data tree, visual node graph, solver, dependency, parameter and parametric regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.5 - Batch I: Professional Manufacturing Nodes Foundation
+
+- [x] ParametricEngine extended with Manufacturing Node metadata
+- [x] ManufacturingNodeLibrary metadata
+- [x] ManufacturingNodeCategory metadata
+- [x] ManufacturingNodeDefinition metadata
+- [x] ManufacturingNodeMetadata
+- [x] ManufacturingNodeFlags
+- [x] ManufacturingNodeStatistics
+- [x] ManufacturingNodeHistory
+- [x] ManufacturingNodeVersion
+- [x] ManufacturingNodeTemplate
+- [x] No ManufacturingNodeManager introduced
+- [x] Machine Node metadata
+- [x] Machine Configuration Node metadata placeholder
+- [x] Machine Setup Node metadata placeholder
+- [x] Machine Coordinate System Node metadata placeholder
+- [x] Stock Node metadata placeholder
+- [x] Fixture Node metadata placeholder
+- [x] Clamp Node metadata placeholder
+- [x] Tool Library Node metadata placeholder
+- [x] Tool Holder Node metadata placeholder
+- [x] Spindle Node metadata placeholder
+- [x] Axis Configuration Node metadata placeholder
+- [x] Work Offset Node metadata placeholder
+- [x] Facing Node metadata
+- [x] Pocket Node metadata
+- [x] Contour Node metadata placeholder
+- [x] Adaptive Clearing Node metadata placeholder
+- [x] Slot Node metadata placeholder
+- [x] Drilling Node metadata placeholder
+- [x] Boring Node metadata placeholder
+- [x] Thread Milling Node metadata placeholder
+- [x] Chamfer Milling Node metadata placeholder
+- [x] Engraving Node metadata placeholder
+- [x] Surface Finishing Node metadata placeholder
+- [x] Rest Machining Node metadata placeholder
+- [x] Adaptive Milling Node metadata placeholder
+- [x] FDM Printing Node metadata placeholder
+- [x] SLA Printing Node metadata placeholder
+- [x] SLS Printing Node metadata placeholder
+- [x] Laser Cutting Node metadata
+- [x] Laser Engraving Node metadata placeholder
+- [x] Plasma Cutting Node metadata placeholder
+- [x] Waterjet Cutting Node metadata placeholder
+- [x] Vinyl Cutting Node metadata placeholder
+- [x] Pen Plotting Node metadata placeholder
+- [x] Foam Cutting Node metadata placeholder
+- [x] Wire Cutting Node metadata placeholder
+- [x] Robot Operation Node metadata placeholder
+- [x] Pick & Place Node metadata placeholder
+- [x] Kinetic Machine Node metadata placeholder
+- [x] Material Node metadata placeholder
+- [x] Stock Material Node metadata placeholder
+- [x] Machine Material Node metadata placeholder
+- [x] Post Processor Node metadata placeholder
+- [x] Toolpath Node metadata
+- [x] G-Code Node metadata
+- [x] NC Program Node metadata placeholder
+- [x] Feed Rate Node metadata placeholder
+- [x] Spindle Speed Node metadata placeholder
+- [x] Coolant Node metadata placeholder
+- [x] Operation Sequence Node metadata placeholder
+- [x] Job Setup Node metadata placeholder
+- [x] Manufacturing Document Node metadata placeholder
+- [x] Quality Inspection Node metadata placeholder
+- [x] Tolerance Node metadata placeholder
+- [x] Surface Finish Node metadata placeholder
+- [x] Parameter reference metadata
+- [x] Expression reference metadata
+- [x] Dependency Graph reference metadata
+- [x] Visual Node reference metadata
+- [x] Data Tree reference metadata
+- [x] CAD Node reference metadata
+- [x] BIM Node reference metadata
+- [x] LiveSolver reference metadata
+- [x] FeatureManager reference metadata
+- [x] BodyManager reference metadata
+- [x] SurfaceManager reference metadata
+- [x] CurveManager reference metadata
+- [x] AssemblyManager reference metadata
+- [x] ProductManager reference metadata
+- [x] Workspace reference metadata
+- [x] MeshEntity reference metadata only
+- [x] Node name metadata
+- [x] Display name metadata
+- [x] Description metadata
+- [x] Version metadata
+- [x] Category metadata
+- [x] Manufacturing process metadata
+- [x] Machine type metadata
+- [x] Tool type metadata
+- [x] Material type metadata
+- [x] Input definition metadata
+- [x] Output definition metadata
+- [x] Default parameter metadata
+- [x] Visibility metadata
+- [x] Documentation placeholder metadata
+- [x] Author metadata
+- [x] Tags metadata
+- [x] Execution status metadata only
+- [x] Existing VisualNodeGraph integration preserved
+- [x] Existing CAD Node integration preserved
+- [x] Existing BIM Node integration preserved
+- [x] Existing DataTree integration preserved
+- [x] Existing LiveSolver integration preserved
+- [x] Existing DependencyManager integration preserved
+- [x] Existing ParameterManager integration preserved
+- [x] Workspace integration through ProductManager
+- [x] Property Panel Manufacturing Node display
+- [x] SelectionManager compatibility
+- [x] Undo / Redo through AddManufacturingNodeCommand
+- [x] Project Save/Open persistence
+- [x] Renderer2D read-only status preserved
+- [x] Renderer3D Manufacturing Node highlighting through existing ProductManager visible-object path
+- [x] Renderer3D remains read-only
+- [x] MeshEntity geometry ownership preserved
+- [x] No node execution
+- [x] No graph execution
+- [x] No solver execution
+- [x] No toolpath generation
+- [x] No G-Code generation
+- [x] No machine simulation
+- [x] No manufacturing execution
+- [x] No geometry generation
+- [x] No MeshEntity mutation
+- [x] No duplicate managers
+- [x] No duplicate Workspace
+- [x] No duplicate render path
+- [x] Focused Batch I validation tests
+- [x] Related Manufacturing node, BIM node, CAD node, data tree, visual node graph, solver, dependency, parameter and parametric regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.5 - Batch J: Professional AI & Script Nodes Foundation
+
+- [x] ParametricEngine extended with AI Node metadata
+- [x] ParametricEngine extended with Script Node metadata
+- [x] AINodeLibrary metadata
+- [x] ScriptNodeLibrary metadata
+- [x] AINodeCategory metadata
+- [x] ScriptNodeCategory metadata
+- [x] AINodeDefinition metadata
+- [x] ScriptNodeDefinition metadata
+- [x] AINodeMetadata
+- [x] ScriptNodeMetadata
+- [x] AINodeFlags
+- [x] ScriptNodeFlags
+- [x] AINodeStatistics
+- [x] ScriptNodeStatistics
+- [x] AINodeHistory
+- [x] ScriptNodeHistory
+- [x] AINodeVersion
+- [x] ScriptNodeVersion
+- [x] AINodeTemplate
+- [x] ScriptNodeTemplate
+- [x] No AINodeManager introduced
+- [x] No ScriptNodeManager introduced
+- [x] AI Prompt Node metadata
+- [x] AI Chat Node metadata placeholder
+- [x] AI Vision Node metadata placeholder
+- [x] AI Image Generation Node metadata placeholder
+- [x] AI Image Analysis Node metadata placeholder
+- [x] AI Code Generation Node metadata placeholder
+- [x] AI Research Node metadata placeholder
+- [x] AI Knowledge Node metadata placeholder
+- [x] AI Classification Node metadata placeholder
+- [x] AI Translation Node metadata placeholder
+- [x] AI Summarization Node metadata placeholder
+- [x] AI Embedding Node metadata placeholder
+- [x] AI Agent Node metadata placeholder
+- [x] AI Optimization Node metadata
+- [x] AI Decision Node metadata placeholder
+- [x] AI Planning Node metadata
+- [x] AI Workflow Node metadata
+- [x] Python Script Node metadata
+- [x] JavaScript Script Node metadata placeholder
+- [x] Expression Node metadata placeholder
+- [x] Variable Node metadata placeholder
+- [x] Constant Node metadata placeholder
+- [x] Function Node metadata placeholder
+- [x] Custom Function Node metadata placeholder
+- [x] Math Node metadata placeholder
+- [x] Logic Node metadata placeholder
+- [x] Comparison Node metadata placeholder
+- [x] Conditional Node metadata placeholder
+- [x] Loop Node metadata placeholder
+- [x] Iterator Node metadata placeholder
+- [x] List Node metadata placeholder
+- [x] Dictionary Node metadata placeholder
+- [x] String Node metadata placeholder
+- [x] DateTime Node metadata placeholder
+- [x] JSON Node metadata
+- [x] CSV Node metadata placeholder
+- [x] XML Node metadata placeholder
+- [x] YAML Node metadata placeholder
+- [x] File Node metadata placeholder
+- [x] HTTP Request Node metadata placeholder
+- [x] REST API Node metadata placeholder
+- [x] WebSocket Node metadata placeholder
+- [x] Database Node metadata placeholder
+- [x] Environment Node metadata placeholder
+- [x] Trigger Node metadata
+- [x] Event Node metadata placeholder
+- [x] Timer Node metadata placeholder
+- [x] Scheduler Node metadata placeholder
+- [x] Pipeline Node metadata placeholder
+- [x] Task Node metadata placeholder
+- [x] Notification Node metadata placeholder
+- [x] Logging Node metadata placeholder
+- [x] Error Handler Node metadata placeholder
+- [x] Monitor Node metadata placeholder
+- [x] Checkpoint Node metadata placeholder
+- [x] Workflow Node metadata
+- [x] Parameter reference metadata
+- [x] Expression reference metadata
+- [x] Dependency Graph reference metadata
+- [x] Visual Node reference metadata
+- [x] Data Tree reference metadata
+- [x] CAD Node reference metadata
+- [x] BIM Node reference metadata
+- [x] Manufacturing Node reference metadata
+- [x] LiveSolver reference metadata
+- [x] FeatureManager reference metadata
+- [x] BodyManager reference metadata
+- [x] SurfaceManager reference metadata
+- [x] CurveManager reference metadata
+- [x] AssemblyManager reference metadata
+- [x] ProductManager reference metadata
+- [x] Workspace reference metadata
+- [x] MeshEntity reference metadata only
+- [x] Node name metadata
+- [x] Display name metadata
+- [x] Description metadata
+- [x] Version metadata
+- [x] Category metadata
+- [x] Subcategory metadata
+- [x] Execution backend placeholder metadata
+- [x] Model provider placeholder metadata
+- [x] Language placeholder metadata
+- [x] Input definition metadata
+- [x] Output definition metadata
+- [x] Default parameter metadata
+- [x] Visibility metadata
+- [x] Documentation placeholder metadata
+- [x] Author metadata
+- [x] Tags metadata
+- [x] Execution status metadata only
+- [x] Existing VisualNodeGraph integration preserved
+- [x] Existing CAD Node integration preserved
+- [x] Existing BIM Node integration preserved
+- [x] Existing Manufacturing Node integration preserved
+- [x] Existing DataTree integration preserved
+- [x] Existing LiveSolver integration preserved
+- [x] Existing DependencyManager integration preserved
+- [x] Existing ParameterManager integration preserved
+- [x] Workspace integration through ProductManager
+- [x] Property Panel AI and Script Node display
+- [x] SelectionManager compatibility
+- [x] Undo / Redo through AddAINodeCommand and AddScriptNodeCommand
+- [x] Project Save/Open persistence
+- [x] Renderer2D read-only status preserved
+- [x] Renderer3D AI and Script Node highlighting through existing ProductManager visible-object path
+- [x] Renderer3D remains read-only
+- [x] MeshEntity geometry ownership preserved
+- [x] No AI execution
+- [x] No script execution
+- [x] No API calls
+- [x] No workflow execution
+- [x] No node execution
+- [x] No graph execution
+- [x] No solver execution
+- [x] No geometry generation
+- [x] No MeshEntity mutation
+- [x] No duplicate managers
+- [x] No duplicate Workspace
+- [x] No duplicate render path
+- [x] Focused Batch J validation tests
+- [x] Related AI/script node, manufacturing node, BIM node, CAD node, data tree, visual node graph, solver, dependency, parameter and parametric regression tests
+- [x] main_v2.py launch validation
+
+## Release 1.5 - Batch K: Professional Live Preview & Workspace Integration
+
+- [x] Workspace synchronization metadata
+- [x] Document synchronization metadata
+- [x] Project synchronization metadata
+- [x] Selection synchronization metadata
+- [x] Property synchronization metadata
+- [x] Layer synchronization metadata
+- [x] Visibility synchronization metadata
+- [x] Session synchronization metadata
+- [x] View synchronization metadata
+- [x] Preview state synchronization metadata
+- [x] PreviewSession metadata
+- [x] PreviewRequest metadata
+- [x] PreviewState metadata
+- [x] PreviewContext metadata
+- [x] PreviewFlags metadata
+- [x] PreviewStatistics metadata
+- [x] PreviewHistory metadata
+- [x] PreviewVersion metadata
+- [x] PreviewTemplate metadata
+- [x] Viewport refresh request metadata
+- [x] Viewport dirty flag metadata
+- [x] View synchronization metadata
+- [x] Camera synchronization metadata
+- [x] Display state metadata
+- [x] Selection highlighting metadata
+- [x] Reference highlighting metadata
+- [x] Overlay metadata
+- [x] Parameter property synchronization metadata
+- [x] Expression property synchronization metadata
+- [x] Dependency Graph property synchronization metadata
+- [x] Visual Node property synchronization metadata
+- [x] Data Tree property synchronization metadata
+- [x] CAD Node property synchronization metadata
+- [x] BIM Node property synchronization metadata
+- [x] Manufacturing Node property synchronization metadata
+- [x] AI Node property synchronization metadata
+- [x] Script Node property synchronization metadata
+- [x] Assembly property synchronization metadata
+- [x] Body property synchronization metadata
+- [x] Feature property synchronization metadata
+- [x] Surface property synchronization metadata
+- [x] Curve property synchronization metadata
+- [x] Product property synchronization metadata
+- [x] Workspace property synchronization metadata
+- [x] Update request metadata
+- [x] Update context metadata
+- [x] Update history metadata placeholder
+- [x] Update statistics through PreviewStatistics
+- [x] Dirty state tracking metadata
+- [x] Refresh request metadata
+- [x] Notification metadata
+- [x] Existing Workspace integration preserved
+- [x] Existing Project Persistence integration preserved
+- [x] Existing Undo/Redo integration through AddLivePreviewCommand
+- [x] Existing SelectionManager compatibility
+- [x] Existing Property Panel compatibility
+- [x] Existing Renderer compatibility
+- [x] Existing ViewManager compatibility metadata
+- [x] Existing LayerManager compatibility metadata
+- [x] Renderer2D read-only status preserved
+- [x] Renderer3D read-only status preserved
+- [x] MeshEntity geometry ownership preserved
+- [x] No preview generation
+- [x] No viewport refresh execution
+- [x] No update execution
+- [x] No node execution
+- [x] No graph execution
+- [x] No solver execution
+- [x] No geometry generation
+- [x] No MeshEntity mutation
+- [x] No duplicate managers
+- [x] No duplicate computational engines
+- [x] Focused Batch K validation tests
+- [x] Related workspace, preview, synchronization, renderer, property, persistence, dependency, parametric, CAD, BIM, Manufacturing, AI, Script, data tree, visual node graph and solver tests
+- [x] main_v2.py launch validation
+
+## Release 1.5 - Batch L: Production Readiness & Architecture Audit
+
+- [x] Complete Release 1.5 architecture audit
+- [x] Workspace ownership validated as the single source of truth
+- [x] ParametricEngine ownership validated as the single computational engine
+- [x] Manager responsibility boundaries validated
+- [x] Subsystem boundaries validated for LiveSolver, VisualNodeGraph, DataTree, CAD Nodes, BIM Nodes, Manufacturing Nodes, AI Nodes and Script Nodes
+- [x] Reference ownership validated as metadata-only
+- [x] MeshEntity geometry ownership preserved
+- [x] Renderer2D read-only status preserved
+- [x] Renderer3D read-only status preserved
+- [x] Persistence ownership validated through existing Project Save/Open path
+- [x] No SolverManager introduced
+- [x] No CADNodeManager introduced
+- [x] No BIMNodeManager introduced
+- [x] No ManufacturingNodeManager introduced
+- [x] No AINodeManager introduced
+- [x] No ScriptNodeManager introduced
+- [x] No duplicate Workspace introduced
+- [x] No duplicate ParametricEngine introduced
+- [x] No duplicate persistence system introduced
+- [x] Dependency metadata consistency validated
+- [x] Parameter metadata consistency validated
+- [x] Expression metadata consistency validated
+- [x] Visual Node Graph metadata consistency validated
+- [x] Data Tree metadata consistency validated
+- [x] CAD/BIM/Manufacturing/AI/Script node metadata consistency validated
+- [x] Reference mappings validated
+- [x] Workspace synchronization metadata validated
+- [x] Selection synchronization compatibility validated
+- [x] Property synchronization compatibility validated
+- [x] View synchronization compatibility validated
+- [x] Preview synchronization metadata validated
+- [x] Update synchronization metadata validated
+- [x] Undo/Redo integrity validated
+- [x] Large-project metadata readiness reviewed
+- [x] Full regression suite passed
+- [x] Every Release 1.5 parametric test passed
+- [x] main_v2.py launch validation passed
+- [x] Release 1.5 certification metadata completed
+- [x] Release 1.5 COMPLETE
+
+## Release 2.0 - Batch A: Core Execution Engine
+
+- [x] ParametricEngine extended with ExecutionEngine subsystem
+- [x] ExecutionContext
+- [x] ExecutionState
+- [x] ExecutionRequest
+- [x] ExecutionQueue
+- [x] ExecutionScheduler
+- [x] ExecutionCache
+- [x] ExecutionHistory
+- [x] ExecutionStatistics
+- [x] ExecutionFlags
+- [x] ExecutionSession
+- [x] ExecutionBatch
+- [x] ExecutionPipeline
+- [x] ExecutionResult
+- [x] ExecutionMetadata
+- [x] No ExecutionManager introduced
+- [x] ExpressionParser foundation
+- [x] ExpressionEvaluator with safe arithmetic, functions, variables and parameter references
+- [x] Expression cache metadata
+- [x] Expression history metadata
+- [x] Unit-aware evaluation metadata placeholders
+- [x] Dependency ordering activated
+- [x] Topological traversal activated
+- [x] Cycle detection activated
+- [x] Dirty propagation activated
+- [x] Incremental recomputation scheduling metadata
+- [x] Reference tracking through existing DependencyManager metadata
+- [x] Parameter Node execution
+- [x] Expression Node execution
+- [x] Math Node execution
+- [x] Variable Node execution
+- [x] Constant Node execution
+- [x] Logic Node execution
+- [x] Comparison Node execution
+- [x] Conditional Node execution
+- [x] FeatureManager and BodyManager remain placeholders for this batch
+- [x] No CAD feature execution
+- [x] No geometry generation
+- [x] No MeshEntity mutation
+- [x] Workspace integration preserved
+- [x] Undo/Redo supported through AddExecutionObjectCommand
+- [x] Selection compatibility preserved
+- [x] Property Panel execution metadata display
+- [x] Project Save/Open persistence
+- [x] Renderer2D remains read-only
+- [x] Renderer3D remains read-only
+- [x] Renderer3D execution status highlighting metadata
+- [x] Backward compatibility preserved
+- [x] Focused Release 2.0 execution validation tests
+- [x] Entire Release 1.5 parametric regression suite passed
+- [x] main_v2.py launch validation passed
+
+## Release 2.0 - Batch B: Professional Graph Execution & Live Solver Activation
+
+- [x] Existing DependencyManager activated without redesign
+- [x] Graph traversal
+- [x] Topological sorting
+- [x] Dependency scheduling
+- [x] Cycle detection
+- [x] Dirty propagation
+- [x] Incremental dependency evaluation
+- [x] Reference tracking
+- [x] Execution ordering
+- [x] Evaluation priority support
+- [x] Dependency validation
+- [x] Graph diagnostics
+- [x] Execution metadata recorded on dependency graph metadata
+- [x] Existing LiveSolver activated without SolverManager
+- [x] SolverExecutionContext metadata
+- [x] SolverQueue activation
+- [x] SolverScheduler helper without manager ownership
+- [x] SolverState updates
+- [x] SolverHistory records
+- [x] SolverStatistics refresh
+- [x] SolverDiagnostics metadata
+- [x] Dirty tracking
+- [x] Incremental solve
+- [x] Evaluation ordering
+- [x] Execution timing/performance metadata placeholders
+- [x] Reactive parameter change propagation
+- [x] Expression evaluation through ExecutionEngine
+- [x] Affected node execution
+- [x] Unchanged node skipping through execution cache
+- [x] VisualNodeGraph execution status metadata
+- [x] Visual node execution highlighting metadata
+- [x] Visual node evaluation order metadata
+- [x] Visual node diagnostics metadata
+- [x] Data Tree branch evaluation metadata
+- [x] Data Tree path/flow propagation metadata
+- [x] Incremental branch update metadata
+- [x] Workspace integration preserved
+- [x] Selection compatibility preserved
+- [x] Undo/Redo compatibility preserved through existing Command System
+- [x] Property Panel compatibility preserved
+- [x] Project Save/Open persistence
+- [x] Renderer2D remains read-only
+- [x] Renderer3D remains read-only
+- [x] MeshEntity geometry ownership preserved
+- [x] No geometry generation
+- [x] No CAD feature execution
+- [x] No MeshEntity ownership change
+- [x] No ExecutionManager
+- [x] No SolverManager
+- [x] No duplicate computational engine
+- [x] Focused Batch B validation tests
+- [x] Release 2.0 parametric regression suite passed
+- [x] Entire Release 1.5 parametric regression suite passed
+- [x] main_v2.py launch validation passed
+
+## Release 2.0 - Batch C: Professional Sketch & Constraint Solver Activation
+
+- [x] ParametricEngine extended with SketchSolver subsystem
+- [x] SketchSolveContext
+- [x] SketchSolveSession
+- [x] SketchSolveState
+- [x] SketchDiagnostics
+- [x] SketchSolverStatistics
+- [x] SketchHistory
+- [x] SketchCache
+- [x] SketchExecutionMetadata
+- [x] SketchEvaluationOrder
+- [x] Existing sketch subsystem activated without adding SketchManager
+- [x] Coincident constraint metadata support
+- [x] Horizontal constraint execution metadata
+- [x] Vertical constraint execution metadata
+- [x] Parallel constraint execution metadata
+- [x] Perpendicular constraint execution metadata
+- [x] Tangent constraint metadata support
+- [x] Concentric constraint metadata support
+- [x] Collinear constraint metadata support
+- [x] Equal constraint metadata support
+- [x] Symmetry constraint metadata support
+- [x] Midpoint constraint metadata support
+- [x] Fix constraint metadata support
+- [x] Distance constraint metadata support
+- [x] Radius constraint metadata support
+- [x] Diameter constraint metadata support
+- [x] Angle constraint metadata support
+- [x] Offset constraint metadata support
+- [x] Constraint ordering metadata
+- [x] Constraint diagnostics
+- [x] Constraint validation
+- [x] Conflict reporting
+- [x] DOF calculation
+- [x] Fully constrained detection metadata
+- [x] Under constrained detection metadata
+- [x] Over constrained detection metadata
+- [x] Sketch status metadata
+- [x] Reactive sketch update path reuses ExecutionEngine and LiveSolver
+- [x] Sketch entities remain sketch-owned
+- [x] No Body creation
+- [x] No MeshEntity update
+- [x] Renderer2D and Renderer3D remain read-only
+- [x] Property Panel support for sketch solver and solve sessions
+- [x] Undo / Redo through AddSketchSolverCommand
+- [x] Project Save/Open persistence for sketch solver metadata
+- [x] Future feature hooks for Extrude, Revolve, Sweep, Loft, Boolean, Fillet, Chamfer, Shell, Pattern and OpenCascade
+- [x] No SolverManager
+- [x] No ExecutionManager
+- [x] No new SketchManager
+- [x] No duplicate computational engine
+- [x] Focused Batch C validation tests
+- [x] Release 2.0 parametric and sketch regression suite passed
+- [x] Entire Release 1.5 parametric regression suite passed
+- [x] main_v2.py launch validation passed
+
+## Release 2.0 - Batch D: Professional Feature Framework Activation
+
+- [x] Existing FeatureManager activated without redesign
+- [x] Feature execution metadata foundation
+- [x] FeatureExecutionContext
+- [x] FeatureExecutionState
+- [x] FeatureExecutionSession
+- [x] FeatureDiagnostics
+- [x] FeatureExecutionMetadata
+- [x] FeatureResult compatibility preserved
+- [x] FeatureOrdering metadata
+- [x] FeatureDependencies metadata
+- [x] FeatureExecutionCache metadata
+- [x] FeatureEvaluationOrder metadata
+- [x] Extrude execution metadata
+- [x] Revolve execution metadata
+- [x] Sweep execution metadata
+- [x] Loft execution metadata
+- [x] Boundary execution metadata
+- [x] Thicken execution metadata
+- [x] Shell execution metadata
+- [x] Draft execution metadata
+- [x] Boolean execution metadata
+- [x] Fillet execution metadata
+- [x] Chamfer execution metadata
+- [x] Mirror execution metadata
+- [x] Pattern execution metadata
+- [x] Transform execution metadata
+- [x] Move execution metadata
+- [x] Rotate execution metadata
+- [x] Scale execution metadata
+- [x] Offset execution metadata
+- [x] Feature history ordering
+- [x] Feature timeline metadata
+- [x] Rollback metadata
+- [x] Roll-forward metadata
+- [x] Feature suppression metadata
+- [x] Feature rename/edit compatibility preserved
+- [x] DependencyManager integration for feature relationships
+- [x] ExecutionEngine and LiveSolver references stored
+- [x] SketchSolver references stored
+- [x] Project Save/Open persistence for feature execution records
+- [x] Property Panel feature execution metadata display
+- [x] Renderer3D read-only feature execution highlighting
+- [x] Undo / Redo through existing Command System
+- [x] No FeatureEngine
+- [x] No duplicate FeatureManager
+- [x] No SolverManager
+- [x] No ExecutionManager
+- [x] No CADNodeManager
+- [x] No GeometryManager
+- [x] No BRep geometry generation
+- [x] No OpenCascade integration
+- [x] No Body creation
+- [x] No MeshEntity ownership change
+- [x] Focused Batch D validation tests
+- [x] Release 2.0 parametric and feature regression suite passed
+- [x] Entire Release 1.5 parametric regression suite passed
+- [x] main_v2.py launch validation passed
+
+## Release 2.0 - Batch E: Professional Geometry Kernel Activation
+
+- [x] ParametricEngine extended with GeometryKernel subsystem
+- [x] GeometryContext
+- [x] GeometrySession
+- [x] GeometryState
+- [x] GeometryHistory
+- [x] GeometryStatistics
+- [x] GeometryDiagnostics
+- [x] GeometryCache
+- [x] GeometryMetadata
+- [x] GeometryPipeline
+- [x] GeometryResult
+- [x] BRepTopology metadata
+- [x] TopologyElement metadata for Vertex, Edge, Wire, Loop, Face, Shell, Solid, Compound and Body
+- [x] Existing FeatureManager reused for executable feature records
+- [x] Existing BodyManager reused for Body creation, update, replacement metadata and diagnostics
+- [x] MeshEntity synchronization through BodyManager-owned body records
+- [x] Extrude geometry generation foundation
+- [x] Revolve geometry generation foundation
+- [x] Sweep geometry generation foundation
+- [x] Loft geometry generation foundation
+- [x] Boolean geometry generation foundation
+- [x] Mirror geometry generation foundation
+- [x] Pattern geometry generation foundation
+- [x] Transform geometry generation foundation
+- [x] Move geometry generation foundation
+- [x] Rotate geometry generation foundation
+- [x] Scale geometry generation foundation
+- [x] Offset geometry generation foundation
+- [x] Topology validation metadata
+- [x] Geometry diagnostics metadata
+- [x] Geometry history metadata
+- [x] Mesh regeneration metadata
+- [x] Undo / Redo through ExecuteFeatureGeometryCommand
+- [x] AddGeometryKernelCommand
+- [x] Project Save/Open persistence for kernel, topology, result and session records
+- [x] Property Panel geometry kernel and topology display
+- [x] Renderer3D read-only geometry status highlighting
+- [x] Workspace integration through existing ProductManager
+- [x] Existing Command System reused
+- [x] Existing DependencyManager relationship storage reused
+- [x] Existing UpdateManager queue metadata reused
+- [x] No GeometryManager introduced
+- [x] No KernelManager introduced
+- [x] No duplicate computational engine
+- [x] No duplicate Workspace
+- [x] No duplicate persistence
+- [x] MeshEntity remains the only renderable geometry owner
+- [x] Renderer2D remains read-only
+- [x] Renderer3D remains read-only
+- [x] Focused Batch E validation tests
+- [x] Related Release 2.0 / Release 1.5 regression suite passed
+- [x] main_v2.py launch validation passed

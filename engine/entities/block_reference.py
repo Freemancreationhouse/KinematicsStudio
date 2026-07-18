@@ -56,13 +56,35 @@ class BlockReference(Entity):
 
     def clone(self):
 
-        return BlockReference(
+        clone = BlockReference(
             self.definition,
             self.insertion_point.copy(),
             self.rotation,
             self.scale_x,
             self.scale_y,
         )
+        clone.selected = self.selected
+        clone.visible = self.visible
+        clone.locked = self.locked
+        clone.layer = self.layer
+        clone.layer_id = self.layer_id
+        clone.layer_name = self.layer_name
+        clone.color = self.color
+
+        return clone
+
+    # --------------------------------
+
+    def exploded_entities(self):
+        """Return transformed copies of entities contained by this reference."""
+
+        if self.definition is None:
+            return []
+
+        return [
+            self._transform_entity(entity)
+            for entity in self.definition.entities
+        ]
 
     # --------------------------------
 
@@ -85,7 +107,7 @@ class BlockReference(Entity):
 
         box = BoundingBox()
 
-        if self.definition is None:
+        if self.definition is None or not self.definition.entities:
             box.add(self.insertion_point)
             return box
 
@@ -141,3 +163,87 @@ class BlockReference(Entity):
             box.max,
             Vector2(box.min.x, box.max.y),
         )
+
+    # --------------------------------
+
+    def _transform_entity(self, entity):
+
+        if hasattr(entity, "start") and hasattr(entity, "end"):
+            transformed = self._transform_line(entity)
+        elif hasattr(entity, "p1") and hasattr(entity, "p2"):
+            transformed = self._transform_rectangle(entity)
+        elif hasattr(entity, "center") and hasattr(entity, "radius"):
+            transformed = self._transform_circle(entity)
+        elif isinstance(entity, BlockReference):
+            transformed = self._transform_reference(entity)
+        else:
+            transformed = entity.clone()
+
+        self._copy_entity_metadata(entity, transformed)
+
+        return transformed
+
+    # --------------------------------
+
+    def _transform_line(self, entity):
+
+        from engine.entities.line_entity import LineEntity
+
+        return LineEntity(
+            self._transform_point(entity.start),
+            self._transform_point(entity.end),
+        )
+
+    # --------------------------------
+
+    def _transform_rectangle(self, entity):
+
+        from engine.entities.rectangle_entity import RectangleEntity
+
+        points = [
+            self._transform_point(point)
+            for point in self._box_corners(entity.bounding_box)
+        ]
+        left = min(point.x for point in points)
+        top = min(point.y for point in points)
+        right = max(point.x for point in points)
+        bottom = max(point.y for point in points)
+
+        return RectangleEntity(Vector2(left, top), Vector2(right, bottom))
+
+    # --------------------------------
+
+    def _transform_circle(self, entity):
+
+        from engine.entities.circle_entity import CircleEntity
+
+        scale = (abs(self.scale_x) + abs(self.scale_y)) * 0.5
+
+        return CircleEntity(
+            self._transform_point(entity.center),
+            entity.radius * scale,
+        )
+
+    # --------------------------------
+
+    def _transform_reference(self, entity):
+
+        return BlockReference(
+            entity.definition,
+            self._transform_point(entity.insertion_point),
+            self.rotation + entity.rotation,
+            self.scale_x * entity.scale_x,
+            self.scale_y * entity.scale_y,
+        )
+
+    # --------------------------------
+
+    def _copy_entity_metadata(self, source, target):
+
+        target.selected = False
+        target.visible = getattr(source, "visible", True)
+        target.locked = getattr(source, "locked", False)
+        target.layer = getattr(source, "layer", None)
+        target.layer_id = getattr(source, "layer_id", None)
+        target.layer_name = getattr(source, "layer_name", None)
+        target.color = getattr(source, "color", None)

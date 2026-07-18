@@ -1,6 +1,8 @@
 from math import sqrt
 
 from engine.geometry import Vector2
+from engine.geometry.curves import midpoint, nearest_on_curve, polyline_segments
+from engine.geometry.primitives import segment_intersection
 
 
 class SnapResult:
@@ -63,7 +65,7 @@ class SnapManager:
             candidates.extend(self._entity_candidates(entity, point))
 
         if self.intersection:
-            candidates.extend(self._intersection_candidates(entities))
+            candidates.extend(self._intersection_candidates(entities, point, tolerance))
 
         if self.grid:
             candidates.append((self._grid_point(point), "GRID", None))
@@ -96,6 +98,12 @@ class SnapManager:
 
         elif hasattr(entity, "center") and hasattr(entity, "radius"):
             candidates.extend(self._circle_candidates(entity, point))
+
+        elif hasattr(entity, "points"):
+            candidates.extend(self._curve_candidates(entity, entity.points, point, getattr(entity, "closed", False)))
+
+        elif hasattr(entity, "control_points"):
+            candidates.extend(self._curve_candidates(entity, entity.control_points, point, False))
 
         return candidates
 
@@ -169,6 +177,28 @@ class SnapManager:
 
     # ------------------------------------------------------------
 
+    def _curve_candidates(self, entity, points, point, closed=False):
+
+        candidates = []
+
+        if self.endpoint:
+            for vertex in points:
+                candidates.append((vertex, "END", entity))
+
+        if self.midpoint:
+            for start, end in polyline_segments(points, closed):
+                candidates.append((midpoint(start, end), "MID", entity))
+
+        if self.nearest:
+            nearest = nearest_on_curve(point, points, closed)
+
+            if nearest is not None:
+                candidates.append((nearest, "NEAR", entity))
+
+        return candidates
+
+    # ------------------------------------------------------------
+
     def _nearest_on_edges(self, point, corners):
 
         nearest = None
@@ -204,22 +234,29 @@ class SnapManager:
 
     # ------------------------------------------------------------
 
-    def _intersection_candidates(self, entities):
+    def _intersection_candidates(self, entities, point=None, tolerance=None):
 
         candidates = []
-        lines = [
-            entity for entity in entities
-            if hasattr(entity, "start") and hasattr(entity, "end")
-        ]
+        segments = []
 
-        for index, first in enumerate(lines):
-            for second in lines[index + 1:]:
-                point = self._line_intersection(
-                    first.start,
-                    first.end,
-                    second.start,
-                    second.end
-                )
+        for entity in entities:
+            if hasattr(entity, "start") and hasattr(entity, "end"):
+                segments.append((entity.start, entity.end))
+            elif hasattr(entity, "points"):
+                segments.extend(polyline_segments(entity.points, getattr(entity, "closed", False)))
+            elif hasattr(entity, "control_points"):
+                segments.extend(polyline_segments(entity.sampled_points()))
+
+        if point is not None and tolerance is not None:
+            segments = [
+                segment for segment in segments
+                if self._segment_near_point(segment, point, tolerance)
+            ]
+
+        for index, first in enumerate(segments):
+            for second in segments[index + 1:]:
+                point = segment_intersection(first[0], first[1], second[0], second[1])
+
                 if point:
                     candidates.append((point, "INT", None))
 
@@ -227,26 +264,16 @@ class SnapManager:
 
     # ------------------------------------------------------------
 
-    def _line_intersection(self, a1, a2, b1, b2):
+    def _segment_near_point(self, segment, point, tolerance):
 
-        dax = a2.x - a1.x
-        day = a2.y - a1.y
-        dbx = b2.x - b1.x
-        dby = b2.y - b1.y
-        denominator = dax * dby - day * dbx
+        start, end = segment
 
-        if denominator == 0:
-            return None
-
-        dx = b1.x - a1.x
-        dy = b1.y - a1.y
-        t = (dx * dby - dy * dbx) / denominator
-        u = (dx * day - dy * dax) / denominator
-
-        if 0 <= t <= 1 and 0 <= u <= 1:
-            return Vector2(a1.x + t * dax, a1.y + t * day)
-
-        return None
+        return not (
+            max(start.x, end.x) < point.x - tolerance or
+            min(start.x, end.x) > point.x + tolerance or
+            max(start.y, end.y) < point.y - tolerance or
+            min(start.y, end.y) > point.y + tolerance
+        )
 
     # ------------------------------------------------------------
 

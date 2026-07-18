@@ -233,7 +233,6 @@ class Canvas(QWidget):
 
             for entity in list(selection.selected):
                 if (
-                    entity not in self.app.workspace.entities or
                     entity not in selectable
                 ):
                     selection.deselect(entity)

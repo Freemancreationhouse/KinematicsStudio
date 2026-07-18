@@ -37,4 +37,7 @@ def entity_distance(entity, point):
     if hasattr(entity, "center") and hasattr(entity, "radius"):
         return abs(entity.center.distance_to(point) - entity.radius)
 
+    if entity.hit_test(point):
+        return 0.0
+
     return None

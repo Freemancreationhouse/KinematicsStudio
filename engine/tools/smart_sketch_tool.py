@@ -57,7 +57,8 @@ class SmartSketchTool(Tool):
 
         )
 
-        entity = self.engine.finish()
+        result = self.engine.finish()
+        entity = result.get("entity") if isinstance(result, dict) else result
 
         if entity is not None:
 

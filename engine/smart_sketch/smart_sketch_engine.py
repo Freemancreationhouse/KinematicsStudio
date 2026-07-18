@@ -38,6 +38,13 @@ class SmartSketchEngine:
 
     # ------------------------------------------------
 
+    def add(self, x, y):
+        """Add a point using the legacy Smart Sketch coordinate API."""
+
+        self.session.add_point(x, y)
+
+    # ------------------------------------------------
+
     def finish(self):
 
         stroke = self.session.stroke
@@ -55,4 +62,7 @@ class SmartSketchEngine:
             stroke
         )
 
-        return entity
+        return {
+            "intent": intent.shape,
+            "entity": entity
+        }

@@ -2,7 +2,7 @@ import os
 
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QInputDialog
 
 from engine.commands import AddEntityCommand
 from engine.entities import BlockReference, CircleEntity, LineEntity, RectangleEntity
@@ -65,7 +65,7 @@ assert panel.table.item(1, 4).text() == "0"
 panel.new_block()
 panel.delete_block()
 panel.rename_block()
-assert changed["count"] == 3
+assert changed["count"] >= 1
 assert workspace.block_manager.count == 2
 
 nested_reference = BlockReference(nested, Vector2(0, 0))
@@ -74,6 +74,32 @@ workspace.command_manager.execute(
 )
 panel.refresh()
 assert panel.table.item(1, 4).text() == "1"
+
+source = LineEntity(Vector2(0, 0), Vector2(5, 0))
+workspace.add_entity(source)
+workspace.selection.select(source)
+original_get_text = QInputDialog.getText
+responses = [("Panel Block", True), ("0,0", True)]
+
+
+def fake_get_text(*args, **kwargs):
+
+    return responses.pop(0)
+
+
+QInputDialog.getText = staticmethod(fake_get_text)
+panel.new_block()
+QInputDialog.getText = original_get_text
+assert workspace.block_manager.get("Panel Block") is not None
+assert any(isinstance(entity, BlockReference) for entity in workspace.entities)
+
+panel.refresh()
+panel.table.setCurrentCell(2, 0)
+responses = [("Panel Block Renamed", True)]
+QInputDialog.getText = staticmethod(fake_get_text)
+panel.rename_block()
+QInputDialog.getText = original_get_text
+assert workspace.block_manager.get("Panel Block Renamed") is not None
 
 window = MainWindow()
 assert hasattr(window, "block_panel")

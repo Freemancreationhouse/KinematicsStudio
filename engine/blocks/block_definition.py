@@ -37,7 +37,22 @@ class BlockDefinition(Block):
     def clone_entities(self):
         """Return cloned definition entities for future editing workflows."""
 
-        return [entity.clone() for entity in self.entities]
+        return [self._clone_entity(entity) for entity in self.entities]
+
+    # --------------------------------
+
+    def _clone_entity(self, entity):
+
+        clone = entity.clone()
+        clone.selected = False
+        clone.visible = getattr(entity, "visible", True)
+        clone.locked = getattr(entity, "locked", False)
+        clone.layer = getattr(entity, "layer", None)
+        clone.layer_id = getattr(entity, "layer_id", None)
+        clone.layer_name = getattr(entity, "layer_name", None)
+        clone.color = getattr(entity, "color", None)
+
+        return clone
 
     # --------------------------------
 

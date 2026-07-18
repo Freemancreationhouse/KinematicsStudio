@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import (
     QHBoxLayout,
+    QInputDialog,
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
@@ -8,7 +9,9 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.commands import CreateBlockCommand
 from engine.entities import BlockReference
+from engine.geometry import Vector2
 
 
 class BlockManagerPanel(QWidget):
@@ -35,6 +38,7 @@ class BlockManagerPanel(QWidget):
 
         self.table = QTableWidget(0, len(self.COLUMNS))
         self.table.setHorizontalHeaderLabels(self.COLUMNS)
+        self.table.itemSelectionChanged.connect(self._selection_changed)
         layout.addWidget(self.table)
 
         toolbar = QHBoxLayout()
@@ -76,23 +80,70 @@ class BlockManagerPanel(QWidget):
     # --------------------------------
 
     def new_block(self):
-        """Placeholder for the future new-block workflow."""
+        """Create a block definition from the current selection."""
 
-        self._placeholder_changed()
+        selection = getattr(self.workspace, "selection", None)
+        selected = list(selection.selected) if selection else []
+
+        if not selected:
+            self._changed()
+            return
+
+        name, ok = QInputDialog.getText(
+            self,
+            "New Block",
+            "Block Name",
+            text=self._next_block_name(),
+        )
+
+        if not ok:
+            return
+
+        origin = self._selected_origin(selected)
+
+        command = CreateBlockCommand(
+            self.workspace,
+            name,
+            origin,
+            selected,
+            replace=True,
+        )
+        self.workspace.command_manager.execute(command)
+        self._changed()
 
     # --------------------------------
 
     def delete_block(self):
-        """Placeholder for the future delete-block workflow."""
+        """Delete the selected unused block definition."""
 
-        self._placeholder_changed()
+        definition = self._selected_definition()
+
+        if definition is None or self._reference_count(definition):
+            self._changed()
+            return
+
+        self.workspace.block_manager.remove(definition)
+        self._changed()
 
     # --------------------------------
 
     def rename_block(self):
-        """Placeholder for the future rename-block workflow."""
+        """Rename the selected block definition."""
 
-        self._placeholder_changed()
+        definition = self._selected_definition()
+
+        if definition is None:
+            return
+
+        name, ok = QInputDialog.getText(
+            self,
+            "Rename Block",
+            "Block Name",
+            text=definition.name,
+        )
+
+        if ok and self.workspace.block_manager.rename(definition, name):
+            self._changed()
 
     # --------------------------------
 
@@ -147,7 +198,78 @@ class BlockManagerPanel(QWidget):
 
     # --------------------------------
 
-    def _placeholder_changed(self):
+    def _selected_definition(self):
+
+        item = self.table.currentItem()
+
+        if item is None:
+            row = self.table.currentRow()
+            item = self.table.item(row, 0) if row >= 0 else None
+
+        if item is None:
+            return None
+
+        return self.workspace.block_manager.get_by_id(item.data(Qt.UserRole))
+
+    # --------------------------------
+
+    def _selection_changed(self):
+
+        definition = self._selected_definition()
+
+        if definition is not None:
+            self.workspace.block_manager.set_current(definition)
+
+    # --------------------------------
+
+    def _selected_origin(self, selected):
+
+        if not selected:
+            return Vector2()
+
+        box = selected[0].bounding_box
+        left = box.min.x
+        top = box.min.y
+        right = box.max.x
+        bottom = box.max.y
+
+        for entity in selected[1:]:
+            box = entity.bounding_box
+            left = min(left, box.min.x)
+            top = min(top, box.min.y)
+            right = max(right, box.max.x)
+            bottom = max(bottom, box.max.y)
+
+        default = f"{(left + right) * 0.5:.2f},{(top + bottom) * 0.5:.2f}"
+        text, ok = QInputDialog.getText(
+            self,
+            "Block Origin",
+            "Origin X,Y",
+            text=default,
+        )
+
+        if not ok:
+            return Vector2((left + right) * 0.5, (top + bottom) * 0.5)
+
+        parts = [part.strip() for part in text.split(",")]
+
+        if len(parts) != 2:
+            return Vector2((left + right) * 0.5, (top + bottom) * 0.5)
+
+        try:
+            return Vector2(float(parts[0]), float(parts[1]))
+        except ValueError:
+            return Vector2((left + right) * 0.5, (top + bottom) * 0.5)
+
+    # --------------------------------
+
+    def _next_block_name(self):
+
+        return self.workspace.block_manager.unique_name("Block")
+
+    # --------------------------------
+
+    def _changed(self):
 
         self.refresh()
 

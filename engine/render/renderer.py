@@ -81,6 +81,20 @@ class Renderer:
 
     # ------------------------------------------------
 
+    def draw_constraints(self, painter, workspace):
+        """Draw visible constraint markers after model entities."""
+
+        manager = getattr(workspace, "constraint_manager", None)
+
+        if manager is None:
+            return
+
+        for constraint in manager.selectable_constraints():
+            if self._entity_in_view(constraint):
+                constraint.draw(painter)
+
+    # ------------------------------------------------
+
     def _entity_in_view(self, entity):
         if self.camera is None:
             return True
@@ -176,6 +190,8 @@ class Renderer:
             workspace
 
         )
+
+        self.draw_constraints(painter, workspace)
 
         self.draw_preview(
 

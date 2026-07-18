@@ -12,19 +12,27 @@ class StudioStatusBar(QStatusBar):
         super().__init__()
 
         self.coords = QLabel("X:0  Y:0")
+        self.coords.setToolTip("Current cursor position in world coordinates.")
         self.view = QLabel("Zoom: 100%  Camera: 0,0")
+        self.view.setToolTip("Current zoom level and camera position.")
 
         self.snap = QLabel("Snap : OFF")
+        self.snap.setToolTip("Active object snap mode. Press F3 to toggle snap.")
 
         self.tool = QLabel("Tool: Select")
+        self.tool.setToolTip("Currently active tool.")
 
         self.selected = QLabel("Selected: None")
+        self.selected.setToolTip("Current selection summary.")
 
-        self.undo = QLabel("Undo Available: No")
+        self.undo = QLabel("Undo: No")
+        self.undo.setToolTip("Whether Ctrl+Z can undo the previous command.")
 
-        self.redo = QLabel("Redo Available: No")
+        self.redo = QLabel("Redo: No")
+        self.redo.setToolTip("Whether Ctrl+Y can redo the next command.")
 
         self.machine = QLabel("Machine: Disconnected")
+        self.machine.setToolTip("Machine connection state.")
 
         self.addPermanentWidget(self.coords)
         self.addPermanentWidget(self.view)
@@ -82,8 +90,8 @@ class StudioStatusBar(QStatusBar):
         undo = "Yes" if command_manager.undo_available else "No"
         redo = "Yes" if command_manager.redo_available else "No"
 
-        self.undo.setText(f"Undo Available: {undo}")
-        self.redo.setText(f"Redo Available: {redo}")
+        self.undo.setText(f"Undo: {undo}")
+        self.redo.setText(f"Redo: {redo}")
 
     # -----------------------------------------
 

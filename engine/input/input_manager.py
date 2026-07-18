@@ -23,6 +23,27 @@ class InputManager:
 
     # --------------------------------
 
+    def mouse_press(self, button):
+        """Handle a legacy mouse-button press through the shared mouse controller."""
+
+        self.mouse.press(button)
+
+    # --------------------------------
+
+    def mouse_move(self, x, y):
+        """Handle a legacy mouse move through the shared mouse controller."""
+
+        self.mouse.move(x, y)
+
+    # --------------------------------
+
+    def mouse_release(self, button):
+        """Handle a legacy mouse-button release through the shared mouse controller."""
+
+        self.mouse.release(button)
+
+    # --------------------------------
+
     @property
     def mouse_position(self):
 
