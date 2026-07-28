@@ -14,16 +14,16 @@ class PickHit:
 class PickingManager3D:
     """Ray-based 3D picking manager using workspace-owned scene entities."""
 
-    def pick(self, workspace, ray, max_distance=1000000.0):
+    def pick(self, workspace, ray, max_distance=1000000.0, include_occ=True):
         """Return the nearest hit for a ray."""
 
-        hits = self.pick_all(workspace, ray, max_distance)
+        hits = self.pick_all(workspace, ray, max_distance, include_occ)
 
         return hits[0] if hits else None
 
     # --------------------------------
 
-    def pick_all(self, workspace, ray, max_distance=1000000.0):
+    def pick_all(self, workspace, ray, max_distance=1000000.0, include_occ=True):
         """Return all hits sorted by distance."""
 
         scene = getattr(workspace, "scene3d", None)
@@ -44,6 +44,9 @@ class PickingManager3D:
             if hit is not None:
                 hits.append(hit)
 
+        if include_occ:
+            hits.extend(self._pick_occ_shapes(workspace, ray, max_distance))
+
         return sorted(hits, key=lambda item: item.distance)
 
     # --------------------------------
@@ -59,7 +62,7 @@ class PickingManager3D:
         for entity in scene.entities():
             entity.hovered = False
 
-        hit = self.pick(workspace, ray)
+        hit = self.pick(workspace, ray, include_occ=False)
 
         if hit is not None:
             hit.entity.hovered = True
@@ -82,6 +85,73 @@ class PickingManager3D:
             return None
 
         return PickHit(entity, box_distance, ray.point_at(box_distance))
+
+    # --------------------------------
+
+    def _pick_occ_shapes(self, workspace, ray, max_distance):
+        """Return OCC shape hits using the existing selection-bound OCC manager."""
+
+        selection = getattr(workspace, "selection", None)
+        occ_manager = getattr(selection, "occ_manager", None)
+        occ_selection = getattr(selection, "occ_selection", None)
+
+        if occ_manager is None or occ_selection is None:
+            return []
+
+        shapes = getattr(occ_manager, "shapes", [])
+
+        if callable(shapes):
+            shapes = shapes()
+
+        hits = []
+
+        for shape in shapes:
+            try:
+                bounds = occ_selection.bounds(shape)
+            except Exception:
+                continue
+
+            distance = self._intersect_bounds(ray, bounds)
+
+            if distance is not None and distance <= max_distance:
+                hits.append(PickHit(shape, distance, ray.point_at(distance)))
+
+        return hits
+
+    # --------------------------------
+
+    def _intersect_bounds(self, ray, bounds):
+        """Intersect a ray with OCC bounds returned as xmin, ymin, zmin, xmax, ymax, zmax."""
+
+        xmin, ymin, zmin, xmax, ymax, zmax = bounds
+        t_min = 0.0
+        t_max = float("inf")
+        padding = 4.0
+
+        for origin, direction, low, high in (
+            (ray.origin.x, ray.direction.x, xmin, xmax),
+            (ray.origin.y, ray.direction.y, ymin, ymax),
+            (ray.origin.z, ray.direction.z, zmin, zmax),
+        ):
+            low -= padding
+            high += padding
+
+            if abs(direction) < 1e-9:
+                if origin < low or origin > high:
+                    return None
+                continue
+
+            inv = 1.0 / direction
+            t1 = (low - origin) * inv
+            t2 = (high - origin) * inv
+            t1, t2 = min(t1, t2), max(t1, t2)
+            t_min = max(t_min, t1)
+            t_max = min(t_max, t2)
+
+            if t_min > t_max:
+                return None
+
+        return t_min
 
     # --------------------------------
 

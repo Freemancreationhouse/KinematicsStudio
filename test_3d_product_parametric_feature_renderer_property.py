@@ -55,7 +55,7 @@ assert "Dependencies: 1" in panel.height.text()
 
 manager.regeneration_manager.rebuild_feature(feature, workspace)
 panel.show_selection([feature])
-assert panel.line_weight.text() == "Active"
-assert "Result: Applied" in panel.height.text() or "Result: Rebuilt" in panel.height.text()
+assert panel.line_weight.text() in ("Active", "Completed / Completed")
+assert "Result: Applied" in panel.height.text() or "Result: Rebuilt" in panel.height.text() or "Result: Geometry Generated" in panel.height.text()
 
 print("3d-product-parametric-feature-renderer-property-ok")

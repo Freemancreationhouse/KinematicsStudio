@@ -344,7 +344,7 @@ class SaveReferenceDisplayPresetCommand(Command):
 
 
 class UpdateCoordinationUICommand(Command):
-    """Undoable command for coordination UI settings and rules."""
+    """Undoable command for coordination UI settings, rules and conflicts."""
 
     def __init__(self, workspace, model, before, after, rule=None, conflict=None):
 

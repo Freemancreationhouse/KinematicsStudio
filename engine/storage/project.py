@@ -10,12 +10,14 @@ from engine.entities import (
     BlockReference,
     CircleEntity,
     DiameterDimensionEntity,
+    EllipseEntity,
     HatchEntity,
     LeaderEntity,
     LineEntity,
     LinearDimensionEntity,
     MTextEntity,
     PolylineEntity,
+    PolygonEntity,
     RadiusDimensionEntity,
     RectangleEntity,
     SplineEntity,
@@ -101,6 +103,7 @@ class ProjectSerializer:
                 "constraints": self._constraints_to_data(workspace, entity_ids),
                 "patterns": self._patterns_to_data(workspace),
                 "dimension_styles": self._dimension_styles_to_data(workspace),
+                "products": workspace.product_manager.to_dict(),
                 "settings": dict(project_settings or {}),
                 "scene3d": self._scene3d_to_data(workspace),
             },
@@ -115,6 +118,14 @@ class ProjectSerializer:
         workspace_data = payload.get("workspace", {})
         workspace = Workspace(workspace_data.get("name", "Model"))
         workspace.project_settings = dict(workspace_data.get("settings", {}))
+        if hasattr(workspace, "product_manager"):
+            workspace.product_manager.from_dict(workspace_data.get("products", {}))
+        if hasattr(workspace, "machine_workspace"):
+            workspace.machine_workspace.load_from_settings()
+        if hasattr(workspace, "manufacturing_engine"):
+            workspace.manufacturing_engine.load_from_settings()
+        if hasattr(workspace, "simulation_workspace"):
+            workspace.simulation_workspace.load_from_settings()
         context = {
             "workspace": workspace,
             "entity_by_id": {},
@@ -459,10 +470,20 @@ class ProjectSerializer:
         if bim is not None:
             data["bim"] = bim.to_dict()
 
+        gis = getattr(workspace, "gis_manager", None)
+
+        if gis is not None:
+            data["gis"] = gis.to_dict()
+
         product = getattr(workspace, "product_manager", None)
 
         if product is not None:
             data["product"] = product.to_dict()
+
+        integrated = getattr(workspace, "integrated_design_manager", None)
+
+        if integrated is not None:
+            data["integrated_design"] = integrated.to_dict()
 
         return data
 
@@ -521,6 +542,24 @@ class ProjectSerializer:
                 "radius": entity.radius,
                 "start_angle": entity.start_angle,
                 "end_angle": entity.end_angle,
+                "clockwise": getattr(entity, "clockwise", False),
+            }
+
+        if isinstance(entity, EllipseEntity):
+            return {
+                "center": self._point_to_data(entity.center),
+                "radius_x": entity.radius_x,
+                "radius_y": entity.radius_y,
+                "rotation": entity.rotation,
+            }
+
+        if isinstance(entity, PolygonEntity):
+            return {
+                "center": self._point_to_data(entity.center),
+                "radius": entity.radius,
+                "sides": entity.sides,
+                "rotation": entity.rotation,
+                "mode": entity.mode,
             }
 
         if isinstance(entity, PolylineEntity):
@@ -1007,6 +1046,11 @@ class ProjectSerializer:
         if hasattr(workspace, "bim_manager"):
             workspace.bim_manager.relink_scene_entities(workspace.scene3d.entities())
 
+        gis_data = data.get("gis")
+
+        if gis_data is not None and hasattr(workspace, "gis_manager"):
+            workspace.gis_manager.from_dict(gis_data)
+
         product_data = data.get("product")
 
         if product_data is not None and hasattr(workspace, "product_manager"):
@@ -1020,6 +1064,11 @@ class ProjectSerializer:
                 if getattr(item, "selected", False):
                     workspace.selection.select(item, True)
             workspace.product_manager.relink_scene_entities(workspace.scene3d.entities())
+
+        integrated_data = data.get("integrated_design")
+
+        if integrated_data is not None and hasattr(workspace, "integrated_design_manager"):
+            workspace.integrated_design_manager.from_dict(integrated_data)
 
     # --------------------------------
 
@@ -1048,6 +1097,22 @@ class ProjectSerializer:
                 data.get("radius", 0.0),
                 data.get("start_angle", 0.0),
                 data.get("end_angle", 90.0),
+            )
+            entity.clockwise = bool(data.get("clockwise", False))
+        elif entity_type == "EllipseEntity":
+            entity = EllipseEntity(
+                self._point_from_data(data.get("center")),
+                data.get("radius_x", 0.0),
+                data.get("radius_y", 0.0),
+                data.get("rotation", 0.0),
+            )
+        elif entity_type == "PolygonEntity":
+            entity = PolygonEntity(
+                self._point_from_data(data.get("center")),
+                data.get("radius", 0.0),
+                data.get("sides", 6),
+                data.get("rotation", 0.0),
+                data.get("mode", "Inscribed"),
             )
         elif entity_type == "PolylineEntity":
             entity = PolylineEntity([

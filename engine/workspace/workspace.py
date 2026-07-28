@@ -11,16 +11,21 @@ from engine.coordination_package import CoordinationPackageManager
 from engine.coordinate_systems import CoordinateSystemManager
 from engine.dimensions import DimensionStyleManager
 from engine.groups import GroupManager
+from engine.gis import GISManager
+from engine.integrated_design import IntegratedDesignManager
 from engine.import3d import ImportManager
 from engine.layers.layer_manager import LayerManager
 from engine.measurements import MeasurementManager
 from engine.model_compare import ModelCompareManager
+from engine.machine.engine import ManufacturingEngine
+from engine.machine.workspace import MachineWorkspace
 from engine.patterns import PatternManager
 from engine.product import ProductManager
 from engine.references3d import CoordinationManager, ReferenceManager
 from engine.scene3d import Scene3D
 from engine.scene_organization import DisplayPresetManager, SceneCollectionManager, ViewFilterManager
 from engine.sections import SectionManager
+from engine.simulation.workspace import SimulationWorkspace
 from engine.snap import SnapManager3D
 from engine.transform_gizmo import TransformGizmo
 from engine.view_states import DisplayModeManager, ViewStateManager, VisualStyleManager
@@ -152,8 +157,15 @@ class Workspace:
         self.archive_manager = self.coordination_package_manager.archive_manager
         self.bim_manager = BIMManager()
         self.bim = self.bim_manager
+        self.gis_manager = GISManager()
+        self.gis = self.gis_manager
         self.product_manager = ProductManager()
         self.products = self.product_manager
+        self.simulation_workspace = SimulationWorkspace(self)
+        self.machine_workspace = MachineWorkspace(self)
+        self.manufacturing_engine = ManufacturingEngine(self)
+        self.integrated_design_manager = IntegratedDesignManager(self)
+        self.integrated_design = self.integrated_design_manager
         self.snap_manager3d = SnapManager3D()
         self.transform_gizmo = TransformGizmo()
         self.entities = WorkspaceEntityList(self)
@@ -183,6 +195,8 @@ class Workspace:
     def clear(self):
         """Remove all entities from this workspace."""
 
+        self.selection.clear()
+        self.command_manager.clear()
         self.entities.clear()
         for entity in list(self.scene3d.entities()):
             self.unregister_layer_entity(entity)
@@ -218,7 +232,12 @@ class Workspace:
         self.coordination_package_manager.active_package_id = None
         self.coordination_package_manager.archive_manager.archives.clear()
         self.bim_manager.clear()
+        self.gis_manager.clear()
         self.product_manager.clear()
+        self.simulation_workspace.clear()
+        self.machine_workspace.clear()
+        self.manufacturing_engine.clear()
+        self.integrated_design_manager.clear()
 
     # --------------------------------
 

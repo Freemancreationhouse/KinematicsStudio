@@ -36,9 +36,17 @@ assert model.coordination_ui_settings["alignment"] == "WCS"
 panel.validate_reference()
 assert model.coordination_ui_settings["validation_status"] == "Valid"
 
-panel.add_conflict_placeholder("Coordination placeholder")
-assert workspace.coordination_manager.conflicts[-1]["description"] == "Coordination placeholder"
-assert model.coordination_ui_settings["conflict_placeholder"] == "Coordination placeholder"
+assert not panel.conflict_button.isHidden()
+conflict = panel.add_conflict("Coordination conflict")
+assert conflict["status"] == "Open"
+assert conflict["severity"] == "Medium"
+assert conflict["priority"] == "Normal"
+assert conflict["reference_id"] == model.id
+assert workspace.coordination_manager.conflicts[-1]["description"] == "Coordination conflict"
+assert workspace.coordination_manager.conflicts[-1]["status"] == "Open"
+assert model.coordination_ui_settings["conflict_description"] == "Coordination conflict"
+assert model.coordination_ui_settings["conflict_status"] == "Open"
+assert model.coordination_ui_settings["conflict_placeholder"] == "Coordination conflict"
 workspace.command_manager.undo()
 assert workspace.coordination_manager.conflicts == []
 

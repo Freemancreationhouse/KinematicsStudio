@@ -2,11 +2,13 @@ from engine.entities import (
     ArcEntity,
     BlockReference,
     CircleEntity,
+    EllipseEntity,
     HatchEntity,
     LeaderEntity,
     LineEntity,
     MTextEntity,
     PolylineEntity,
+    PolygonEntity,
     RectangleEntity,
     SplineEntity,
     TextEntity,
@@ -82,6 +84,10 @@ class SVGExporter(Exporter):
             return [self._circle(item, entity)]
         if isinstance(entity, ArcEntity):
             return [self._arc(item, entity)]
+        if isinstance(entity, EllipseEntity):
+            return [self._ellipse(item, entity)]
+        if isinstance(entity, PolygonEntity):
+            return [self._polyline(item, entity.points, True)]
         if isinstance(entity, PolylineEntity):
             return [self._polyline(item, entity.points, entity.closed)]
         if isinstance(entity, SplineEntity):
@@ -161,6 +167,17 @@ class SVGExporter(Exporter):
         return (
             f'<path d="M {start.x:.3f} {start.y:.3f} '
             f'A {entity.radius:.3f} {entity.radius:.3f} 0 {large} 1 {end.x:.3f} {end.y:.3f}" '
+            f'{self._style(item)} />'
+        )
+
+    # --------------------------------
+
+    def _ellipse(self, item, entity):
+
+        return (
+            f'<ellipse cx="{entity.center.x:.3f}" cy="{entity.center.y:.3f}" '
+            f'rx="{entity.radius_x:.3f}" ry="{entity.radius_y:.3f}" '
+            f'transform="rotate({entity.rotation:.3f} {entity.center.x:.3f} {entity.center.y:.3f})" '
             f'{self._style(item)} />'
         )
 

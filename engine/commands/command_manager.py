@@ -69,6 +69,15 @@ class CommandManager:
 
     # --------------------------------
 
+    def clear(self):
+        """Clear undo/redo history during workspace disposal."""
+
+        self.undo_stack.clear()
+        self.redo_stack.clear()
+        self._changed()
+
+    # --------------------------------
+
     @property
     def undo_available(self):
 

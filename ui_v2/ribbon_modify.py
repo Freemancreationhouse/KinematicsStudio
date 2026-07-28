@@ -4,6 +4,8 @@ from PySide6.QtWidgets import (
     QPushButton,
 )
 
+from engine.commands.occ_boolean_command import OCCBooleanCommand
+
 
 class ModifyRibbon(QWidget):
     """Ribbon section for modify and view maintenance commands."""
@@ -26,6 +28,9 @@ class ModifyRibbon(QWidget):
         "Extend",
         "Fillet",
         "Chamfer",
+        "Union",
+        "Subtract",
+        "Intersect",
         "Cube 3D",
         "Box 3D",
         "Plane 3D",
@@ -36,6 +41,10 @@ class ModifyRibbon(QWidget):
         "Pyramid 3D",
         "Prism 3D",
         "Capsule 3D",
+        "Extrude",
+        "Revolve",
+        "Sweep",
+        "Loft",
     ]
 
     def __init__(self, tool_manager):
@@ -140,6 +149,12 @@ class ModifyRibbon(QWidget):
             button.clicked.connect(
                 lambda checked=False: self.tool_manager.activate("ScaleTool")
             )
+        elif text == "Union":
+            button.clicked.connect(lambda checked=False: self._boolean("union"))
+        elif text == "Subtract":
+            button.clicked.connect(lambda checked=False: self._boolean("subtract"))
+        elif text == "Intersect":
+            button.clicked.connect(lambda checked=False: self._boolean("intersect"))
         elif text == "Undo":
             button.clicked.connect(self._undo)
         elif text == "Redo":
@@ -155,6 +170,11 @@ class ModifyRibbon(QWidget):
         elif text in self._primitive_tool_names():
             button.clicked.connect(
                 lambda checked=False, tool=self._primitive_tool_names()[text]:
+                    self.tool_manager.activate(tool)
+            )
+        elif text in self._solid_tool_names():
+            button.clicked.connect(
+                lambda checked=False, tool=self._solid_tool_names()[text]:
                     self.tool_manager.activate(tool)
             )
 
@@ -177,6 +197,17 @@ class ModifyRibbon(QWidget):
 
     # ---------------------------------------------
 
+    def _solid_tool_names(self):
+
+        return {
+            "Extrude": "ExtrudeTool",
+            "Revolve": "RevolveTool",
+            "Sweep": "SweepTool",
+            "Loft": "LoftTool",
+        }
+
+    # ---------------------------------------------
+
     def _undo(self):
 
         workspace = self._workspace()
@@ -192,6 +223,47 @@ class ModifyRibbon(QWidget):
 
         if workspace:
             workspace.command_manager.redo()
+
+    # ---------------------------------------------
+
+    def _boolean(self, operation):
+
+        app = getattr(self.tool_manager, "app", None)
+        workspace = self._workspace()
+        engine = getattr(app, "engine", None)
+
+        if app is None or workspace is None or engine is None:
+            return
+
+        shapes = getattr(getattr(engine, "occ", None), "shapes", [])
+        selected = [
+            item for item in list(workspace.selection.selected)
+            if item in shapes
+        ]
+
+        if len(selected) != 2:
+            self._show_status_text("Select exactly two OCC solids for Boolean operation.")
+            return
+
+        try:
+            workspace.command_manager.execute(
+                OCCBooleanCommand(engine, workspace, operation, selected[0], selected[1])
+            )
+        except Exception as error:
+            self._show_status_text(f"Boolean {operation} failed: {error}")
+            return
+
+        self._show_status_text(f"Boolean {operation} completed.")
+
+    # ---------------------------------------------
+
+    def _show_status_text(self, text):
+
+        canvas = getattr(self.tool_manager, "canvas", None)
+        status_bar = getattr(canvas, "status_bar", None)
+
+        if status_bar is not None:
+            status_bar.show_status_text(text)
 
     # ---------------------------------------------
 

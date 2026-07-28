@@ -1,11 +1,13 @@
+from engine.ai import AIProviderNotConfiguredError
 from engine.ai.assistant import AIAssistant
+
 
 ai = AIAssistant()
 
-result = ai.execute(
+try:
+    ai.execute("Create a modern wooden chair")
+    raise AssertionError("AIAssistant must not fabricate AI responses")
+except AIProviderNotConfiguredError:
+    pass
 
-    "Create a modern wooden chair"
-
-)
-
-print(result)
+print("ai-assistant-production-ok")

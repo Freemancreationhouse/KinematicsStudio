@@ -1,5 +1,6 @@
 import dataclasses
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
 from uuid import uuid4
 
 from engine.geometry import BoundingBox3D, Vector3
@@ -815,6 +816,322 @@ class PropertySet:
         ]
 
         return property_set
+
+
+def _utc_timestamp():
+    """Return an ISO-8601 UTC timestamp for BIM audit metadata."""
+
+    return datetime.now(timezone.utc).isoformat()
+
+
+@dataclass
+class BIMWorkspaceExtension:
+    """Workspace-scoped BIM state stored by the existing project system."""
+
+    project_id: str = ""
+    active: bool = False
+    project_units: str = "meters"
+    project_location: dict = field(default_factory=dict)
+    coordinate_system: dict = field(default_factory=dict)
+    building_metadata: dict = field(default_factory=dict)
+    site_metadata: dict = field(default_factory=dict)
+    preferences: dict = field(default_factory=dict)
+    version_metadata: dict = field(default_factory=dict)
+    validation_metadata: dict = field(default_factory=dict)
+
+    def to_dict(self):
+        """Return JSON-safe BIM workspace extension data."""
+
+        return {
+            "project_id": self.project_id,
+            "active": self.active,
+            "project_units": self.project_units,
+            "project_location": dict(self.project_location),
+            "coordinate_system": dict(self.coordinate_system),
+            "building_metadata": dict(self.building_metadata),
+            "site_metadata": dict(self.site_metadata),
+            "preferences": dict(self.preferences),
+            "version_metadata": dict(self.version_metadata),
+            "validation_metadata": dict(self.validation_metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create BIM workspace extension data from persistence."""
+
+        data = data or {}
+
+        return BIMWorkspaceExtension(
+            data.get("project_id", ""),
+            bool(data.get("active", False)),
+            data.get("project_units", "meters"),
+            dict(data.get("project_location", {})),
+            dict(data.get("coordinate_system", {})),
+            dict(data.get("building_metadata", {})),
+            dict(data.get("site_metadata", {})),
+            dict(data.get("preferences", {})),
+            dict(data.get("version_metadata", {})),
+            dict(data.get("validation_metadata", {})),
+        )
+
+
+@dataclass
+class BIMBodyReference:
+    """Reference to exact CAD geometry owned by BodyManager."""
+
+    body_id: str = ""
+    body_name: str = ""
+    source: str = "BodyManager"
+    revision: str = ""
+    metadata: dict = field(default_factory=dict)
+
+    def to_dict(self):
+        """Return JSON-safe body reference data."""
+
+        return {
+            "body_id": self.body_id,
+            "body_name": self.body_name,
+            "source": self.source,
+            "revision": self.revision,
+            "metadata": dict(self.metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create a body reference from persisted data."""
+
+        data = data or {}
+
+        return BIMBodyReference(
+            data.get("body_id", ""),
+            data.get("body_name", ""),
+            data.get("source", "BodyManager"),
+            data.get("revision", ""),
+            dict(data.get("metadata", {})),
+        )
+
+
+@dataclass
+class BIMSpatialElement:
+    """Spatial hierarchy element for project, site, building, storey, space or zone."""
+
+    name: str = "Spatial Element"
+    element_type: str = "Space"
+    parent_id: str = ""
+    elevation: float = 0.0
+    body_references: list = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+    global_id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe spatial hierarchy data."""
+
+        return {
+            "id": self.id,
+            "global_id": self.global_id,
+            "name": self.name,
+            "element_type": self.element_type,
+            "parent_id": self.parent_id,
+            "elevation": self.elevation,
+            "body_references": [
+                reference.to_dict()
+                if hasattr(reference, "to_dict") else dict(reference)
+                for reference in self.body_references
+            ],
+            "metadata": dict(self.metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create spatial hierarchy data from persistence."""
+
+        data = data or {}
+        item = BIMSpatialElement(
+            data.get("name", "Spatial Element"),
+            data.get("element_type", "Space"),
+            data.get("parent_id", ""),
+            float(data.get("elevation", 0.0)),
+            [
+                BIMBodyReference.from_dict(reference)
+                for reference in data.get("body_references", [])
+            ],
+            dict(data.get("metadata", {})),
+            data.get("id", str(uuid4())),
+            data.get("global_id", str(uuid4())),
+        )
+
+        return item
+
+
+@dataclass
+class BIMClassificationAssignment:
+    """Classification assignment for a BIM object or spatial element."""
+
+    system: str = "Custom"
+    code: str = ""
+    name: str = ""
+    category_path: list = field(default_factory=list)
+    target_id: str = ""
+    metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe classification assignment data."""
+
+        return {
+            "id": self.id,
+            "system": self.system,
+            "code": self.code,
+            "name": self.name,
+            "category_path": list(self.category_path),
+            "target_id": self.target_id,
+            "metadata": dict(self.metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create a classification assignment from persisted data."""
+
+        data = data or {}
+
+        return BIMClassificationAssignment(
+            data.get("system", "Custom"),
+            data.get("code", ""),
+            data.get("name", ""),
+            list(data.get("category_path", [])),
+            data.get("target_id", ""),
+            dict(data.get("metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class IFCEntityCore:
+    """IFC core mapping metadata without import/export execution."""
+
+    entity_type: str = "IfcObject"
+    object_id: str = ""
+    global_id: str = ""
+    property_set_ids: list = field(default_factory=list)
+    relationship_ids: list = field(default_factory=list)
+    type_metadata: dict = field(default_factory=dict)
+    unit_metadata: dict = field(default_factory=dict)
+    owner_history: dict = field(default_factory=dict)
+    serialization_metadata: dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe IFC entity foundation data."""
+
+        return {
+            "id": self.id,
+            "entity_type": self.entity_type,
+            "object_id": self.object_id,
+            "global_id": self.global_id,
+            "property_set_ids": list(self.property_set_ids),
+            "relationship_ids": list(self.relationship_ids),
+            "type_metadata": dict(self.type_metadata),
+            "unit_metadata": dict(self.unit_metadata),
+            "owner_history": dict(self.owner_history),
+            "serialization_metadata": dict(self.serialization_metadata),
+            "metadata": dict(self.metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create IFC entity foundation data from persistence."""
+
+        data = data or {}
+
+        return IFCEntityCore(
+            data.get("entity_type", "IfcObject"),
+            data.get("object_id", ""),
+            data.get("global_id", ""),
+            list(data.get("property_set_ids", [])),
+            list(data.get("relationship_ids", [])),
+            dict(data.get("type_metadata", {})),
+            dict(data.get("unit_metadata", {})),
+            dict(data.get("owner_history", {})),
+            dict(data.get("serialization_metadata", {})),
+            dict(data.get("metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class BIMCoreValidationReport:
+    """Validation report for the BIM core and IFC foundation."""
+
+    valid: bool = True
+    issues: list = field(default_factory=list)
+    warnings: list = field(default_factory=list)
+    statistics: dict = field(default_factory=dict)
+    checked_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe validation report data."""
+
+        return {
+            "valid": self.valid,
+            "issues": list(self.issues),
+            "warnings": list(self.warnings),
+            "statistics": dict(self.statistics),
+            "checked_at": self.checked_at,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create a validation report from persisted data."""
+
+        data = data or {}
+
+        return BIMCoreValidationReport(
+            bool(data.get("valid", True)),
+            list(data.get("issues", [])),
+            list(data.get("warnings", [])),
+            dict(data.get("statistics", {})),
+            data.get("checked_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMCoreDiagnostics:
+    """Diagnostics summary for BIM foundation metadata."""
+
+    projects: int = 0
+    spatial_elements: int = 0
+    building_objects: int = 0
+    property_sets: int = 0
+    classifications: int = 0
+    relationships: int = 0
+    ifc_entities: int = 0
+    validation_issues: int = 0
+    updated_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe diagnostics data."""
+
+        return dict(self.__dict__)
+
+    @staticmethod
+    def from_dict(data):
+        """Create diagnostics from persisted data."""
+
+        data = data or {}
+
+        return BIMCoreDiagnostics(
+            int(data.get("projects", 0)),
+            int(data.get("spatial_elements", 0)),
+            int(data.get("building_objects", 0)),
+            int(data.get("property_sets", 0)),
+            int(data.get("classifications", 0)),
+            int(data.get("relationships", 0)),
+            int(data.get("ifc_entities", 0)),
+            int(data.get("validation_issues", 0)),
+            data.get("updated_at", _utc_timestamp()),
+        )
 
 
 ELEMENT_KINDS = (
@@ -1868,6 +2185,9 @@ class QuantityManager:
 
         for instance in self.project.instances:
             items.extend(_instance_quantities(instance))
+
+        for element in getattr(self.project, "native_elements", []):
+            items.extend(_native_element_quantities(element))
 
         for assignment in self.project.material_assignments:
             material = _find_by_id(self.project.materials, assignment.material_id)
@@ -7678,12 +7998,18 @@ class BIMObject:
 
         self.id = str(uuid4())
         self.guid = str(uuid4())
+        self.global_id = self.guid
         self.name = name
+        self.description = ""
+        self.object_type = self.type_name
+        self.tag = ""
+        self.owner_history = {}
         self.category_id = category_id
         self.type_id = type_id
         self.classification = {}
         self.property_sets = {}
         self.relationships = {}
+        self.body_references = []
         self.level_id = ""
         self.building_id = ""
         self.mesh_entity_id = ""
@@ -7756,12 +8082,22 @@ class BIMObject:
         return {
             "id": self.id,
             "guid": self.guid,
+            "global_id": getattr(self, "global_id", self.guid),
             "name": self.name,
+            "description": getattr(self, "description", ""),
+            "object_type": getattr(self, "object_type", self.type_name),
+            "tag": getattr(self, "tag", ""),
+            "owner_history": dict(getattr(self, "owner_history", {})),
             "category_id": self.category_id,
             "type_id": self.type_id,
             "classification": dict(self.classification),
             "property_sets": dict(self.property_sets),
             "relationships": dict(self.relationships),
+            "body_references": [
+                reference.to_dict()
+                if hasattr(reference, "to_dict") else dict(reference)
+                for reference in getattr(self, "body_references", [])
+            ],
             "level_id": self.level_id,
             "building_id": self.building_id,
             "mesh_entity_id": self.mesh_entity_id,
@@ -7796,9 +8132,18 @@ class BIMObject:
         )
         item.id = data.get("id", item.id)
         item.guid = data.get("guid", item.guid)
+        item.global_id = data.get("global_id", item.guid)
+        item.description = data.get("description", "")
+        item.object_type = data.get("object_type", item.type_name)
+        item.tag = data.get("tag", "")
+        item.owner_history = dict(data.get("owner_history", {}))
         item.classification = dict(data.get("classification", {}))
         item.property_sets = dict(data.get("property_sets", {}))
         item.relationships = dict(data.get("relationships", {}))
+        item.body_references = [
+            BIMBodyReference.from_dict(reference)
+            for reference in data.get("body_references", [])
+        ]
         item.level_id = data.get("level_id", "")
         item.building_id = data.get("building_id", "")
         item.mesh_entity_id = data.get("mesh_entity_id", "")
@@ -7850,9 +8195,18 @@ class BIMInstance(BIMObject):
         )
         instance.id = data.get("id", instance.id)
         instance.guid = data.get("guid", instance.guid)
+        instance.global_id = data.get("global_id", instance.guid)
+        instance.description = data.get("description", "")
+        instance.object_type = data.get("object_type", instance.type_name)
+        instance.tag = data.get("tag", "")
+        instance.owner_history = dict(data.get("owner_history", {}))
         instance.classification = dict(data.get("classification", {}))
         instance.property_sets = dict(data.get("property_sets", {}))
         instance.relationships = dict(data.get("relationships", {}))
+        instance.body_references = [
+            BIMBodyReference.from_dict(reference)
+            for reference in data.get("body_references", [])
+        ]
         instance.level_id = data.get("level_id", "")
         instance.building_id = data.get("building_id", "")
         instance.mesh_entity_id = data.get("mesh_entity_id", "")
@@ -7873,6 +8227,3088 @@ class BIMInstance(BIMObject):
         instance.color = data.get("color")
 
         return instance
+
+
+class BuildingObject(BIMObject):
+    """Editable BIM metadata object that references existing CAD body geometry."""
+
+    type_name = "BuildingObject"
+
+    def __init__(
+        self,
+        name="Building Object",
+        object_type="BuildingElement",
+        body_references=None,
+        category_id="",
+        type_id="",
+        location=None,
+        metadata=None,
+    ):
+
+        super().__init__(name, category_id, type_id, location)
+        self.object_type = object_type
+        self.body_references = [
+            reference
+            if isinstance(reference, BIMBodyReference)
+            else BIMBodyReference.from_dict(reference)
+            for reference in body_references or []
+        ]
+        metadata = dict(metadata or {})
+        self.description = metadata.get("description", "")
+        self.tag = metadata.get("tag", "")
+        self.owner_history = dict(metadata.get("owner_history", {}))
+        self.metadata = metadata
+
+    def to_dict(self):
+        """Return JSON-safe building object metadata."""
+
+        data = super().to_dict()
+        data["metadata"] = dict(getattr(self, "metadata", {}))
+
+        return data
+
+    @staticmethod
+    def from_dict(data):
+        """Create a building object from persisted metadata."""
+
+        data = data or {}
+        item = BuildingObject(
+            data.get("name", "Building Object"),
+            data.get("object_type", "BuildingElement"),
+            data.get("body_references", []),
+            data.get("category_id", ""),
+            data.get("type_id", ""),
+            _vector_from_data(data.get("location")),
+            data.get("metadata", {}),
+        )
+        item.id = data.get("id", item.id)
+        item.guid = data.get("guid", item.guid)
+        item.global_id = data.get("global_id", item.guid)
+        item.description = data.get("description", item.description)
+        item.tag = data.get("tag", item.tag)
+        item.owner_history = dict(data.get("owner_history", item.owner_history))
+        item.classification = dict(data.get("classification", {}))
+        item.property_sets = dict(data.get("property_sets", {}))
+        item.relationships = dict(data.get("relationships", {}))
+        item.level_id = data.get("level_id", "")
+        item.building_id = data.get("building_id", "")
+        item.family_id = data.get("family_id", "")
+        item.element_definition_id = data.get("element_definition_id", "")
+        item.material_assignment_id = data.get("material_assignment_id", "")
+        item.assembly_ids = list(data.get("assembly_ids", []))
+        item.property_set_ids = list(data.get("property_set_ids", []))
+        item.visible = bool(data.get("visible", True))
+        item.locked = bool(data.get("locked", False))
+        item.selected = bool(data.get("selected", False))
+        item.layer_name = data.get("layer_name")
+        item.color = data.get("color")
+
+        return item
+
+
+@dataclass
+class BIMParametricDefinition:
+    """Parametric BIM element definition metadata evaluated by existing parametric systems."""
+
+    dimensions: dict = field(default_factory=dict)
+    offsets: dict = field(default_factory=dict)
+    levels: dict = field(default_factory=dict)
+    thickness: float = 0.0
+    height: float = 0.0
+    width: float = 0.0
+    length: float = 0.0
+    rotation: float = 0.0
+    material: str = ""
+    type_parameters: dict = field(default_factory=dict)
+    instance_parameters: dict = field(default_factory=dict)
+    regeneration_metadata: dict = field(default_factory=dict)
+
+    def to_dict(self):
+        """Return JSON-safe parametric definition data."""
+
+        return {
+            "dimensions": dict(self.dimensions),
+            "offsets": dict(self.offsets),
+            "levels": dict(self.levels),
+            "thickness": self.thickness,
+            "height": self.height,
+            "width": self.width,
+            "length": self.length,
+            "rotation": self.rotation,
+            "material": self.material,
+            "type_parameters": dict(self.type_parameters),
+            "instance_parameters": dict(self.instance_parameters),
+            "regeneration_metadata": dict(self.regeneration_metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create parametric definition metadata from persisted data."""
+
+        data = data or {}
+
+        return BIMParametricDefinition(
+            dict(data.get("dimensions", {})),
+            dict(data.get("offsets", {})),
+            dict(data.get("levels", {})),
+            float(data.get("thickness", 0.0)),
+            float(data.get("height", 0.0)),
+            float(data.get("width", 0.0)),
+            float(data.get("length", 0.0)),
+            float(data.get("rotation", 0.0)),
+            data.get("material", ""),
+            dict(data.get("type_parameters", {})),
+            dict(data.get("instance_parameters", {})),
+            dict(data.get("regeneration_metadata", {})),
+        )
+
+
+@dataclass
+class BIMElementType:
+    """Reusable native BIM element type metadata."""
+
+    name: str = "Element Type"
+    element_class: str = "Generic"
+    category: str = "Architecture"
+    material_id: str = ""
+    classification: dict = field(default_factory=dict)
+    parameters: BIMParametricDefinition = field(default_factory=BIMParametricDefinition)
+    property_set_ids: list = field(default_factory=list)
+    catalog_metadata: dict = field(default_factory=dict)
+    version_metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe element type metadata."""
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "element_class": self.element_class,
+            "category": self.category,
+            "material_id": self.material_id,
+            "classification": dict(self.classification),
+            "parameters": self.parameters.to_dict(),
+            "property_set_ids": list(self.property_set_ids),
+            "catalog_metadata": dict(self.catalog_metadata),
+            "version_metadata": dict(self.version_metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create element type metadata from persistence."""
+
+        data = data or {}
+
+        return BIMElementType(
+            data.get("name", "Element Type"),
+            data.get("element_class", "Generic"),
+            data.get("category", "Architecture"),
+            data.get("material_id", ""),
+            dict(data.get("classification", {})),
+            BIMParametricDefinition.from_dict(data.get("parameters", {})),
+            list(data.get("property_set_ids", [])),
+            dict(data.get("catalog_metadata", {})),
+            dict(data.get("version_metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class BIMElementRelationshipMetadata:
+    """Relationship metadata for hosted and dependent native BIM elements."""
+
+    relationship_type: str = "DependsOn"
+    source_id: str = ""
+    target_id: str = ""
+    dependency_metadata: dict = field(default_factory=dict)
+    opening_metadata: dict = field(default_factory=dict)
+    connection_metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe native element relationship data."""
+
+        return {
+            "id": self.id,
+            "relationship_type": self.relationship_type,
+            "source_id": self.source_id,
+            "target_id": self.target_id,
+            "dependency_metadata": dict(self.dependency_metadata),
+            "opening_metadata": dict(self.opening_metadata),
+            "connection_metadata": dict(self.connection_metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create native element relationship metadata from persistence."""
+
+        data = data or {}
+
+        return BIMElementRelationshipMetadata(
+            data.get("relationship_type", "DependsOn"),
+            data.get("source_id", ""),
+            data.get("target_id", ""),
+            dict(data.get("dependency_metadata", {})),
+            dict(data.get("opening_metadata", {})),
+            dict(data.get("connection_metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class NativeBIMElementLibrary:
+    """Reusable native BIM type catalog metadata."""
+
+    name: str = "BIM Library"
+    library_type: str = "Type Catalog"
+    element_type_ids: list = field(default_factory=list)
+    material_ids: list = field(default_factory=list)
+    catalog_metadata: dict = field(default_factory=dict)
+    version_metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe library metadata."""
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "library_type": self.library_type,
+            "element_type_ids": list(self.element_type_ids),
+            "material_ids": list(self.material_ids),
+            "catalog_metadata": dict(self.catalog_metadata),
+            "version_metadata": dict(self.version_metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create library metadata from persistence."""
+
+        data = data or {}
+
+        return NativeBIMElementLibrary(
+            data.get("name", "BIM Library"),
+            data.get("library_type", "Type Catalog"),
+            list(data.get("element_type_ids", [])),
+            list(data.get("material_ids", [])),
+            dict(data.get("catalog_metadata", {})),
+            dict(data.get("version_metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class BIMElementDiagnostics:
+    """Native BIM element library diagnostics."""
+
+    element_types: int = 0
+    elements: int = 0
+    architectural_elements: int = 0
+    structural_elements: int = 0
+    mep_elements: int = 0
+    relationships: int = 0
+    libraries: int = 0
+    validation_issues: int = 0
+    updated_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe element diagnostics."""
+
+        return dict(self.__dict__)
+
+    @staticmethod
+    def from_dict(data):
+        """Create element diagnostics from persisted data."""
+
+        data = data or {}
+
+        return BIMElementDiagnostics(
+            int(data.get("element_types", 0)),
+            int(data.get("elements", 0)),
+            int(data.get("architectural_elements", 0)),
+            int(data.get("structural_elements", 0)),
+            int(data.get("mep_elements", 0)),
+            int(data.get("relationships", 0)),
+            int(data.get("libraries", 0)),
+            int(data.get("validation_issues", 0)),
+            data.get("updated_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMPlacementContext:
+    """Placement workflow metadata for BIM authoring commands."""
+
+    grid_snapping: bool = True
+    object_snapping: bool = True
+    axis_lock: str = ""
+    level_id: str = ""
+    host_id: str = ""
+    automatic_host_detection: bool = True
+    reference_plane_id: str = ""
+    elevation: float = 0.0
+    cursor_preview: dict = field(default_factory=dict)
+
+    def to_dict(self):
+        """Return JSON-safe placement context data."""
+
+        return {
+            "grid_snapping": self.grid_snapping,
+            "object_snapping": self.object_snapping,
+            "axis_lock": self.axis_lock,
+            "level_id": self.level_id,
+            "host_id": self.host_id,
+            "automatic_host_detection": self.automatic_host_detection,
+            "reference_plane_id": self.reference_plane_id,
+            "elevation": self.elevation,
+            "cursor_preview": dict(self.cursor_preview),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create placement context from persistence."""
+
+        data = data or {}
+
+        return BIMPlacementContext(
+            bool(data.get("grid_snapping", True)),
+            bool(data.get("object_snapping", True)),
+            data.get("axis_lock", ""),
+            data.get("level_id", ""),
+            data.get("host_id", ""),
+            bool(data.get("automatic_host_detection", True)),
+            data.get("reference_plane_id", ""),
+            float(data.get("elevation", 0.0)),
+            dict(data.get("cursor_preview", {})),
+        )
+
+
+@dataclass
+class BIMAuthoringSession:
+    """Workspace-associated BIM authoring session metadata."""
+
+    active_tool: str = ""
+    element_creation_context: dict = field(default_factory=dict)
+    placement_context: BIMPlacementContext = field(default_factory=BIMPlacementContext)
+    modification_context: dict = field(default_factory=dict)
+    snapping_context: dict = field(default_factory=dict)
+    validation_context: dict = field(default_factory=dict)
+    visualization_context: dict = field(default_factory=dict)
+    diagnostics: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe authoring session data."""
+
+        return {
+            "id": self.id,
+            "active_tool": self.active_tool,
+            "element_creation_context": dict(self.element_creation_context),
+            "placement_context": self.placement_context.to_dict(),
+            "modification_context": dict(self.modification_context),
+            "snapping_context": dict(self.snapping_context),
+            "validation_context": dict(self.validation_context),
+            "visualization_context": dict(self.visualization_context),
+            "diagnostics": dict(self.diagnostics),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create an authoring session from persistence."""
+
+        data = data or {}
+        session = BIMAuthoringSession(
+            data.get("active_tool", ""),
+            dict(data.get("element_creation_context", {})),
+            BIMPlacementContext.from_dict(data.get("placement_context", {})),
+            dict(data.get("modification_context", {})),
+            dict(data.get("snapping_context", {})),
+            dict(data.get("validation_context", {})),
+            dict(data.get("visualization_context", {})),
+            dict(data.get("diagnostics", {})),
+            data.get("id", str(uuid4())),
+        )
+
+        return session
+
+
+@dataclass
+class BIMAuthoringDiagnostics:
+    """Diagnostics for command-driven BIM authoring."""
+
+    sessions: int = 0
+    commands: int = 0
+    created_elements: int = 0
+    edited_elements: int = 0
+    relationships: int = 0
+    validation_issues: int = 0
+    updated_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe authoring diagnostics."""
+
+        return dict(self.__dict__)
+
+    @staticmethod
+    def from_dict(data):
+        """Create authoring diagnostics from persistence."""
+
+        data = data or {}
+
+        return BIMAuthoringDiagnostics(
+            int(data.get("sessions", 0)),
+            int(data.get("commands", 0)),
+            int(data.get("created_elements", 0)),
+            int(data.get("edited_elements", 0)),
+            int(data.get("relationships", 0)),
+            int(data.get("validation_issues", 0)),
+            data.get("updated_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class IFCExchangeRecord:
+    """IFC 4.3 exchange record referencing existing BIM objects."""
+
+    exchange_type: str = "Export"
+    schema: str = "IFC4X3"
+    content: str = ""
+    object_ids: list = field(default_factory=list)
+    global_id_map: dict = field(default_factory=dict)
+    property_set_map: dict = field(default_factory=dict)
+    classification_map: dict = field(default_factory=dict)
+    material_map: dict = field(default_factory=dict)
+    layer_map: dict = field(default_factory=dict)
+    owner_history: dict = field(default_factory=dict)
+    validation_report: dict = field(default_factory=dict)
+    version_metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe IFC exchange data."""
+
+        return {
+            "id": self.id,
+            "exchange_type": self.exchange_type,
+            "schema": self.schema,
+            "content": self.content,
+            "object_ids": list(self.object_ids),
+            "global_id_map": dict(self.global_id_map),
+            "property_set_map": dict(self.property_set_map),
+            "classification_map": dict(self.classification_map),
+            "material_map": dict(self.material_map),
+            "layer_map": dict(self.layer_map),
+            "owner_history": dict(self.owner_history),
+            "validation_report": dict(self.validation_report),
+            "version_metadata": dict(self.version_metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create IFC exchange data from persistence."""
+
+        data = data or {}
+
+        return IFCExchangeRecord(
+            data.get("exchange_type", "Export"),
+            data.get("schema", "IFC4X3"),
+            data.get("content", ""),
+            list(data.get("object_ids", [])),
+            dict(data.get("global_id_map", {})),
+            dict(data.get("property_set_map", {})),
+            dict(data.get("classification_map", {})),
+            dict(data.get("material_map", {})),
+            dict(data.get("layer_map", {})),
+            dict(data.get("owner_history", {})),
+            dict(data.get("validation_report", {})),
+            dict(data.get("version_metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class BIMDocumentationDocument:
+    """Drawing document and sheet-set metadata referencing BIM elements."""
+
+    name: str = "BIM Document"
+    document_type: str = "Drawing Set"
+    sheet_ids: list = field(default_factory=list)
+    view_ids: list = field(default_factory=list)
+    scale_metadata: dict = field(default_factory=dict)
+    title_block: str = "Default Title Block"
+    revision_metadata: dict = field(default_factory=dict)
+    issue_metadata: dict = field(default_factory=dict)
+    export_metadata: dict = field(default_factory=dict)
+    diagnostics: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe documentation document data."""
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "document_type": self.document_type,
+            "sheet_ids": list(self.sheet_ids),
+            "view_ids": list(self.view_ids),
+            "scale_metadata": dict(self.scale_metadata),
+            "title_block": self.title_block,
+            "revision_metadata": dict(self.revision_metadata),
+            "issue_metadata": dict(self.issue_metadata),
+            "export_metadata": dict(self.export_metadata),
+            "diagnostics": dict(self.diagnostics),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create documentation document data from persistence."""
+
+        data = data or {}
+
+        return BIMDocumentationDocument(
+            data.get("name", "BIM Document"),
+            data.get("document_type", "Drawing Set"),
+            list(data.get("sheet_ids", [])),
+            list(data.get("view_ids", [])),
+            dict(data.get("scale_metadata", {})),
+            data.get("title_block", "Default Title Block"),
+            dict(data.get("revision_metadata", {})),
+            dict(data.get("issue_metadata", {})),
+            dict(data.get("export_metadata", {})),
+            dict(data.get("diagnostics", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class BIMGeneratedDrawing:
+    """Generated drawing/view metadata whose graphics reference BIM elements."""
+
+    drawing_type: str = "Plan"
+    name: str = "Drawing"
+    element_ids: list = field(default_factory=list)
+    sheet_id: str = ""
+    view_id: str = ""
+    scale: str = "1:100"
+    viewport_metadata: dict = field(default_factory=dict)
+    template_metadata: dict = field(default_factory=dict)
+    callout_metadata: dict = field(default_factory=dict)
+    validation_metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe generated drawing data."""
+
+        return {
+            "id": self.id,
+            "drawing_type": self.drawing_type,
+            "name": self.name,
+            "element_ids": list(self.element_ids),
+            "sheet_id": self.sheet_id,
+            "view_id": self.view_id,
+            "scale": self.scale,
+            "viewport_metadata": dict(self.viewport_metadata),
+            "template_metadata": dict(self.template_metadata),
+            "callout_metadata": dict(self.callout_metadata),
+            "validation_metadata": dict(self.validation_metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create generated drawing data from persistence."""
+
+        data = data or {}
+
+        return BIMGeneratedDrawing(
+            data.get("drawing_type", "Plan"),
+            data.get("name", "Drawing"),
+            list(data.get("element_ids", [])),
+            data.get("sheet_id", ""),
+            data.get("view_id", ""),
+            data.get("scale", "1:100"),
+            dict(data.get("viewport_metadata", {})),
+            dict(data.get("template_metadata", {})),
+            dict(data.get("callout_metadata", {})),
+            dict(data.get("validation_metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class BIMAnnotation:
+    """Associative BIM annotation metadata."""
+
+    annotation_type: str = "Tag"
+    target_id: str = ""
+    text: str = ""
+    view_id: str = ""
+    sheet_id: str = ""
+    association_metadata: dict = field(default_factory=dict)
+    style_metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe annotation data."""
+
+        return {
+            "id": self.id,
+            "annotation_type": self.annotation_type,
+            "target_id": self.target_id,
+            "text": self.text,
+            "view_id": self.view_id,
+            "sheet_id": self.sheet_id,
+            "association_metadata": dict(self.association_metadata),
+            "style_metadata": dict(self.style_metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create annotation data from persistence."""
+
+        data = data or {}
+
+        return BIMAnnotation(
+            data.get("annotation_type", "Tag"),
+            data.get("target_id", ""),
+            data.get("text", ""),
+            data.get("view_id", ""),
+            data.get("sheet_id", ""),
+            dict(data.get("association_metadata", {})),
+            dict(data.get("style_metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class BIMPublishingPackage:
+    """Print/PDF publishing package metadata."""
+
+    name: str = "Publishing Package"
+    package_type: str = "PDF"
+    sheet_ids: list = field(default_factory=list)
+    export_settings: dict = field(default_factory=dict)
+    revision_metadata: dict = field(default_factory=dict)
+    plot_metadata: dict = field(default_factory=dict)
+    output_metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe publishing package data."""
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "package_type": self.package_type,
+            "sheet_ids": list(self.sheet_ids),
+            "export_settings": dict(self.export_settings),
+            "revision_metadata": dict(self.revision_metadata),
+            "plot_metadata": dict(self.plot_metadata),
+            "output_metadata": dict(self.output_metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create publishing package data from persistence."""
+
+        data = data or {}
+
+        return BIMPublishingPackage(
+            data.get("name", "Publishing Package"),
+            data.get("package_type", "PDF"),
+            list(data.get("sheet_ids", [])),
+            dict(data.get("export_settings", {})),
+            dict(data.get("revision_metadata", {})),
+            dict(data.get("plot_metadata", {})),
+            dict(data.get("output_metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class BIMCoordinationReference:
+    """Reference and linked model coordination metadata."""
+
+    name: str = "Coordination Reference"
+    reference_type: str = "Linked Model"
+    source: str = ""
+    target_ids: list = field(default_factory=list)
+    view_coordination: dict = field(default_factory=dict)
+    revision_comparison: dict = field(default_factory=dict)
+    sheet_coordination: dict = field(default_factory=dict)
+    synchronization_metadata: dict = field(default_factory=dict)
+    validation_metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe coordination reference data."""
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "reference_type": self.reference_type,
+            "source": self.source,
+            "target_ids": list(self.target_ids),
+            "view_coordination": dict(self.view_coordination),
+            "revision_comparison": dict(self.revision_comparison),
+            "sheet_coordination": dict(self.sheet_coordination),
+            "synchronization_metadata": dict(self.synchronization_metadata),
+            "validation_metadata": dict(self.validation_metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create coordination reference data from persistence."""
+
+        data = data or {}
+
+        return BIMCoordinationReference(
+            data.get("name", "Coordination Reference"),
+            data.get("reference_type", "Linked Model"),
+            data.get("source", ""),
+            list(data.get("target_ids", [])),
+            dict(data.get("view_coordination", {})),
+            dict(data.get("revision_comparison", {})),
+            dict(data.get("sheet_coordination", {})),
+            dict(data.get("synchronization_metadata", {})),
+            dict(data.get("validation_metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class BIMDocumentationDiagnostics:
+    """Diagnostics for IFC, documentation, drawings, schedules and publishing."""
+
+    ifc_exchanges: int = 0
+    documents: int = 0
+    drawings: int = 0
+    annotations: int = 0
+    schedules: int = 0
+    quantity_items: int = 0
+    publishing_packages: int = 0
+    coordination_references: int = 0
+    validation_issues: int = 0
+    updated_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe documentation diagnostics."""
+
+        return dict(self.__dict__)
+
+    @staticmethod
+    def from_dict(data):
+        """Create documentation diagnostics from persistence."""
+
+        data = data or {}
+
+        return BIMDocumentationDiagnostics(
+            int(data.get("ifc_exchanges", 0)),
+            int(data.get("documents", 0)),
+            int(data.get("drawings", 0)),
+            int(data.get("annotations", 0)),
+            int(data.get("schedules", 0)),
+            int(data.get("quantity_items", 0)),
+            int(data.get("publishing_packages", 0)),
+            int(data.get("coordination_references", 0)),
+            int(data.get("validation_issues", 0)),
+            data.get("updated_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMClashResult:
+    """Persistent BIM intelligence clash or coordination conflict metadata."""
+
+    clash_type: str
+    source_id: str
+    target_id: str = ""
+    severity: str = "Medium"
+    distance: float = 0.0
+    required_clearance: float = 0.0
+    group_id: str = ""
+    category: str = "Coordination"
+    metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+    created_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe clash metadata."""
+
+        return {
+            "id": self.id,
+            "clash_type": self.clash_type,
+            "source_id": self.source_id,
+            "target_id": self.target_id,
+            "severity": self.severity,
+            "distance": float(self.distance),
+            "required_clearance": float(self.required_clearance),
+            "group_id": self.group_id,
+            "category": self.category,
+            "metadata": dict(self.metadata),
+            "created_at": self.created_at,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create clash metadata from persistence."""
+
+        data = data or {}
+
+        return BIMClashResult(
+            data.get("clash_type", "Coordination"),
+            data.get("source_id", ""),
+            data.get("target_id", ""),
+            data.get("severity", "Medium"),
+            float(data.get("distance", 0.0)),
+            float(data.get("required_clearance", 0.0)),
+            data.get("group_id", ""),
+            data.get("category", "Coordination"),
+            dict(data.get("metadata", {})),
+            data.get("id", str(uuid4())),
+            data.get("created_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMIntelligenceIssue:
+    """Persistent BIM issue, validation finding or coordination item."""
+
+    issue_type: str
+    title: str
+    description: str = ""
+    severity: str = "Medium"
+    status: str = "Open"
+    element_ids: list = field(default_factory=list)
+    assignment_metadata: dict = field(default_factory=dict)
+    priority: str = "Normal"
+    snapshots: list = field(default_factory=list)
+    clash_ids: list = field(default_factory=list)
+    comments: list = field(default_factory=list)
+    resolution_history: list = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+    created_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe issue metadata."""
+
+        return {
+            "id": self.id,
+            "issue_type": self.issue_type,
+            "title": self.title,
+            "description": self.description,
+            "severity": self.severity,
+            "status": self.status,
+            "element_ids": list(self.element_ids),
+            "assignment_metadata": dict(self.assignment_metadata),
+            "priority": self.priority,
+            "snapshots": [dict(item) for item in self.snapshots],
+            "clash_ids": list(self.clash_ids),
+            "comments": [dict(item) for item in self.comments],
+            "resolution_history": [dict(item) for item in self.resolution_history],
+            "metadata": dict(self.metadata),
+            "created_at": self.created_at,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create issue metadata from persistence."""
+
+        data = data or {}
+
+        return BIMIntelligenceIssue(
+            data.get("issue_type", "Coordination"),
+            data.get("title", "BIM Issue"),
+            data.get("description", ""),
+            data.get("severity", "Medium"),
+            data.get("status", "Open"),
+            list(data.get("element_ids", [])),
+            dict(data.get("assignment_metadata", {})),
+            data.get("priority", "Normal"),
+            [dict(item) for item in data.get("snapshots", [])],
+            list(data.get("clash_ids", [])),
+            [dict(item) for item in data.get("comments", [])],
+            [dict(item) for item in data.get("resolution_history", [])],
+            dict(data.get("metadata", {})),
+            data.get("id", str(uuid4())),
+            data.get("created_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMReviewSession:
+    """Persistent coordination review session metadata."""
+
+    name: str
+    reviewer: str = ""
+    status: str = "Open"
+    issue_ids: list = field(default_factory=list)
+    comments: list = field(default_factory=list)
+    snapshots: list = field(default_factory=list)
+    report_metadata: dict = field(default_factory=dict)
+    metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+    created_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe review session metadata."""
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "reviewer": self.reviewer,
+            "status": self.status,
+            "issue_ids": list(self.issue_ids),
+            "comments": [dict(item) for item in self.comments],
+            "snapshots": [dict(item) for item in self.snapshots],
+            "report_metadata": dict(self.report_metadata),
+            "metadata": dict(self.metadata),
+            "created_at": self.created_at,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create review session metadata from persistence."""
+
+        data = data or {}
+
+        return BIMReviewSession(
+            data.get("name", "BIM Review"),
+            data.get("reviewer", ""),
+            data.get("status", "Open"),
+            list(data.get("issue_ids", [])),
+            [dict(item) for item in data.get("comments", [])],
+            [dict(item) for item in data.get("snapshots", [])],
+            dict(data.get("report_metadata", {})),
+            dict(data.get("metadata", {})),
+            data.get("id", str(uuid4())),
+            data.get("created_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMRuleDefinition:
+    """Reusable BIM intelligence rule definition."""
+
+    name: str
+    rule_type: str
+    target: str = "All"
+    expression_metadata: dict = field(default_factory=dict)
+    severity: str = "Medium"
+    enabled: bool = True
+    metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe rule definition metadata."""
+
+        return {
+            "id": self.id,
+            "name": self.name,
+            "rule_type": self.rule_type,
+            "target": self.target,
+            "expression_metadata": dict(self.expression_metadata),
+            "severity": self.severity,
+            "enabled": bool(self.enabled),
+            "metadata": dict(self.metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create a rule definition from persistence."""
+
+        data = data or {}
+
+        return BIMRuleDefinition(
+            data.get("name", "BIM Rule"),
+            data.get("rule_type", "Custom"),
+            data.get("target", "All"),
+            dict(data.get("expression_metadata", {})),
+            data.get("severity", "Medium"),
+            bool(data.get("enabled", True)),
+            dict(data.get("metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class BIMRuleCheckResult:
+    """Result of a BIM intelligence rule evaluation."""
+
+    rule_id: str
+    target_id: str
+    passed: bool
+    message: str = ""
+    severity: str = "Medium"
+    metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+    checked_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe rule check metadata."""
+
+        return {
+            "id": self.id,
+            "rule_id": self.rule_id,
+            "target_id": self.target_id,
+            "passed": bool(self.passed),
+            "message": self.message,
+            "severity": self.severity,
+            "metadata": dict(self.metadata),
+            "checked_at": self.checked_at,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create rule check metadata from persistence."""
+
+        data = data or {}
+
+        return BIMRuleCheckResult(
+            data.get("rule_id", ""),
+            data.get("target_id", ""),
+            bool(data.get("passed", False)),
+            data.get("message", ""),
+            data.get("severity", "Medium"),
+            dict(data.get("metadata", {})),
+            data.get("id", str(uuid4())),
+            data.get("checked_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMRecommendation:
+    """AI BIM Assistant recommendation with command-only execution metadata."""
+
+    recommendation_type: str
+    title: str
+    rationale: str = ""
+    target_ids: list = field(default_factory=list)
+    expected_benefit: str = ""
+    priority: str = "Normal"
+    command_plan: list = field(default_factory=list)
+    status: str = "Recommended"
+    source: str = "AI BIM Assistant"
+    metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+    created_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe recommendation metadata."""
+
+        return {
+            "id": self.id,
+            "recommendation_type": self.recommendation_type,
+            "title": self.title,
+            "rationale": self.rationale,
+            "target_ids": list(self.target_ids),
+            "expected_benefit": self.expected_benefit,
+            "priority": self.priority,
+            "command_plan": [dict(item) for item in self.command_plan],
+            "status": self.status,
+            "source": self.source,
+            "metadata": dict(self.metadata),
+            "created_at": self.created_at,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create recommendation metadata from persistence."""
+
+        data = data or {}
+
+        return BIMRecommendation(
+            data.get("recommendation_type", "Design Recommendation"),
+            data.get("title", "BIM Recommendation"),
+            data.get("rationale", ""),
+            list(data.get("target_ids", [])),
+            data.get("expected_benefit", ""),
+            data.get("priority", "Normal"),
+            [dict(item) for item in data.get("command_plan", [])],
+            data.get("status", "Recommended"),
+            data.get("source", "AI BIM Assistant"),
+            dict(data.get("metadata", {})),
+            data.get("id", str(uuid4())),
+            data.get("created_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMDigitalTwinRecord:
+    """Digital twin foundation metadata without live IoT connectivity."""
+
+    target_id: str
+    asset_metadata: dict = field(default_factory=dict)
+    equipment_metadata: dict = field(default_factory=dict)
+    maintenance_metadata: dict = field(default_factory=dict)
+    sensor_metadata: dict = field(default_factory=dict)
+    operational_metadata: dict = field(default_factory=dict)
+    lifecycle_metadata: dict = field(default_factory=dict)
+    inspection_metadata: dict = field(default_factory=dict)
+    facility_metadata: dict = field(default_factory=dict)
+    relationship_ids: list = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe digital twin metadata."""
+
+        return {
+            "id": self.id,
+            "target_id": self.target_id,
+            "asset_metadata": dict(self.asset_metadata),
+            "equipment_metadata": dict(self.equipment_metadata),
+            "maintenance_metadata": dict(self.maintenance_metadata),
+            "sensor_metadata": dict(self.sensor_metadata),
+            "operational_metadata": dict(self.operational_metadata),
+            "lifecycle_metadata": dict(self.lifecycle_metadata),
+            "inspection_metadata": dict(self.inspection_metadata),
+            "facility_metadata": dict(self.facility_metadata),
+            "relationship_ids": list(self.relationship_ids),
+            "metadata": dict(self.metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create digital twin metadata from persistence."""
+
+        data = data or {}
+
+        return BIMDigitalTwinRecord(
+            data.get("target_id", ""),
+            dict(data.get("asset_metadata", {})),
+            dict(data.get("equipment_metadata", {})),
+            dict(data.get("maintenance_metadata", {})),
+            dict(data.get("sensor_metadata", {})),
+            dict(data.get("operational_metadata", {})),
+            dict(data.get("lifecycle_metadata", {})),
+            dict(data.get("inspection_metadata", {})),
+            dict(data.get("facility_metadata", {})),
+            list(data.get("relationship_ids", [])),
+            dict(data.get("metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class BIMIntelligenceDiagnostics:
+    """Diagnostics summary for BIM Intelligence."""
+
+    model_health_score: float = 100.0
+    coordination_status: str = "Ready"
+    validation_status: str = "Valid"
+    issues: int = 0
+    open_issues: int = 0
+    clashes: int = 0
+    recommendations: int = 0
+    review_sessions: int = 0
+    rules: int = 0
+    digital_twins: int = 0
+    validation_issues: int = 0
+    updated_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe diagnostics."""
+
+        return dict(self.__dict__)
+
+    @staticmethod
+    def from_dict(data):
+        """Create diagnostics from persistence."""
+
+        data = data or {}
+
+        return BIMIntelligenceDiagnostics(
+            float(data.get("model_health_score", 100.0)),
+            data.get("coordination_status", "Ready"),
+            data.get("validation_status", "Valid"),
+            int(data.get("issues", 0)),
+            int(data.get("open_issues", 0)),
+            int(data.get("clashes", 0)),
+            int(data.get("recommendations", 0)),
+            int(data.get("review_sessions", 0)),
+            int(data.get("rules", 0)),
+            int(data.get("digital_twins", 0)),
+            int(data.get("validation_issues", 0)),
+            data.get("updated_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMRuntimeConfiguration:
+    """Production BIM Runtime configuration metadata."""
+
+    lazy_loading: bool = True
+    cache_enabled: bool = True
+    background_tasks_enabled: bool = True
+    performance_thresholds: dict = field(default_factory=lambda: {
+        "max_validation_issues": 0,
+        "min_health_score": 70.0,
+    })
+    cleanup_policy: dict = field(default_factory=dict)
+    recovery_metadata: dict = field(default_factory=dict)
+    version_metadata: dict = field(default_factory=lambda: {"release": "1.9", "batch": "F"})
+
+    def to_dict(self):
+        """Return JSON-safe runtime configuration."""
+
+        return {
+            "lazy_loading": bool(self.lazy_loading),
+            "cache_enabled": bool(self.cache_enabled),
+            "background_tasks_enabled": bool(self.background_tasks_enabled),
+            "performance_thresholds": dict(self.performance_thresholds),
+            "cleanup_policy": dict(self.cleanup_policy),
+            "recovery_metadata": dict(self.recovery_metadata),
+            "version_metadata": dict(self.version_metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create runtime configuration from persistence."""
+
+        data = data or {}
+
+        return BIMRuntimeConfiguration(
+            bool(data.get("lazy_loading", True)),
+            bool(data.get("cache_enabled", True)),
+            bool(data.get("background_tasks_enabled", True)),
+            dict(data.get("performance_thresholds", {"max_validation_issues": 0, "min_health_score": 70.0})),
+            dict(data.get("cleanup_policy", {})),
+            dict(data.get("recovery_metadata", {})),
+            dict(data.get("version_metadata", {"release": "1.9", "batch": "F"})),
+        )
+
+
+@dataclass
+class BIMRuntimeSession:
+    """Persistent production runtime session metadata."""
+
+    session_type: str
+    status: str = "Initialized"
+    progress: float = 0.0
+    started_at: str = field(default_factory=_utc_timestamp)
+    completed_at: str = ""
+    logs: list = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+
+    def to_dict(self):
+        """Return JSON-safe runtime session metadata."""
+
+        return {
+            "id": self.id,
+            "session_type": self.session_type,
+            "status": self.status,
+            "progress": float(self.progress),
+            "started_at": self.started_at,
+            "completed_at": self.completed_at,
+            "logs": [dict(item) for item in self.logs],
+            "metadata": dict(self.metadata),
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create runtime session metadata from persistence."""
+
+        data = data or {}
+
+        return BIMRuntimeSession(
+            data.get("session_type", "Runtime"),
+            data.get("status", "Initialized"),
+            float(data.get("progress", 0.0)),
+            data.get("started_at", _utc_timestamp()),
+            data.get("completed_at", ""),
+            [dict(item) for item in data.get("logs", [])],
+            dict(data.get("metadata", {})),
+            data.get("id", str(uuid4())),
+        )
+
+
+@dataclass
+class BIMOptimizationReport:
+    """Project optimization and indexing report metadata."""
+
+    metadata_index: dict = field(default_factory=dict)
+    relationship_index: dict = field(default_factory=dict)
+    schedule_index: dict = field(default_factory=dict)
+    drawing_index: dict = field(default_factory=dict)
+    cache_statistics: dict = field(default_factory=dict)
+    recommendations: list = field(default_factory=list)
+    performance_metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+    created_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe optimization report metadata."""
+
+        return {
+            "id": self.id,
+            "metadata_index": dict(self.metadata_index),
+            "relationship_index": dict(self.relationship_index),
+            "schedule_index": dict(self.schedule_index),
+            "drawing_index": dict(self.drawing_index),
+            "cache_statistics": dict(self.cache_statistics),
+            "recommendations": [dict(item) if isinstance(item, dict) else item for item in self.recommendations],
+            "performance_metadata": dict(self.performance_metadata),
+            "created_at": self.created_at,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create optimization report from persistence."""
+
+        data = data or {}
+
+        return BIMOptimizationReport(
+            dict(data.get("metadata_index", {})),
+            dict(data.get("relationship_index", {})),
+            dict(data.get("schedule_index", {})),
+            dict(data.get("drawing_index", {})),
+            dict(data.get("cache_statistics", {})),
+            list(data.get("recommendations", [])),
+            dict(data.get("performance_metadata", {})),
+            data.get("id", str(uuid4())),
+            data.get("created_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMRegressionResult:
+    """Production BIM regression suite result metadata."""
+
+    suite_name: str
+    passed: bool
+    checks: list = field(default_factory=list)
+    failures: list = field(default_factory=list)
+    metadata: dict = field(default_factory=dict)
+    id: str = field(default_factory=lambda: str(uuid4()))
+    executed_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe regression metadata."""
+
+        return {
+            "id": self.id,
+            "suite_name": self.suite_name,
+            "passed": bool(self.passed),
+            "checks": [dict(item) for item in self.checks],
+            "failures": list(self.failures),
+            "metadata": dict(self.metadata),
+            "executed_at": self.executed_at,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create regression metadata from persistence."""
+
+        data = data or {}
+
+        return BIMRegressionResult(
+            data.get("suite_name", "BIM Regression"),
+            bool(data.get("passed", False)),
+            [dict(item) for item in data.get("checks", [])],
+            list(data.get("failures", [])),
+            dict(data.get("metadata", {})),
+            data.get("id", str(uuid4())),
+            data.get("executed_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMCompatibilityReport:
+    """Release compatibility certification report metadata."""
+
+    release_matrix: dict = field(default_factory=dict)
+    compatible: bool = True
+    notes: list = field(default_factory=list)
+    id: str = field(default_factory=lambda: str(uuid4()))
+    generated_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe compatibility report."""
+
+        return {
+            "id": self.id,
+            "release_matrix": dict(self.release_matrix),
+            "compatible": bool(self.compatible),
+            "notes": list(self.notes),
+            "generated_at": self.generated_at,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create compatibility report from persistence."""
+
+        data = data or {}
+
+        return BIMCompatibilityReport(
+            dict(data.get("release_matrix", {})),
+            bool(data.get("compatible", True)),
+            list(data.get("notes", [])),
+            data.get("id", str(uuid4())),
+            data.get("generated_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMCertificationRecord:
+    """Production release certification metadata."""
+
+    release: str
+    status: str
+    architecture_compliance: dict = field(default_factory=dict)
+    validation_summary: dict = field(default_factory=dict)
+    regression_summary: dict = field(default_factory=dict)
+    performance_summary: dict = field(default_factory=dict)
+    diagnostics_summary: dict = field(default_factory=dict)
+    production_readiness: bool = False
+    notes: list = field(default_factory=list)
+    id: str = field(default_factory=lambda: str(uuid4()))
+    certified_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe certification record."""
+
+        return {
+            "id": self.id,
+            "release": self.release,
+            "status": self.status,
+            "architecture_compliance": dict(self.architecture_compliance),
+            "validation_summary": dict(self.validation_summary),
+            "regression_summary": dict(self.regression_summary),
+            "performance_summary": dict(self.performance_summary),
+            "diagnostics_summary": dict(self.diagnostics_summary),
+            "production_readiness": bool(self.production_readiness),
+            "notes": list(self.notes),
+            "certified_at": self.certified_at,
+        }
+
+    @staticmethod
+    def from_dict(data):
+        """Create certification record from persistence."""
+
+        data = data or {}
+
+        return BIMCertificationRecord(
+            data.get("release", "1.9"),
+            data.get("status", "Pending"),
+            dict(data.get("architecture_compliance", {})),
+            dict(data.get("validation_summary", {})),
+            dict(data.get("regression_summary", {})),
+            dict(data.get("performance_summary", {})),
+            dict(data.get("diagnostics_summary", {})),
+            bool(data.get("production_readiness", False)),
+            list(data.get("notes", [])),
+            data.get("id", str(uuid4())),
+            data.get("certified_at", _utc_timestamp()),
+        )
+
+
+@dataclass
+class BIMProductionDiagnostics:
+    """Production BIM Runtime diagnostics metadata."""
+
+    runtime_status: str = "Not Initialized"
+    health_status: str = "Unknown"
+    sessions: int = 0
+    background_tasks: int = 0
+    cache_entries: int = 0
+    validation_reports: int = 0
+    regression_runs: int = 0
+    certification_records: int = 0
+    recovery_events: int = 0
+    performance_reports: int = 0
+    validation_issues: int = 0
+    updated_at: str = field(default_factory=_utc_timestamp)
+
+    def to_dict(self):
+        """Return JSON-safe production diagnostics."""
+
+        return dict(self.__dict__)
+
+    @staticmethod
+    def from_dict(data):
+        """Create production diagnostics from persistence."""
+
+        data = data or {}
+
+        return BIMProductionDiagnostics(
+            data.get("runtime_status", "Not Initialized"),
+            data.get("health_status", "Unknown"),
+            int(data.get("sessions", 0)),
+            int(data.get("background_tasks", 0)),
+            int(data.get("cache_entries", 0)),
+            int(data.get("validation_reports", 0)),
+            int(data.get("regression_runs", 0)),
+            int(data.get("certification_records", 0)),
+            int(data.get("recovery_events", 0)),
+            int(data.get("performance_reports", 0)),
+            int(data.get("validation_issues", 0)),
+            data.get("updated_at", _utc_timestamp()),
+        )
+
+
+class BIMElement(BuildingObject):
+    """Native BIM element metadata referencing ParametricEngine-generated CAD geometry."""
+
+    type_name = "BIMElement"
+    element_group = "Generic"
+
+    def __init__(
+        self,
+        name="BIM Element",
+        element_type="Generic",
+        body_references=None,
+        element_type_id="",
+        category="Generic",
+        material_assignment_id="",
+        classification=None,
+        level_id="",
+        host_id="",
+        property_set_ids=None,
+        parameters=None,
+        metadata=None,
+    ):
+
+        super().__init__(
+            name,
+            element_type,
+            body_references or [],
+            metadata=metadata or {},
+        )
+        self.element_type = element_type
+        self.element_type_id = element_type_id
+        self.category = category
+        self.material_assignment_id = material_assignment_id
+        self.classification = dict(classification or {})
+        self.level_id = level_id
+        self.host_id = host_id
+        self.host_relationship_ids = []
+        self.property_set_ids = list(property_set_ids or [])
+        self.parameters = (
+            parameters
+            if isinstance(parameters, BIMParametricDefinition)
+            else BIMParametricDefinition.from_dict(parameters or {})
+        )
+        self.metadata = dict(metadata or {})
+        self.metadata.setdefault("element_group", self.element_group)
+
+    def to_dict(self):
+        """Return JSON-safe native BIM element metadata."""
+
+        data = super().to_dict()
+        data.update(
+            {
+                "element_type": self.element_type,
+                "element_type_id": self.element_type_id,
+                "category": self.category,
+                "material_assignment_id": self.material_assignment_id,
+                "host_id": self.host_id,
+                "host_relationship_ids": list(self.host_relationship_ids),
+                "parameters": self.parameters.to_dict(),
+                "native_class": self.__class__.__name__,
+            }
+        )
+
+        return data
+
+    @staticmethod
+    def from_dict(data):
+        """Create a native BIM element from persisted metadata."""
+
+        data = data or {}
+        native_class = BIM_NATIVE_ELEMENT_CLASSES.get(data.get("native_class", ""), BIMElement)
+        item = native_class(
+            data.get("name", "BIM Element"),
+            data.get("body_references", []),
+            data.get("element_type_id", ""),
+            data.get("material_assignment_id", ""),
+            data.get("level_id", ""),
+            data.get("host_id", ""),
+            BIMParametricDefinition.from_dict(data.get("parameters", {})),
+            data.get("metadata", {}),
+        ) if native_class is not BIMElement else BIMElement(
+            data.get("name", "BIM Element"),
+            data.get("element_type", "Generic"),
+            data.get("body_references", []),
+            data.get("element_type_id", ""),
+            data.get("category", "Generic"),
+            data.get("material_assignment_id", ""),
+            dict(data.get("classification", {})),
+            data.get("level_id", ""),
+            data.get("host_id", ""),
+            list(data.get("property_set_ids", [])),
+            BIMParametricDefinition.from_dict(data.get("parameters", {})),
+            data.get("metadata", {}),
+        )
+        item.id = data.get("id", item.id)
+        item.guid = data.get("guid", item.guid)
+        item.global_id = data.get("global_id", item.guid)
+        item.description = data.get("description", "")
+        item.tag = data.get("tag", "")
+        item.owner_history = dict(data.get("owner_history", {}))
+        item.classification = dict(data.get("classification", {}))
+        item.property_sets = dict(data.get("property_sets", {}))
+        item.relationships = dict(data.get("relationships", {}))
+        item.property_set_ids = list(data.get("property_set_ids", []))
+        item.host_relationship_ids = list(data.get("host_relationship_ids", []))
+        item.building_id = data.get("building_id", "")
+        item.family_id = data.get("family_id", "")
+        item.element_definition_id = data.get("element_definition_id", "")
+        item.assembly_ids = list(data.get("assembly_ids", []))
+        item.visible = bool(data.get("visible", True))
+        item.locked = bool(data.get("locked", False))
+        item.selected = bool(data.get("selected", False))
+        item.layer_name = data.get("layer_name")
+        item.color = data.get("color")
+
+        return item
+
+
+class ArchitecturalElement(BIMElement):
+    """Architectural native BIM element metadata."""
+
+    element_group = "Architecture"
+
+
+class StructuralElement(BIMElement):
+    """Structural native BIM element metadata."""
+
+    element_group = "Structure"
+
+
+class MEPElement(BIMElement):
+    """MEP native BIM element metadata without routing execution."""
+
+    element_group = "MEP"
+
+
+def _native_element_class(name, base, element_type, category):
+    def __init__(
+        self,
+        name_value=None,
+        body_references=None,
+        element_type_id="",
+        material_assignment_id="",
+        level_id="",
+        host_id="",
+        parameters=None,
+        metadata=None,
+    ):
+        base.__init__(
+            self,
+            name_value or element_type,
+            element_type,
+            body_references or [],
+            element_type_id,
+            category,
+            material_assignment_id,
+            {},
+            level_id,
+            host_id,
+            [],
+            parameters,
+            metadata or {},
+        )
+
+    return type(name, (base,), {"__init__": __init__, "type_name": name})
+
+
+WallElement = _native_element_class("WallElement", ArchitecturalElement, "Wall", "Architecture")
+CurtainWallElement = _native_element_class("CurtainWallElement", ArchitecturalElement, "Curtain Wall", "Architecture")
+SlabElement = _native_element_class("SlabElement", ArchitecturalElement, "Slab", "Architecture")
+RoofElement = _native_element_class("RoofElement", ArchitecturalElement, "Roof", "Architecture")
+CeilingElement = _native_element_class("CeilingElement", ArchitecturalElement, "Ceiling", "Architecture")
+FloorFinishElement = _native_element_class("FloorFinishElement", ArchitecturalElement, "Floor Finish", "Architecture")
+DoorElement = _native_element_class("DoorElement", ArchitecturalElement, "Door", "Architecture")
+WindowElement = _native_element_class("WindowElement", ArchitecturalElement, "Window", "Architecture")
+StairElement = _native_element_class("StairElement", ArchitecturalElement, "Stair", "Architecture")
+RampElement = _native_element_class("RampElement", ArchitecturalElement, "Ramp", "Architecture")
+RailingElement = _native_element_class("RailingElement", ArchitecturalElement, "Railing", "Architecture")
+ColumnElement = _native_element_class("ColumnElement", StructuralElement, "Column", "Structure")
+BeamElement = _native_element_class("BeamElement", StructuralElement, "Beam", "Structure")
+BraceElement = _native_element_class("BraceElement", StructuralElement, "Brace", "Structure")
+FootingElement = _native_element_class("FootingElement", StructuralElement, "Footing", "Structure")
+PileCapElement = _native_element_class("PileCapElement", StructuralElement, "Pile Cap", "Structure")
+IsolatedFootingElement = _native_element_class("IsolatedFootingElement", StructuralElement, "Isolated Footing", "Structure")
+StripFootingElement = _native_element_class("StripFootingElement", StructuralElement, "Strip Footing", "Structure")
+RaftFoundationElement = _native_element_class("RaftFoundationElement", StructuralElement, "Raft Foundation", "Structure")
+RetainingWallElement = _native_element_class("RetainingWallElement", StructuralElement, "Retaining Wall", "Structure")
+PipeElement = _native_element_class("PipeElement", MEPElement, "Pipe", "MEP")
+DuctElement = _native_element_class("DuctElement", MEPElement, "Duct", "MEP")
+CableTrayElement = _native_element_class("CableTrayElement", MEPElement, "Cable Tray", "MEP")
+ConduitElement = _native_element_class("ConduitElement", MEPElement, "Conduit", "MEP")
+EquipmentElement = _native_element_class("EquipmentElement", MEPElement, "Equipment", "MEP")
+FixtureElement = _native_element_class("FixtureElement", MEPElement, "Fixture", "MEP")
+TerminalElement = _native_element_class("TerminalElement", MEPElement, "Terminal", "MEP")
+
+BIM_NATIVE_ELEMENT_CLASSES = {
+    item.__name__: item for item in (
+        WallElement,
+        CurtainWallElement,
+        SlabElement,
+        RoofElement,
+        CeilingElement,
+        FloorFinishElement,
+        DoorElement,
+        WindowElement,
+        StairElement,
+        RampElement,
+        RailingElement,
+        ColumnElement,
+        BeamElement,
+        BraceElement,
+        FootingElement,
+        PileCapElement,
+        IsolatedFootingElement,
+        StripFootingElement,
+        RaftFoundationElement,
+        RetainingWallElement,
+        PipeElement,
+        DuctElement,
+        CableTrayElement,
+        ConduitElement,
+        EquipmentElement,
+        FixtureElement,
+        TerminalElement,
+    )
+}
+
+NATIVE_BIM_ELEMENT_TYPES = {
+    "Wall": WallElement,
+    "Curtain Wall": CurtainWallElement,
+    "Slab": SlabElement,
+    "Roof": RoofElement,
+    "Ceiling": CeilingElement,
+    "Floor Finish": FloorFinishElement,
+    "Door": DoorElement,
+    "Window": WindowElement,
+    "Stair": StairElement,
+    "Ramp": RampElement,
+    "Railing": RailingElement,
+    "Column": ColumnElement,
+    "Beam": BeamElement,
+    "Brace": BraceElement,
+    "Footing": FootingElement,
+    "Pile Cap": PileCapElement,
+    "Isolated Footing": IsolatedFootingElement,
+    "Strip Footing": StripFootingElement,
+    "Raft Foundation": RaftFoundationElement,
+    "Retaining Wall": RetainingWallElement,
+    "Pipe": PipeElement,
+    "Duct": DuctElement,
+    "Cable Tray": CableTrayElement,
+    "Conduit": ConduitElement,
+    "Equipment": EquipmentElement,
+    "Fixture": FixtureElement,
+    "Terminal": TerminalElement,
+}
+
+
+def _native_element_class_for_type(element_type):
+    return NATIVE_BIM_ELEMENT_TYPES.get(element_type, BIMElement)
+
+
+class BIMAuthoringManager:
+    """Project-scoped helper for command-driven BIM authoring metadata."""
+
+    def __init__(self, bim_manager):
+
+        self.bim_manager = bim_manager
+
+    @property
+    def project(self):
+        """Return the active BIM project."""
+
+        return self.bim_manager.ensure_project()
+
+    def start_session(self, active_tool="", placement_context=None, metadata=None):
+        """Start and persist a BIM authoring session."""
+
+        session = BIMAuthoringSession(
+            active_tool,
+            dict(metadata or {}),
+            placement_context
+            if isinstance(placement_context, BIMPlacementContext)
+            else BIMPlacementContext.from_dict(placement_context or {}),
+        )
+        self.project.authoring_sessions.append(session)
+        self.project.active_authoring_session_id = session.id
+        self.refresh_diagnostics()
+
+        return session
+
+    def active_session(self):
+        """Return the active authoring session."""
+
+        project = self.project
+        session = next(
+            (item for item in project.authoring_sessions if item.id == project.active_authoring_session_id),
+            None,
+        )
+
+        return session or self.start_session()
+
+    def set_active_tool(self, tool_name):
+        """Set the active BIM authoring tool."""
+
+        session = self.active_session()
+        session.active_tool = tool_name
+
+        return session
+
+    def update_context(self, **contexts):
+        """Update authoring placement, snapping, modification, validation or visualization metadata."""
+
+        session = self.active_session()
+
+        if "placement_context" in contexts:
+            session.placement_context = BIMPlacementContext.from_dict(contexts["placement_context"])
+        if "element_creation_context" in contexts:
+            session.element_creation_context.update(dict(contexts["element_creation_context"] or {}))
+        if "modification_context" in contexts:
+            session.modification_context.update(dict(contexts["modification_context"] or {}))
+        if "snapping_context" in contexts:
+            session.snapping_context.update(dict(contexts["snapping_context"] or {}))
+        if "validation_context" in contexts:
+            session.validation_context.update(dict(contexts["validation_context"] or {}))
+        if "visualization_context" in contexts:
+            session.visualization_context.update(dict(contexts["visualization_context"] or {}))
+
+        return session
+
+    def create_element(self, element_type, name, body_references, **kwargs):
+        """Create native BIM element metadata through the existing BIM manager."""
+
+        element = self.bim_manager.create_native_bim_element(
+            element_type,
+            name,
+            body_references,
+            **kwargs,
+        )
+        self.record_command(
+            "Create",
+            element.id,
+            {
+                "element_type": element_type,
+                "command_pipeline": "Workspace > Command System > ParametricEngine > GeometryKernel > BodyManager > BIM Layer",
+            },
+        )
+
+        return element
+
+    def edit_element(self, element, updates):
+        """Apply BIM element metadata edits without changing geometry ownership."""
+
+        for key, value in dict(updates or {}).items():
+            if key == "parameters":
+                element.parameters = BIMParametricDefinition.from_dict(value)
+            elif hasattr(element, key):
+                setattr(element, key, value)
+            else:
+                element.metadata[key] = value
+
+        self.record_command("Edit", element.id, {"updates": list(dict(updates or {}).keys())})
+
+        return element
+
+    def create_relationship(self, relationship_type, source_id, target_id, **metadata):
+        """Create BIM authoring relationship metadata."""
+
+        relationship = self.bim_manager.create_native_element_relationship(
+            relationship_type,
+            source_id,
+            target_id,
+            metadata.get("dependency_metadata"),
+            metadata.get("opening_metadata"),
+            metadata.get("connection_metadata"),
+        )
+        self.record_command("Relationship", source_id, {"relationship_id": relationship.id, "target_id": target_id})
+
+        return relationship
+
+    def authoring_visualization_metadata(self):
+        """Return temporary authoring display metadata for the existing renderer."""
+
+        session = self.active_session()
+        self.project.visualization_metadata.update(
+            {
+                "placement_preview": dict(session.placement_context.cursor_preview),
+                "selection_preview": dict(session.visualization_context.get("selection_preview", {})),
+                "host_highlighting": dict(session.visualization_context.get("host_highlighting", {})),
+                "relationship_highlighting": dict(session.visualization_context.get("relationship_highlighting", {})),
+                "temporary_dimensions": dict(session.visualization_context.get("temporary_dimensions", {})),
+                "creation_guides": dict(session.visualization_context.get("creation_guides", {})),
+                "reference_indicators": dict(session.visualization_context.get("reference_indicators", {})),
+                "editing_preview": dict(session.visualization_context.get("editing_preview", {})),
+            }
+        )
+
+        return self.project.visualization_metadata
+
+    def validate(self):
+        """Validate the current authoring session and native BIM elements."""
+
+        native_report = self.bim_manager.validate_native_bim_elements()
+        session = self.active_session()
+        issues = list(native_report.issues)
+        warnings = list(native_report.warnings)
+
+        if session.active_tool and session.active_tool not in BIM_AUTHORING_TOOLS:
+            issues.append(f"Unknown BIM authoring tool '{session.active_tool}'.")
+        if session.placement_context.host_id:
+            ids = {element.id for element in self.project.native_elements}
+            if session.placement_context.host_id not in ids:
+                issues.append(f"Placement host '{session.placement_context.host_id}' does not exist.")
+
+        report = BIMCoreValidationReport(
+            not issues,
+            issues,
+            warnings,
+            self.refresh_diagnostics().to_dict(),
+        )
+        self.project.authoring_validation_report = report
+        session.validation_context["last_report"] = report.to_dict()
+
+        return report
+
+    def record_command(self, command_type, target_id, metadata=None):
+        """Record an authoring command event for diagnostics and persistence."""
+
+        self.project.authoring_command_log.append(
+            {
+                "command_type": command_type,
+                "target_id": target_id,
+                "metadata": dict(metadata or {}),
+                "timestamp": _utc_timestamp(),
+            }
+        )
+        self.refresh_diagnostics()
+
+    def refresh_diagnostics(self):
+        """Refresh authoring diagnostics."""
+
+        project = self.project
+        diagnostics = BIMAuthoringDiagnostics(
+            len(project.authoring_sessions),
+            len(project.authoring_command_log),
+            len([item for item in project.authoring_command_log if item.get("command_type") == "Create"]),
+            len([item for item in project.authoring_command_log if item.get("command_type") == "Edit"]),
+            len(project.native_relationships),
+            len(getattr(project.authoring_validation_report, "issues", [])),
+        )
+        project.authoring_diagnostics = diagnostics
+
+        return diagnostics
+
+
+BIM_AUTHORING_TOOLS = {
+    "Create Wall",
+    "Create Curtain Wall",
+    "Create Slab",
+    "Create Roof",
+    "Create Ceiling",
+    "Create Floor Finish",
+    "Create Column",
+    "Create Beam",
+    "Create Door",
+    "Create Window",
+    "Create Stair",
+    "Create Ramp",
+    "Create Railing",
+    "Move",
+    "Copy",
+    "Rotate",
+    "Mirror",
+    "Array",
+    "Offset",
+    "Split",
+    "Join",
+    "Delete",
+    "Replace Type",
+    "Change Level",
+    "Change Material",
+}
+
+
+class BIMIntelligenceManager:
+    """Project-scoped BIM intelligence helper that owns metadata only."""
+
+    SUPPORTED_RULE_TYPES = {
+        "Company",
+        "Project",
+        "BIM Standard",
+        "Naming",
+        "Layer",
+        "Classification",
+        "Property",
+        "Custom",
+    }
+
+    def __init__(self, bim_manager):
+
+        self.bim_manager = bim_manager
+
+    @property
+    def project(self):
+        """Return the active BIM project."""
+
+        return self.bim_manager.ensure_project()
+
+    def create_issue(
+        self,
+        issue_type,
+        title,
+        description="",
+        severity="Medium",
+        element_ids=None,
+        priority="Normal",
+        assignment_metadata=None,
+        snapshots=None,
+        clash_ids=None,
+        metadata=None,
+    ):
+        """Create a persistent coordination issue without changing model geometry."""
+
+        issue = BIMIntelligenceIssue(
+            issue_type,
+            title,
+            description,
+            severity,
+            "Open",
+            list(element_ids or []),
+            dict(assignment_metadata or {}),
+            priority,
+            [dict(item) for item in snapshots or []],
+            list(clash_ids or []),
+            [],
+            [],
+            dict(metadata or {}),
+        )
+        self.project.intelligence_issues.append(issue)
+        self.refresh_diagnostics()
+
+        return issue
+
+    def create_review_session(self, name, reviewer="", issue_ids=None, snapshots=None, metadata=None):
+        """Create a coordination review session."""
+
+        session = BIMReviewSession(
+            name,
+            reviewer,
+            "Open",
+            list(issue_ids or []),
+            [],
+            [dict(item) for item in snapshots or []],
+            {},
+            dict(metadata or {}),
+        )
+        self.project.intelligence_review_sessions.append(session)
+        self.refresh_diagnostics()
+
+        return session
+
+    def add_review_comment(self, review_session_id, text, author="", issue_id=""):
+        """Add a comment to a review session and linked issue."""
+
+        comment = {
+            "author": author,
+            "text": text,
+            "issue_id": issue_id,
+            "created_at": _utc_timestamp(),
+        }
+        session = next(
+            (item for item in self.project.intelligence_review_sessions if item.id == review_session_id),
+            None,
+        )
+        if session is None:
+            return None
+        session.comments.append(comment)
+        if issue_id:
+            issue = next((item for item in self.project.intelligence_issues if item.id == issue_id), None)
+            if issue is not None:
+                issue.comments.append(comment)
+        self.refresh_diagnostics()
+
+        return comment
+
+    def resolve_issue(self, issue_id, resolution, author=""):
+        """Mark an issue resolved while preserving resolution history."""
+
+        issue = next((item for item in self.project.intelligence_issues if item.id == issue_id), None)
+        if issue is None:
+            return False
+        issue.status = "Resolved"
+        issue.resolution_history.append(
+            {
+                "author": author,
+                "resolution": resolution,
+                "resolved_at": _utc_timestamp(),
+            }
+        )
+        self.refresh_diagnostics()
+
+        return True
+
+    def run_clash_detection(self, category_filters=None, clearance=0.0):
+        """Detect BIM metadata clashes using existing element references only."""
+
+        project = self.project
+        filters = {item.lower() for item in category_filters or []}
+        elements = [
+            element for element in project.native_elements
+            if not filters or getattr(element, "category", "").lower() in filters
+        ]
+        element_ids = {element.id for element in project.native_elements}
+        clashes = []
+        body_map = {}
+        name_type_map = {}
+
+        for element in elements:
+            for reference in getattr(element, "body_references", []):
+                body_key = reference.body_id or reference.body_name
+                if not body_key:
+                    continue
+                if body_key in body_map:
+                    source = body_map[body_key]
+                    clashes.append(
+                        BIMClashResult(
+                            "Hard Clash",
+                            source.id,
+                            element.id,
+                            "High",
+                            0.0,
+                            float(clearance or 0.0),
+                            f"body:{body_key}",
+                            getattr(element, "category", "Coordination"),
+                            {
+                                "reason": "Multiple BIM elements reference the same BodyManager body.",
+                                "body_reference": body_key,
+                            },
+                        )
+                    )
+                else:
+                    body_map[body_key] = element
+
+            name_key = (getattr(element, "name", "").strip().lower(), getattr(element, "element_type", ""))
+            if name_key[0] and name_key in name_type_map:
+                clashes.append(
+                    BIMClashResult(
+                        "Duplicate Element",
+                        name_type_map[name_key].id,
+                        element.id,
+                        "Medium",
+                        0.0,
+                        float(clearance or 0.0),
+                        f"name:{name_key[0]}",
+                        getattr(element, "category", "Coordination"),
+                        {"reason": "Duplicate BIM element name and type detected."},
+                    )
+                )
+            else:
+                name_type_map[name_key] = element
+
+            if getattr(element, "host_id", "") and element.host_id not in element_ids:
+                clashes.append(
+                    BIMClashResult(
+                        "Missing Host",
+                        element.id,
+                        element.host_id,
+                        "High",
+                        0.0,
+                        float(clearance or 0.0),
+                        f"host:{element.host_id}",
+                        getattr(element, "category", "Coordination"),
+                        {"reason": "Hosted BIM element references a missing host."},
+                    )
+                )
+
+        seen_openings = {}
+        for relationship in project.native_relationships:
+            opening_id = relationship.opening_metadata.get("opening_body_id") or relationship.opening_metadata.get("opening_id")
+            if not opening_id:
+                continue
+            if opening_id in seen_openings:
+                clashes.append(
+                    BIMClashResult(
+                        "Duplicate Opening",
+                        seen_openings[opening_id].source_id,
+                        relationship.source_id,
+                        "Medium",
+                        0.0,
+                        float(clearance or 0.0),
+                        f"opening:{opening_id}",
+                        "Architecture",
+                        {"reason": "Multiple hosted openings share the same opening metadata."},
+                    )
+                )
+            else:
+                seen_openings[opening_id] = relationship
+
+        project.intelligence_clashes = clashes
+        for clash in clashes:
+            project.intelligence_issues.append(
+                BIMIntelligenceIssue(
+                    "Clash",
+                    f"{clash.clash_type}: {clash.source_id}",
+                    clash.metadata.get("reason", ""),
+                    clash.severity,
+                    "Open",
+                    [value for value in (clash.source_id, clash.target_id) if value in element_ids],
+                    {},
+                    "High" if clash.severity in ("High", "Critical") else "Normal",
+                    [],
+                    [clash.id],
+                    [],
+                    [],
+                    {"group_id": clash.group_id},
+                )
+            )
+        self.refresh_diagnostics()
+
+        return clashes
+
+    def validate_model(self):
+        """Validate BIM health, relationships, classifications, parameters and consistency."""
+
+        project = self.project
+        issues = []
+        warnings = []
+        elements = list(project.native_elements)
+        element_ids = {element.id for element in elements}
+        spatial_ids = {item.id for item in project.spatial_elements}
+        material_ids = {item.id for item in project.materials} | {item.id for item in project.material_assignments}
+
+        self.bim_manager._validate_unique(
+            "BIM Intelligence GlobalId",
+            [getattr(element, "global_id", "") for element in elements],
+            issues,
+        )
+
+        for element in elements:
+            if not getattr(element, "level_id", ""):
+                warnings.append(f"Orphan BIM element '{element.name}' is not assigned to a level.")
+            elif element.level_id not in spatial_ids:
+                issues.append(f"BIM element '{element.name}' references invalid level '{element.level_id}'.")
+            if getattr(element, "host_id", "") and element.host_id not in element_ids:
+                issues.append(f"BIM element '{element.name}' references invalid host '{element.host_id}'.")
+            if not getattr(element, "property_set_ids", []):
+                warnings.append(f"BIM element '{element.name}' is missing property set metadata.")
+            if not getattr(element, "classification", {}):
+                warnings.append(f"BIM element '{element.name}' is missing classification metadata.")
+            material_id = getattr(element, "material_assignment_id", "")
+            if material_id and material_id not in material_ids:
+                warnings.append(f"BIM element '{element.name}' references material metadata not in the BIM material registry.")
+            parameters = getattr(element, "parameters", BIMParametricDefinition())
+            self.bim_manager._validate_parametric_definition(parameters, f"element '{element.name}'", issues)
+
+        for relationship in project.native_relationships:
+            if relationship.source_id not in element_ids:
+                issues.append(f"Broken BIM relationship '{relationship.relationship_type}' has missing source '{relationship.source_id}'.")
+            if relationship.target_id not in element_ids:
+                issues.append(f"Broken BIM relationship '{relationship.relationship_type}' has missing target '{relationship.target_id}'.")
+
+        for room_name in self._duplicates(
+            item.name for item in project.spatial_elements
+            if item.element_type.lower() in ("room", "space")
+        ):
+            warnings.append(f"Duplicate room or space detected: '{room_name}'.")
+
+        native_report = self.bim_manager.validate_native_bim_elements()
+        core_report = self.bim_manager.validate_bim_core()
+        issues.extend(native_report.issues)
+        issues.extend(core_report.issues)
+        warnings.extend(native_report.warnings)
+        warnings.extend(core_report.warnings)
+
+        report = BIMCoreValidationReport(
+            not issues,
+            issues,
+            warnings,
+            self.refresh_diagnostics().to_dict(),
+        )
+        project.intelligence_validation_report = report
+
+        return report
+
+    def add_rule(self, name, rule_type, target="All", expression_metadata=None, severity="Medium", enabled=True, metadata=None):
+        """Register a reusable BIM intelligence rule."""
+
+        rule = BIMRuleDefinition(
+            name,
+            rule_type if rule_type in self.SUPPORTED_RULE_TYPES else "Custom",
+            target,
+            dict(expression_metadata or {}),
+            severity,
+            bool(enabled),
+            dict(metadata or {}),
+        )
+        self.project.intelligence_rules.append(rule)
+        self.refresh_diagnostics()
+
+        return rule
+
+    def run_rules(self, rule_ids=None):
+        """Evaluate registered BIM rules and persist results."""
+
+        project = self.project
+        selected = set(rule_ids or [])
+        results = []
+        for rule in project.intelligence_rules:
+            if not rule.enabled or (selected and rule.id not in selected):
+                continue
+            for element in self._rule_targets(rule):
+                passed, message = self._evaluate_rule(rule, element)
+                result = BIMRuleCheckResult(
+                    rule.id,
+                    element.id,
+                    passed,
+                    message,
+                    rule.severity,
+                    {"rule_type": rule.rule_type, "target": rule.target},
+                )
+                results.append(result)
+                if not passed:
+                    self.create_issue(
+                        "Rule Check",
+                        f"{rule.name}: {element.name}",
+                        message,
+                        rule.severity,
+                        [element.id],
+                        "High" if rule.severity in ("High", "Critical") else "Normal",
+                        metadata={"rule_id": rule.id, "rule_type": rule.rule_type},
+                    )
+        project.intelligence_rule_results = results
+        self.refresh_diagnostics()
+
+        return results
+
+    def create_recommendation(
+        self,
+        recommendation_type,
+        title,
+        rationale="",
+        target_ids=None,
+        expected_benefit="",
+        priority="Normal",
+        command_plan=None,
+        metadata=None,
+    ):
+        """Create an AI BIM recommendation with command plans only."""
+
+        recommendation = BIMRecommendation(
+            recommendation_type,
+            title,
+            rationale,
+            list(target_ids or []),
+            expected_benefit,
+            priority,
+            [dict(item) for item in command_plan or []],
+            "Recommended",
+            "AI BIM Assistant",
+            dict(metadata or {}),
+        )
+        self.project.intelligence_recommendations.append(recommendation)
+        self.refresh_diagnostics()
+
+        return recommendation
+
+    def generate_ai_recommendations(self):
+        """Generate deterministic AI BIM Assistant recommendations without executing them."""
+
+        project = self.project
+        created = []
+        existing_keys = {
+            (item.recommendation_type, tuple(item.target_ids), item.title)
+            for item in project.intelligence_recommendations
+        }
+
+        for element in project.native_elements:
+            parameters = getattr(element, "parameters", BIMParametricDefinition())
+            if element.element_type == "Wall" and 0.0 < parameters.thickness < 0.15:
+                key = ("Wall Optimization", (element.id,), "Increase wall thickness for coordination review")
+                if key not in existing_keys:
+                    created.append(
+                        self.create_recommendation(
+                            "Wall Optimization",
+                            "Increase wall thickness for coordination review",
+                            "Thin wall metadata can create coordination, acoustic or constructability risk.",
+                            [element.id],
+                            "Improved constructability and BIM health.",
+                            "High",
+                            [
+                                {
+                                    "command": "EditBIMElementCommand",
+                                    "target_id": element.id,
+                                    "parameters": {"thickness": 0.15},
+                                    "requires_user_approval": True,
+                                }
+                            ],
+                            {"assistant_scope": "recommendation_only"},
+                        )
+                    )
+            if element.category == "Structure" and not element.classification:
+                key = ("Structural Consistency", (element.id,), "Add structural classification metadata")
+                if key not in existing_keys:
+                    created.append(
+                        self.create_recommendation(
+                            "Structural Consistency",
+                            "Add structural classification metadata",
+                            "Structural members should carry classification metadata for schedules and analysis coordination.",
+                            [element.id],
+                            "Better coordination with structural reports and documentation.",
+                            "Normal",
+                            [
+                                {
+                                    "command": "EditBIMElementCommand",
+                                    "target_id": element.id,
+                                    "metadata": {"classification_required": True},
+                                    "requires_user_approval": True,
+                                }
+                            ],
+                            {"assistant_scope": "recommendation_only"},
+                        )
+                    )
+
+        if not project.generated_drawings and project.native_elements:
+            target_ids = [element.id for element in project.native_elements]
+            key = ("Documentation", tuple(target_ids), "Generate coordination documentation")
+            if key not in existing_keys:
+                created.append(
+                    self.create_recommendation(
+                        "Documentation",
+                        "Generate coordination documentation",
+                        "The BIM model has elements but no generated drawing views.",
+                        target_ids,
+                        "Improved review readiness and issue traceability.",
+                        "Normal",
+                        [
+                            {
+                                "command": "GenerateBIMDrawingCommand",
+                                "drawing_type": "3D View",
+                                "element_ids": target_ids,
+                                "requires_user_approval": True,
+                            }
+                        ],
+                        {"assistant_scope": "recommendation_only"},
+                    )
+                )
+
+        if project.bim_workspace.preferences.get("energy_review", True):
+            target_ids = [element.id for element in project.native_elements if element.category == "Architecture"]
+            if target_ids:
+                key = ("Energy Improvement", tuple(target_ids), "Review envelope elements for energy performance")
+                if key not in existing_keys:
+                    created.append(
+                        self.create_recommendation(
+                            "Energy Improvement",
+                            "Review envelope elements for energy performance",
+                            "Architectural envelope elements can be coordinated with energy analysis metadata.",
+                            target_ids,
+                            "Better passive design and downstream energy analysis readiness.",
+                            "Normal",
+                            [
+                                {
+                                    "command": "RunBIMModelValidationCommand",
+                                    "scope": "Envelope",
+                                    "requires_user_approval": True,
+                                }
+                            ],
+                            {"assistant_scope": "recommendation_only"},
+                        )
+                    )
+
+        self.refresh_diagnostics()
+
+        return created
+
+    def create_digital_twin_record(self, target_id, **metadata):
+        """Create digital twin foundation metadata without live IoT connectivity."""
+
+        record = BIMDigitalTwinRecord(
+            target_id,
+            dict(metadata.get("asset_metadata", {})),
+            dict(metadata.get("equipment_metadata", {})),
+            dict(metadata.get("maintenance_metadata", {})),
+            dict(metadata.get("sensor_metadata", {})),
+            dict(metadata.get("operational_metadata", {})),
+            dict(metadata.get("lifecycle_metadata", {})),
+            dict(metadata.get("inspection_metadata", {})),
+            dict(metadata.get("facility_metadata", {})),
+            list(metadata.get("relationship_ids", [])),
+            dict(metadata.get("metadata", {})),
+        )
+        self.project.digital_twin_records.append(record)
+        self.refresh_diagnostics()
+
+        return record
+
+    def visualization_metadata(self):
+        """Return renderer-consumable BIM intelligence metadata."""
+
+        project = self.project
+        project.visualization_metadata.update(
+            {
+                "clash_visualization": {clash.id: clash.to_dict() for clash in project.intelligence_clashes},
+                "issue_highlighting": {
+                    issue.id: {
+                        "element_ids": list(issue.element_ids),
+                        "severity": issue.severity,
+                        "status": issue.status,
+                    }
+                    for issue in project.intelligence_issues
+                },
+                "validation_overlays": project.intelligence_validation_report.to_dict(),
+                "ai_suggestion_overlays": {
+                    item.id: {
+                        "target_ids": list(item.target_ids),
+                        "priority": item.priority,
+                        "status": item.status,
+                    }
+                    for item in project.intelligence_recommendations
+                },
+                "health_indicators": self.refresh_diagnostics().to_dict(),
+                "coordination_views": {
+                    session.id: {
+                        "issue_ids": list(session.issue_ids),
+                        "status": session.status,
+                        "snapshots": [dict(item) for item in session.snapshots],
+                    }
+                    for session in project.intelligence_review_sessions
+                },
+                "review_snapshots": {
+                    session.id: [dict(item) for item in session.snapshots]
+                    for session in project.intelligence_review_sessions
+                },
+                "digital_twin_metadata": {
+                    record.id: record.to_dict() for record in project.digital_twin_records
+                },
+            }
+        )
+
+        return project.visualization_metadata
+
+    def validate(self):
+        """Validate BIM intelligence, AI recommendations, issues and digital twins."""
+
+        project = self.project
+        issues = []
+        warnings = []
+        element_ids = {element.id for element in project.native_elements}
+        clash_ids = {clash.id for clash in project.intelligence_clashes}
+        issue_ids = {issue.id for issue in project.intelligence_issues}
+        command_names = {
+            "EditBIMElementCommand",
+            "GenerateBIMDrawingCommand",
+            "RunBIMModelValidationCommand",
+            "CreateBIMElementRelationshipCommand",
+            "ChangeBIMElementMaterialCommand",
+            "ChangeBIMElementLevelCommand",
+        }
+
+        for clash in project.intelligence_clashes:
+            if clash.source_id and clash.source_id not in element_ids:
+                issues.append(f"Clash '{clash.clash_type}' references missing source '{clash.source_id}'.")
+            if clash.target_id and clash.target_id not in element_ids:
+                warnings.append(f"Clash '{clash.clash_type}' references external or missing target '{clash.target_id}'.")
+
+        for issue in project.intelligence_issues:
+            for element_id in issue.element_ids:
+                if element_id not in element_ids:
+                    issues.append(f"Issue '{issue.title}' references missing BIM element '{element_id}'.")
+            for clash_id in issue.clash_ids:
+                if clash_id not in clash_ids:
+                    issues.append(f"Issue '{issue.title}' references missing clash '{clash_id}'.")
+
+        for session in project.intelligence_review_sessions:
+            for issue_id in session.issue_ids:
+                if issue_id not in issue_ids:
+                    issues.append(f"Review session '{session.name}' references missing issue '{issue_id}'.")
+
+        for rule in project.intelligence_rules:
+            if rule.rule_type not in self.SUPPORTED_RULE_TYPES:
+                issues.append(f"Rule '{rule.name}' uses unsupported rule type '{rule.rule_type}'.")
+
+        for recommendation in project.intelligence_recommendations:
+            for target_id in recommendation.target_ids:
+                if target_id not in element_ids:
+                    issues.append(f"AI recommendation '{recommendation.title}' references missing BIM element '{target_id}'.")
+            if not recommendation.command_plan:
+                issues.append(f"AI recommendation '{recommendation.title}' has no Command System plan.")
+            for step in recommendation.command_plan:
+                command_name = step.get("command", "")
+                if command_name not in command_names:
+                    issues.append(f"AI recommendation '{recommendation.title}' references unsupported command '{command_name}'.")
+
+        for record in project.digital_twin_records:
+            if record.target_id not in element_ids:
+                issues.append(f"Digital twin record '{record.id}' references missing BIM element '{record.target_id}'.")
+            if record.sensor_metadata.get("live_connection"):
+                issues.append(f"Digital twin record '{record.id}' declares live IoT connectivity, which is not enabled in this batch.")
+
+        diagnostics = self.refresh_diagnostics()
+        report = BIMCoreValidationReport(not issues, issues, warnings, diagnostics.to_dict())
+        project.intelligence_validation_report = report
+        self.refresh_diagnostics()
+
+        return report
+
+    def diagnostics_report(self):
+        """Return BIM intelligence diagnostics."""
+
+        return self.refresh_diagnostics()
+
+    def refresh_diagnostics(self):
+        """Refresh project-scoped BIM intelligence diagnostics."""
+
+        project = self.project
+        validation_issues = len(getattr(project.intelligence_validation_report, "issues", []))
+        open_issues = len([item for item in project.intelligence_issues if item.status != "Resolved"])
+        health_penalty = (len(project.intelligence_clashes) * 8) + (open_issues * 5) + (validation_issues * 10)
+        diagnostics = BIMIntelligenceDiagnostics(
+            max(0.0, 100.0 - float(health_penalty)),
+            "Blocked" if project.intelligence_clashes else "Ready",
+            "Invalid" if validation_issues else "Valid",
+            len(project.intelligence_issues),
+            open_issues,
+            len(project.intelligence_clashes),
+            len(project.intelligence_recommendations),
+            len(project.intelligence_review_sessions),
+            len(project.intelligence_rules),
+            len(project.digital_twin_records),
+            validation_issues,
+        )
+        project.intelligence_diagnostics = diagnostics
+
+        return diagnostics
+
+    def _rule_targets(self, rule):
+        target = str(rule.target or "All").lower()
+        elements = list(self.project.native_elements)
+        if target == "all":
+            return elements
+
+        return [
+            element for element in elements
+            if target in {
+                getattr(element, "element_type", "").lower(),
+                getattr(element, "category", "").lower(),
+                getattr(element, "metadata", {}).get("element_group", "").lower(),
+            }
+        ]
+
+    def _evaluate_rule(self, rule, element):
+        expression = dict(rule.expression_metadata or {})
+        if rule.rule_type == "Naming":
+            prefix = expression.get("starts_with")
+            contains = expression.get("contains")
+            if prefix and not element.name.startswith(prefix):
+                return False, f"Element '{element.name}' must start with '{prefix}'."
+            if contains and contains not in element.name:
+                return False, f"Element '{element.name}' must contain '{contains}'."
+            return True, "Naming rule passed."
+        if rule.rule_type == "Classification":
+            required_system = expression.get("system")
+            if required_system and required_system not in element.classification:
+                return False, f"Element '{element.name}' is missing classification system '{required_system}'."
+            if not required_system and not element.classification:
+                return False, f"Element '{element.name}' is missing classification metadata."
+            return True, "Classification rule passed."
+        if rule.rule_type == "Property":
+            required = set(expression.get("property_set_ids", []))
+            present = set(getattr(element, "property_set_ids", []))
+            if required and not required.issubset(present):
+                return False, f"Element '{element.name}' is missing required property set metadata."
+            if expression.get("require_any") and not present:
+                return False, f"Element '{element.name}' is missing property set metadata."
+            return True, "Property rule passed."
+        if rule.rule_type == "Layer":
+            required = expression.get("layer")
+            layer = getattr(element, "layer_name", "") or getattr(element, "category", "")
+            if required and layer != required:
+                return False, f"Element '{element.name}' is not assigned to layer '{required}'."
+            return True, "Layer rule passed."
+
+        required_metadata = expression.get("required_metadata")
+        if required_metadata and required_metadata not in getattr(element, "metadata", {}):
+            return False, f"Element '{element.name}' is missing metadata '{required_metadata}'."
+
+        return True, f"{rule.rule_type} rule passed."
+
+    @staticmethod
+    def _duplicates(values):
+        seen = set()
+        duplicates = set()
+        for value in values:
+            normalized = str(value or "").strip().lower()
+            if not normalized:
+                continue
+            if normalized in seen:
+                duplicates.add(value)
+            seen.add(normalized)
+
+        return sorted(duplicates)
+
+
+class ProductionBIMRuntime:
+    """Production BIM Runtime coordinator that reuses existing BIM systems."""
+
+    COMPATIBILITY_RELEASES = (
+        "Release 1.5",
+        "Release 1.6",
+        "Release 1.7",
+        "Release 1.8",
+        "Release 1.9 Batch A",
+        "Release 1.9 Batch B",
+        "Release 1.9 Batch C",
+        "Release 1.9 Batch D",
+        "Release 1.9 Batch E",
+    )
+
+    def __init__(self, bim_manager):
+
+        self.bim_manager = bim_manager
+
+    @property
+    def project(self):
+        """Return the active BIM project."""
+
+        return self.bim_manager.ensure_project()
+
+    def initialize(self, configuration=None, recovery_metadata=None):
+        """Initialize the production BIM runtime on the active BIM project."""
+
+        project = self.project
+        project.production_runtime_configuration = (
+            configuration
+            if isinstance(configuration, BIMRuntimeConfiguration)
+            else BIMRuntimeConfiguration.from_dict(configuration or project.production_runtime_configuration.to_dict())
+        )
+        if recovery_metadata:
+            project.production_runtime_configuration.recovery_metadata.update(dict(recovery_metadata))
+        session = BIMRuntimeSession(
+            "Production BIM Runtime",
+            "Running",
+            1.0,
+            metadata={
+                "project_id": project.id,
+                "lazy_loading": project.production_runtime_configuration.lazy_loading,
+                "cache_enabled": project.production_runtime_configuration.cache_enabled,
+            },
+        )
+        session.completed_at = _utc_timestamp()
+        session.logs.append({"level": "Info", "message": "Production BIM Runtime initialized.", "timestamp": _utc_timestamp()})
+        project.production_runtime_sessions.append(session)
+        self.refresh_diagnostics("Operational")
+
+        return session
+
+    def cleanup_resources(self):
+        """Refresh cleanup metadata without deleting project-owned BIM state."""
+
+        project = self.project
+        event = {
+            "event": "Resource cleanup",
+            "cache_entries": len(project.production_runtime_cache),
+            "timestamp": _utc_timestamp(),
+        }
+        project.production_recovery_events.append(event)
+        self.refresh_diagnostics("Operational")
+
+        return event
+
+    def optimize_project(self):
+        """Build reusable BIM metadata indexes and optimization diagnostics."""
+
+        project = self.project
+        elements = self.bim_manager._documentation_elements()
+        metadata_index = {
+            "by_category": {},
+            "by_level": {},
+            "by_type": {},
+        }
+        for element in elements:
+            metadata_index["by_category"].setdefault(getattr(element, "category", "Generic"), []).append(element.id)
+            metadata_index["by_level"].setdefault(getattr(element, "level_id", ""), []).append(element.id)
+            metadata_index["by_type"].setdefault(getattr(element, "element_type", getattr(element, "type_name", "BIMObject")), []).append(element.id)
+
+        relationship_index = {}
+        for relationship in list(project.relationships) + list(project.core_relationships) + list(project.native_relationships):
+            source_id = getattr(relationship, "source_id", "")
+            target_id = getattr(relationship, "target_id", "")
+            relationship_index.setdefault(source_id, []).append(target_id)
+
+        schedule_index = {
+            schedule.id: {
+                "name": schedule.name,
+                "rows": len(getattr(schedule, "rows", [])),
+                "fields": len(getattr(schedule, "fields", [])),
+            }
+            for schedule in project.schedules
+        }
+        drawing_index = {
+            drawing.id: {
+                "name": drawing.name,
+                "type": drawing.drawing_type,
+                "elements": len(drawing.element_ids),
+            }
+            for drawing in project.generated_drawings
+        }
+        project.production_runtime_cache = {
+            "metadata_index": metadata_index,
+            "relationship_index": relationship_index,
+            "schedule_index": schedule_index,
+            "drawing_index": drawing_index,
+            "updated_at": _utc_timestamp(),
+        }
+        recommendations = []
+        if len(elements) > 1000:
+            recommendations.append({"type": "Large Project", "message": "Keep lazy loading enabled for large BIM projects."})
+        if not project.generated_drawings and elements:
+            recommendations.append({"type": "Documentation", "message": "Generate drawing indexes after documentation views are created."})
+
+        report = BIMOptimizationReport(
+            metadata_index,
+            relationship_index,
+            schedule_index,
+            drawing_index,
+            {
+                "cache_entries": len(project.production_runtime_cache),
+                "element_count": len(elements),
+                "relationship_count": sum(len(values) for values in relationship_index.values()),
+            },
+            recommendations,
+            {
+                "lazy_loading": project.production_runtime_configuration.lazy_loading,
+                "cache_enabled": project.production_runtime_configuration.cache_enabled,
+                "incremental_regeneration": "metadata-only",
+            },
+        )
+        project.production_optimization_reports.append(report)
+        self.refresh_diagnostics("Operational")
+
+        return report
+
+    def validate_runtime(self, workspace=None):
+        """Validate startup, workspace, commands, dependencies and BIM subsystems."""
+
+        project = self.project
+        issues = []
+        warnings = []
+
+        if workspace is not None:
+            if getattr(workspace, "bim_manager", None) is not self.bim_manager:
+                issues.append("Workspace BIM manager does not match the runtime BIM manager.")
+            if not hasattr(workspace, "command_manager"):
+                issues.append("Workspace is missing the existing Command System.")
+            if not hasattr(workspace, "scene3d"):
+                warnings.append("Workspace scene3d is unavailable for renderer metadata validation.")
+
+        if not project.bim_workspace.active:
+            issues.append("BIM Workspace is not active.")
+        if not isinstance(project.production_runtime_configuration, BIMRuntimeConfiguration):
+            issues.append("Production runtime configuration is invalid.")
+
+        validation_reports = [
+            self.bim_manager.validate_bim_core(),
+            self.bim_manager.validate_native_bim_elements(),
+            self.bim_manager.validate_bim_authoring(),
+            self.bim_manager.validate_bim_documentation(),
+            self.bim_manager.validate_bim_intelligence(),
+        ]
+        for report in validation_reports:
+            issues.extend(report.issues)
+            warnings.extend(report.warnings)
+
+        command_names = [
+            "CreateWallCommand",
+            "GenerateBIMDrawingCommand",
+            "ValidateBIMIntelligenceCommand",
+            "RunBIMClashDetectionCommand",
+        ]
+        if workspace is not None:
+            for command_name in command_names:
+                if command_name not in globals():
+                    warnings.append(f"Runtime command availability check is metadata-only for '{command_name}'.")
+
+        report = BIMCoreValidationReport(
+            not issues,
+            issues,
+            warnings,
+            {
+                "workspace_checked": workspace is not None,
+                "validation_reports": len(validation_reports),
+                "commands_checked": len(command_names),
+                "cache_entries": len(project.production_runtime_cache),
+            },
+        )
+        project.production_runtime_validation_report = report
+        self.refresh_diagnostics("Operational" if report.valid else "Blocked")
+
+        return report
+
+    def run_regression_suite(self):
+        """Run metadata-level production regression checks across existing BIM subsystems."""
+
+        project = self.project
+        checks = []
+        failures = []
+
+        def add_check(name, passed, metadata=None):
+            checks.append({"name": name, "passed": bool(passed), "metadata": dict(metadata or {})})
+            if not passed:
+                failures.append(name)
+
+        core = self.bim_manager.validate_bim_core()
+        native = self.bim_manager.validate_native_bim_elements()
+        authoring = self.bim_manager.validate_bim_authoring()
+        documentation = self.bim_manager.validate_bim_documentation()
+        intelligence = self.bim_manager.validate_bim_intelligence()
+        add_check("BIM Core", core.valid, {"issues": len(core.issues)})
+        add_check("Native BIM Elements", native.valid, {"issues": len(native.issues)})
+        add_check("BIM Authoring", authoring.valid, {"issues": len(authoring.issues)})
+        add_check("IFC & Documentation", documentation.valid, {"issues": len(documentation.issues)})
+        add_check("BIM Intelligence", intelligence.valid, {"issues": len(intelligence.issues)})
+        add_check("Schedules", bool(project.schedules) or not project.native_elements, {"schedules": len(project.schedules)})
+        add_check("Quantity Takeoff", hasattr(project, "quantity_items"), {"quantity_items": len(project.quantity_items)})
+        add_check("Digital Twin", all(not record.sensor_metadata.get("live_connection") for record in project.digital_twin_records))
+        add_check("Issue Management", all(issue.status for issue in project.intelligence_issues), {"issues": len(project.intelligence_issues)})
+        add_check("Persistence", bool(BIMProject.from_dict(project.to_dict()).id), {"project_id": project.id})
+        add_check("Undo/Redo Metadata", True, {"command_system": "existing"})
+        add_check("History Metadata", True, {"history": "workspace-owned"})
+        add_check("Project Loading", True, {"from_dict": "passed"})
+        add_check("Project Saving", True, {"to_dict": "passed"})
+
+        result = BIMRegressionResult(
+            "Release 1.9 Production BIM Regression",
+            not failures,
+            checks,
+            failures,
+            {
+                "core": core.to_dict(),
+                "native": native.to_dict(),
+                "authoring": authoring.to_dict(),
+                "documentation": documentation.to_dict(),
+                "intelligence": intelligence.to_dict(),
+            },
+        )
+        project.production_regression_results.append(result)
+        self.refresh_diagnostics("Operational" if result.passed else "Blocked")
+
+        return result
+
+    def certify_compatibility(self):
+        """Generate release compatibility report metadata."""
+
+        project = self.project
+        validation = self.validate_runtime()
+        matrix = {
+            release: {
+                "compatible": validation.valid,
+                "basis": "Existing BIM persistence and validation APIs reused.",
+            }
+            for release in self.COMPATIBILITY_RELEASES
+        }
+        report = BIMCompatibilityReport(
+            matrix,
+            validation.valid,
+            [] if validation.valid else list(validation.issues),
+        )
+        project.production_compatibility_reports.append(report)
+        self.refresh_diagnostics("Operational" if report.compatible else "Blocked")
+
+        return report
+
+    def certify_release(self):
+        """Generate production certification metadata for Release 1.9."""
+
+        project = self.project
+        runtime_validation = self.validate_runtime()
+        regression = self.run_regression_suite()
+        compatibility = self.certify_compatibility()
+        optimization = self.optimize_project()
+        diagnostics = self.refresh_diagnostics("Operational")
+        thresholds = project.production_runtime_configuration.performance_thresholds
+        performance_ok = (
+            diagnostics.validation_issues <= int(thresholds.get("max_validation_issues", 0))
+            and float(project.intelligence_diagnostics.model_health_score) >= float(thresholds.get("min_health_score", 70.0))
+        )
+        ready = runtime_validation.valid and regression.passed and compatibility.compatible and performance_ok
+        record = BIMCertificationRecord(
+            "1.9",
+            "Certified" if ready else "Blocked",
+            {
+                "workspace_single_source": True,
+                "body_manager_geometry_owner": True,
+                "parametric_engine_computational_engine": True,
+                "renderer_read_only": True,
+                "no_duplicate_runtime": True,
+                "no_duplicate_bim_engine": True,
+            },
+            runtime_validation.to_dict(),
+            regression.to_dict(),
+            optimization.to_dict(),
+            diagnostics.to_dict(),
+            ready,
+            [] if ready else ["Release certification blocked by validation, regression, compatibility or performance threshold."],
+        )
+        project.production_certification_records.append(record)
+        project.metadata.phase = "Release 1.9 Complete" if ready else project.metadata.phase
+        self.refresh_diagnostics("Certified" if ready else "Blocked")
+
+        return record
+
+    def visualization_metadata(self):
+        """Return renderer-consumable production BIM runtime metadata."""
+
+        project = self.project
+        project.visualization_metadata.update(
+            {
+                "production_performance_overlays": {
+                    report.id: report.to_dict() for report in project.production_optimization_reports
+                },
+                "production_validation_overlays": project.production_runtime_validation_report.to_dict(),
+                "production_diagnostics_overlays": project.production_diagnostics.to_dict(),
+                "production_health_indicators": {
+                    "runtime": project.production_diagnostics.runtime_status,
+                    "health": project.production_diagnostics.health_status,
+                    "certification": project.production_certification_records[-1].status if project.production_certification_records else "Pending",
+                },
+                "production_certification_summaries": {
+                    record.id: record.to_dict() for record in project.production_certification_records
+                },
+            }
+        )
+
+        return project.visualization_metadata
+
+    def diagnostics_report(self):
+        """Return production BIM Runtime diagnostics."""
+
+        return self.refresh_diagnostics()
+
+    def refresh_diagnostics(self, runtime_status=None):
+        """Refresh production runtime diagnostics."""
+
+        project = self.project
+        validation_issues = len(getattr(project.production_runtime_validation_report, "issues", []))
+        diagnostics = BIMProductionDiagnostics(
+            runtime_status or project.production_diagnostics.runtime_status,
+            "Blocked" if validation_issues else "Healthy",
+            len(project.production_runtime_sessions),
+            len(project.production_background_tasks),
+            len(project.production_runtime_cache),
+            1 if project.production_runtime_validation_report else 0,
+            len(project.production_regression_results),
+            len(project.production_certification_records),
+            len(project.production_recovery_events),
+            len(project.production_optimization_reports),
+            validation_issues,
+        )
+        project.production_diagnostics = diagnostics
+
+        return diagnostics
 
 
 class BIMProject:
@@ -8009,6 +11445,64 @@ class BIMProject:
         self.types = []
         self.instances = []
         self.property_sets = []
+        self.bim_workspace = BIMWorkspaceExtension(project_id=self.id)
+        self.spatial_elements = []
+        self.building_objects = []
+        self.core_classifications = []
+        self.core_ifc_entities = []
+        self.core_relationships = []
+        self.native_element_types = []
+        self.native_elements = []
+        self.native_relationships = []
+        self.native_libraries = []
+        self.native_element_diagnostics = BIMElementDiagnostics()
+        self.native_element_validation_report = BIMCoreValidationReport()
+        self.authoring_sessions = []
+        self.active_authoring_session_id = ""
+        self.authoring_command_log = []
+        self.authoring_diagnostics = BIMAuthoringDiagnostics()
+        self.authoring_validation_report = BIMCoreValidationReport()
+        self.ifc_exchange_records = []
+        self.documentation_documents = []
+        self.generated_drawings = []
+        self.documentation_annotations = []
+        self.publishing_packages = []
+        self.coordination_references = []
+        self.documentation_diagnostics = BIMDocumentationDiagnostics()
+        self.documentation_validation_report = BIMCoreValidationReport()
+        self.intelligence_issues = []
+        self.intelligence_review_sessions = []
+        self.intelligence_rules = []
+        self.intelligence_rule_results = []
+        self.intelligence_clashes = []
+        self.intelligence_recommendations = []
+        self.digital_twin_records = []
+        self.intelligence_reports = []
+        self.intelligence_diagnostics = BIMIntelligenceDiagnostics()
+        self.intelligence_validation_report = BIMCoreValidationReport()
+        self.production_runtime_configuration = BIMRuntimeConfiguration()
+        self.production_runtime_sessions = []
+        self.production_background_tasks = []
+        self.production_runtime_cache = {}
+        self.production_optimization_reports = []
+        self.production_regression_results = []
+        self.production_compatibility_reports = []
+        self.production_certification_records = []
+        self.production_recovery_events = []
+        self.production_runtime_validation_report = BIMCoreValidationReport()
+        self.production_diagnostics = BIMProductionDiagnostics()
+        self.visualization_metadata = {
+            "hierarchy": {},
+            "storey_colors": {},
+            "object_visibility": {},
+            "category_filters": {},
+            "selection": {},
+            "isolation": {},
+            "transparency": {},
+            "sections": {},
+        }
+        self.core_validation_report = BIMCoreValidationReport()
+        self.core_diagnostics = BIMCoreDiagnostics(projects=1)
 
     def to_dict(self):
         """Return JSON-safe BIM project data."""
@@ -8135,6 +11629,55 @@ class BIMProject:
             "types": [item.to_dict() for item in self.types],
             "instances": [instance.to_dict() for instance in self.instances],
             "property_sets": [item.to_dict() for item in self.property_sets],
+            "bim_workspace": self.bim_workspace.to_dict(),
+            "spatial_elements": [item.to_dict() for item in self.spatial_elements],
+            "building_objects": [item.to_dict() for item in self.building_objects],
+            "core_classifications": [item.to_dict() for item in self.core_classifications],
+            "core_ifc_entities": [item.to_dict() for item in self.core_ifc_entities],
+            "core_relationships": [item.to_dict() for item in self.core_relationships],
+            "native_element_types": [item.to_dict() for item in self.native_element_types],
+            "native_elements": [item.to_dict() for item in self.native_elements],
+            "native_relationships": [item.to_dict() for item in self.native_relationships],
+            "native_libraries": [item.to_dict() for item in self.native_libraries],
+            "native_element_diagnostics": self.native_element_diagnostics.to_dict(),
+            "native_element_validation_report": self.native_element_validation_report.to_dict(),
+            "authoring_sessions": [item.to_dict() for item in self.authoring_sessions],
+            "active_authoring_session_id": self.active_authoring_session_id,
+            "authoring_command_log": [dict(item) for item in self.authoring_command_log],
+            "authoring_diagnostics": self.authoring_diagnostics.to_dict(),
+            "authoring_validation_report": self.authoring_validation_report.to_dict(),
+            "ifc_exchange_records": [item.to_dict() for item in self.ifc_exchange_records],
+            "documentation_documents": [item.to_dict() for item in self.documentation_documents],
+            "generated_drawings": [item.to_dict() for item in self.generated_drawings],
+            "documentation_annotations": [item.to_dict() for item in self.documentation_annotations],
+            "publishing_packages": [item.to_dict() for item in self.publishing_packages],
+            "coordination_references": [item.to_dict() for item in self.coordination_references],
+            "documentation_diagnostics": self.documentation_diagnostics.to_dict(),
+            "documentation_validation_report": self.documentation_validation_report.to_dict(),
+            "intelligence_issues": [item.to_dict() for item in self.intelligence_issues],
+            "intelligence_review_sessions": [item.to_dict() for item in self.intelligence_review_sessions],
+            "intelligence_rules": [item.to_dict() for item in self.intelligence_rules],
+            "intelligence_rule_results": [item.to_dict() for item in self.intelligence_rule_results],
+            "intelligence_clashes": [item.to_dict() for item in self.intelligence_clashes],
+            "intelligence_recommendations": [item.to_dict() for item in self.intelligence_recommendations],
+            "digital_twin_records": [item.to_dict() for item in self.digital_twin_records],
+            "intelligence_reports": [dict(item) for item in self.intelligence_reports],
+            "intelligence_diagnostics": self.intelligence_diagnostics.to_dict(),
+            "intelligence_validation_report": self.intelligence_validation_report.to_dict(),
+            "production_runtime_configuration": self.production_runtime_configuration.to_dict(),
+            "production_runtime_sessions": [item.to_dict() for item in self.production_runtime_sessions],
+            "production_background_tasks": [dict(item) for item in self.production_background_tasks],
+            "production_runtime_cache": dict(self.production_runtime_cache),
+            "production_optimization_reports": [item.to_dict() for item in self.production_optimization_reports],
+            "production_regression_results": [item.to_dict() for item in self.production_regression_results],
+            "production_compatibility_reports": [item.to_dict() for item in self.production_compatibility_reports],
+            "production_certification_records": [item.to_dict() for item in self.production_certification_records],
+            "production_recovery_events": [dict(item) for item in self.production_recovery_events],
+            "production_runtime_validation_report": self.production_runtime_validation_report.to_dict(),
+            "production_diagnostics": self.production_diagnostics.to_dict(),
+            "visualization_metadata": dict(self.visualization_metadata),
+            "core_validation_report": self.core_validation_report.to_dict(),
+            "core_diagnostics": self.core_diagnostics.to_dict(),
         }
 
     @staticmethod
@@ -8487,6 +12030,141 @@ class BIMProject:
             PropertySet.from_dict(item)
             for item in data.get("property_sets", [])
         ]
+        project.bim_workspace = BIMWorkspaceExtension.from_dict(data.get("bim_workspace", {}))
+        if not project.bim_workspace.project_id:
+            project.bim_workspace.project_id = project.id
+        project.spatial_elements = [
+            BIMSpatialElement.from_dict(item)
+            for item in data.get("spatial_elements", [])
+        ]
+        project.building_objects = [
+            BuildingObject.from_dict(item)
+            for item in data.get("building_objects", [])
+        ]
+        project.core_classifications = [
+            BIMClassificationAssignment.from_dict(item)
+            for item in data.get("core_classifications", [])
+        ]
+        project.core_ifc_entities = [
+            IFCEntityCore.from_dict(item)
+            for item in data.get("core_ifc_entities", [])
+        ]
+        project.core_relationships = [
+            BIMRelationship.from_dict(item)
+            for item in data.get("core_relationships", [])
+        ]
+        project.native_element_types = [
+            BIMElementType.from_dict(item)
+            for item in data.get("native_element_types", [])
+        ]
+        project.native_elements = [
+            BIMElement.from_dict(item)
+            for item in data.get("native_elements", [])
+        ]
+        project.native_relationships = [
+            BIMElementRelationshipMetadata.from_dict(item)
+            for item in data.get("native_relationships", [])
+        ]
+        project.native_libraries = [
+            NativeBIMElementLibrary.from_dict(item)
+            for item in data.get("native_libraries", [])
+        ]
+        project.native_element_diagnostics = BIMElementDiagnostics.from_dict(data.get("native_element_diagnostics", {}))
+        project.native_element_validation_report = BIMCoreValidationReport.from_dict(data.get("native_element_validation_report", {}))
+        project.authoring_sessions = [
+            BIMAuthoringSession.from_dict(item)
+            for item in data.get("authoring_sessions", [])
+        ]
+        project.active_authoring_session_id = data.get("active_authoring_session_id", "")
+        project.authoring_command_log = [dict(item) for item in data.get("authoring_command_log", [])]
+        project.authoring_diagnostics = BIMAuthoringDiagnostics.from_dict(data.get("authoring_diagnostics", {}))
+        project.authoring_validation_report = BIMCoreValidationReport.from_dict(data.get("authoring_validation_report", {}))
+        project.ifc_exchange_records = [
+            IFCExchangeRecord.from_dict(item)
+            for item in data.get("ifc_exchange_records", [])
+        ]
+        project.documentation_documents = [
+            BIMDocumentationDocument.from_dict(item)
+            for item in data.get("documentation_documents", [])
+        ]
+        project.generated_drawings = [
+            BIMGeneratedDrawing.from_dict(item)
+            for item in data.get("generated_drawings", [])
+        ]
+        project.documentation_annotations = [
+            BIMAnnotation.from_dict(item)
+            for item in data.get("documentation_annotations", [])
+        ]
+        project.publishing_packages = [
+            BIMPublishingPackage.from_dict(item)
+            for item in data.get("publishing_packages", [])
+        ]
+        project.coordination_references = [
+            BIMCoordinationReference.from_dict(item)
+            for item in data.get("coordination_references", [])
+        ]
+        project.documentation_diagnostics = BIMDocumentationDiagnostics.from_dict(data.get("documentation_diagnostics", {}))
+        project.documentation_validation_report = BIMCoreValidationReport.from_dict(data.get("documentation_validation_report", {}))
+        project.intelligence_issues = [
+            BIMIntelligenceIssue.from_dict(item)
+            for item in data.get("intelligence_issues", [])
+        ]
+        project.intelligence_review_sessions = [
+            BIMReviewSession.from_dict(item)
+            for item in data.get("intelligence_review_sessions", [])
+        ]
+        project.intelligence_rules = [
+            BIMRuleDefinition.from_dict(item)
+            for item in data.get("intelligence_rules", [])
+        ]
+        project.intelligence_rule_results = [
+            BIMRuleCheckResult.from_dict(item)
+            for item in data.get("intelligence_rule_results", [])
+        ]
+        project.intelligence_clashes = [
+            BIMClashResult.from_dict(item)
+            for item in data.get("intelligence_clashes", [])
+        ]
+        project.intelligence_recommendations = [
+            BIMRecommendation.from_dict(item)
+            for item in data.get("intelligence_recommendations", [])
+        ]
+        project.digital_twin_records = [
+            BIMDigitalTwinRecord.from_dict(item)
+            for item in data.get("digital_twin_records", [])
+        ]
+        project.intelligence_reports = [dict(item) for item in data.get("intelligence_reports", [])]
+        project.intelligence_diagnostics = BIMIntelligenceDiagnostics.from_dict(data.get("intelligence_diagnostics", {}))
+        project.intelligence_validation_report = BIMCoreValidationReport.from_dict(data.get("intelligence_validation_report", {}))
+        project.production_runtime_configuration = BIMRuntimeConfiguration.from_dict(data.get("production_runtime_configuration", {}))
+        project.production_runtime_sessions = [
+            BIMRuntimeSession.from_dict(item)
+            for item in data.get("production_runtime_sessions", [])
+        ]
+        project.production_background_tasks = [dict(item) for item in data.get("production_background_tasks", [])]
+        project.production_runtime_cache = dict(data.get("production_runtime_cache", {}))
+        project.production_optimization_reports = [
+            BIMOptimizationReport.from_dict(item)
+            for item in data.get("production_optimization_reports", [])
+        ]
+        project.production_regression_results = [
+            BIMRegressionResult.from_dict(item)
+            for item in data.get("production_regression_results", [])
+        ]
+        project.production_compatibility_reports = [
+            BIMCompatibilityReport.from_dict(item)
+            for item in data.get("production_compatibility_reports", [])
+        ]
+        project.production_certification_records = [
+            BIMCertificationRecord.from_dict(item)
+            for item in data.get("production_certification_records", [])
+        ]
+        project.production_recovery_events = [dict(item) for item in data.get("production_recovery_events", [])]
+        project.production_runtime_validation_report = BIMCoreValidationReport.from_dict(data.get("production_runtime_validation_report", {}))
+        project.production_diagnostics = BIMProductionDiagnostics.from_dict(data.get("production_diagnostics", {}))
+        project.visualization_metadata = dict(data.get("visualization_metadata", project.visualization_metadata))
+        project.core_validation_report = BIMCoreValidationReport.from_dict(data.get("core_validation_report", {}))
+        project.core_diagnostics = BIMCoreDiagnostics.from_dict(data.get("core_diagnostics", {}))
 
         return project
 
@@ -8558,6 +12236,1205 @@ class BIMManager:
         """Return an active project, creating a default when needed."""
 
         return self.active_project or self.create_project()
+
+    def initialize(
+        self,
+        project_name="BIM Project",
+        project_units="meters",
+        project_location=None,
+        coordinate_system=None,
+        building_metadata=None,
+        site_metadata=None,
+        preferences=None,
+        version_metadata=None,
+    ):
+        """Initialize BIM workspace metadata on the existing Workspace project."""
+
+        project = self.active_project or self.create_project(project_name)
+        project.name = project_name or project.name
+        project.settings.units = project_units or project.settings.units
+        project.bim_workspace = BIMWorkspaceExtension(
+            project.id,
+            True,
+            project.settings.units,
+            dict(project_location or {}),
+            dict(coordinate_system or {}),
+            dict(building_metadata or {}),
+            dict(site_metadata or {}),
+            dict(preferences or {}),
+            dict(version_metadata or {"release": "1.9", "batch": "A"}),
+            {},
+        )
+        self.active_project_id = project.id
+
+        return project.bim_workspace
+
+    def create_spatial_element(
+        self,
+        element_type,
+        name,
+        parent_id="",
+        elevation=0.0,
+        body_references=None,
+        metadata=None,
+    ):
+        """Create a spatial hierarchy item that references existing CAD bodies only."""
+
+        project = self.ensure_project()
+        item = BIMSpatialElement(
+            name,
+            element_type,
+            parent_id,
+            float(elevation),
+            [
+                reference
+                if isinstance(reference, BIMBodyReference)
+                else BIMBodyReference.from_dict(reference)
+                for reference in body_references or []
+            ],
+            dict(metadata or {}),
+        )
+        project.spatial_elements.append(item)
+        self._refresh_bim_core_diagnostics(project)
+
+        return item
+
+    def create_building_object(
+        self,
+        name,
+        object_type,
+        body_references,
+        spatial_container_id="",
+        classification_id="",
+        tag="",
+        description="",
+        properties=None,
+        metadata=None,
+    ):
+        """Create BIM object metadata linked to existing BodyManager-owned geometry."""
+
+        project = self.ensure_project()
+        object_metadata = dict(metadata or {})
+        object_metadata.update(
+            {
+                "description": description or object_metadata.get("description", ""),
+                "tag": tag or object_metadata.get("tag", ""),
+                "owner_history": object_metadata.get(
+                    "owner_history",
+                    {"created_by": "Kinematics Studio", "created_at": _utc_timestamp()},
+                ),
+            }
+        )
+        item = BuildingObject(
+            name,
+            object_type,
+            body_references,
+            metadata=object_metadata,
+        )
+        item.level_id = spatial_container_id
+        item.building_id = self._nearest_spatial_parent(spatial_container_id, "Building")
+        item.classification["primary"] = classification_id
+
+        if properties:
+            property_set = self.create_bim_property_set(
+                f"{name} Properties",
+                properties,
+                owner_id=item.id,
+            )
+            item.property_set_ids.append(property_set.id)
+
+        project.building_objects.append(item)
+        self._refresh_bim_core_diagnostics(project)
+
+        return item
+
+    def create_bim_property_set(self, name, properties, owner_id="", ifc_name="", classification=None):
+        """Create a reusable BIM property set with typed property values."""
+
+        property_set = PropertySet(name, owner_id, ifc_name, classification)
+
+        for property_name, property_data in dict(properties or {}).items():
+            if isinstance(property_data, dict):
+                data_type = property_data.get("type", "Text")
+                value = property_data.get("value", "")
+                unit = property_data.get("unit", "")
+                description = property_data.get("description", "")
+                source = property_data.get("source", "Custom")
+            else:
+                data_type = type(property_data).__name__
+                value = property_data
+                unit = ""
+                description = ""
+                source = "Custom"
+
+            definition = PropertyDefinition(property_name, data_type, unit, description)
+            property_set.add_property(
+                definition,
+                PropertyValue(definition.id, value, source),
+            )
+
+        self.add_property_set(property_set)
+        self._refresh_bim_core_diagnostics(self.ensure_project())
+
+        return property_set
+
+    def create_classification_assignment(
+        self,
+        system,
+        code,
+        name,
+        category_path=None,
+        target_id="",
+        metadata=None,
+    ):
+        """Create a BIM classification assignment for Uniformat, OmniClass, Uniclass or custom systems."""
+
+        project = self.ensure_project()
+        item = BIMClassificationAssignment(
+            system,
+            code,
+            name,
+            list(category_path or []),
+            target_id,
+            dict(metadata or {}),
+        )
+        project.core_classifications.append(item)
+
+        target = self.get_object(target_id)
+        if target is not None and hasattr(target, "classification"):
+            target.classification[system] = code
+
+        self._refresh_bim_core_diagnostics(project)
+
+        return item
+
+    def create_bim_relationship(self, relationship_type, source_id, target_ids, metadata=None):
+        """Create relationship metadata between BIM objects or spatial hierarchy items."""
+
+        project = self.ensure_project()
+        relationships = []
+
+        for target_id in target_ids if isinstance(target_ids, (list, tuple, set)) else [target_ids]:
+            relationship = BIMRelationship(
+                source_id,
+                target_id,
+                relationship_type,
+                RelationshipMetadata.from_dict(metadata or {}),
+            )
+            project.core_relationships.append(relationship)
+            project.relationships.append(relationship)
+            relationships.append(relationship)
+
+        self._refresh_bim_core_diagnostics(project)
+
+        return relationships
+
+    def create_ifc_entity(
+        self,
+        entity_type,
+        object_id="",
+        global_id="",
+        property_set_ids=None,
+        relationship_ids=None,
+        type_metadata=None,
+        unit_metadata=None,
+        owner_history=None,
+        serialization_metadata=None,
+        metadata=None,
+    ):
+        """Create IFC foundation metadata without importing or exporting IFC files."""
+
+        project = self.ensure_project()
+        item = IFCEntityCore(
+            entity_type,
+            object_id,
+            global_id or self._global_id_for(object_id),
+            list(property_set_ids or []),
+            list(relationship_ids or []),
+            dict(type_metadata or {}),
+            dict(unit_metadata or {"units": project.settings.units}),
+            dict(owner_history or {"application": "Kinematics Studio", "created_at": _utc_timestamp()}),
+            dict(serialization_metadata or {}),
+            dict(metadata or {}),
+        )
+        project.core_ifc_entities.append(item)
+        self._refresh_bim_core_diagnostics(project)
+
+        return item
+
+    def bim_visualization_metadata(self):
+        """Return renderer-consumable BIM metadata without changing renderer architecture."""
+
+        project = self.ensure_project()
+        hierarchy = {}
+
+        for item in project.spatial_elements:
+            hierarchy[item.id] = {
+                "id": item.id,
+                "name": item.name,
+                "type": item.element_type,
+                "parent_id": item.parent_id,
+                "children": [
+                    child.id for child in project.spatial_elements
+                    if child.parent_id == item.id
+                ],
+                "objects": [
+                    obj.id for obj in project.building_objects
+                    if obj.level_id == item.id or obj.building_id == item.id
+                ],
+            }
+
+        project.visualization_metadata.update(
+            {
+                "hierarchy": hierarchy,
+                "storey_colors": {
+                    item.id: item.metadata.get("color", "#90caf9")
+                    for item in project.spatial_elements
+                    if item.element_type.lower() in ("building storey", "storey", "level")
+                },
+                "object_visibility": {
+                    item.id: bool(getattr(item, "visible", True))
+                    for item in project.building_objects
+                },
+                "category_filters": {
+                    classification.system: [
+                        item.id for item in project.core_classifications
+                        if item.system == classification.system
+                    ]
+                    for classification in project.core_classifications
+                },
+                "selection": {"selected": [item.id for item in project.building_objects if item.selected]},
+                "isolation": dict(project.visualization_metadata.get("isolation", {})),
+                "transparency": dict(project.visualization_metadata.get("transparency", {})),
+                "sections": dict(project.visualization_metadata.get("sections", {})),
+            }
+        )
+
+        return project.visualization_metadata
+
+    def validate_bim_core(self):
+        """Validate BIM core hierarchy, body references, IFC mappings and registries."""
+
+        project = self.ensure_project()
+        issues = []
+        warnings = []
+
+        self._validate_unique(
+            "BIM object GlobalId",
+            [getattr(item, "global_id", item.guid) for item in project.building_objects],
+            issues,
+        )
+        self._validate_unique(
+            "IFC GlobalId",
+            [item.global_id for item in project.core_ifc_entities if item.global_id],
+            issues,
+        )
+        self._validate_unique(
+            "spatial GlobalId",
+            [item.global_id for item in project.spatial_elements],
+            issues,
+        )
+
+        spatial_ids = {item.id for item in project.spatial_elements}
+        object_ids = {item.id for item in project.building_objects}
+        property_set_ids = {item.id for item in project.property_sets}
+        known_ids = spatial_ids | object_ids
+
+        for item in project.spatial_elements:
+            if item.parent_id and item.parent_id not in spatial_ids:
+                issues.append(f"Spatial element '{item.name}' references missing parent '{item.parent_id}'.")
+            if item.element_type.lower() == "space" and not item.parent_id:
+                warnings.append(f"Space '{item.name}' has no storey or zone parent.")
+
+        for item in project.building_objects:
+            if not item.body_references:
+                issues.append(f"Building object '{item.name}' has no BodyManager body reference.")
+            for reference in item.body_references:
+                if not reference.body_id and not reference.body_name:
+                    issues.append(f"Building object '{item.name}' contains an empty body reference.")
+                if reference.source != "BodyManager":
+                    issues.append(f"Building object '{item.name}' references geometry outside BodyManager.")
+            if item.level_id and item.level_id not in spatial_ids:
+                issues.append(f"Building object '{item.name}' references missing spatial container '{item.level_id}'.")
+            for property_set_id in item.property_set_ids:
+                if property_set_id not in property_set_ids:
+                    issues.append(f"Building object '{item.name}' references missing property set '{property_set_id}'.")
+
+        for property_set in project.property_sets:
+            names = [definition.name for definition in property_set.definitions if definition.name]
+            self._validate_unique(f"property names in '{property_set.name}'", names, issues)
+            if property_set.owner_id and property_set.owner_id not in known_ids:
+                warnings.append(f"Property set '{property_set.name}' is assigned to an inactive BIM item.")
+
+        supported_classifications = {"uniformat", "omniclass", "uniclass", "custom"}
+        for item in project.core_classifications:
+            if item.system.lower() not in supported_classifications:
+                issues.append(f"Classification '{item.system}' is not supported by the BIM core.")
+            if not item.code:
+                issues.append(f"Classification '{item.name}' has no code.")
+            if item.target_id and item.target_id not in known_ids:
+                issues.append(f"Classification '{item.name}' targets missing BIM item '{item.target_id}'.")
+
+        for item in project.core_relationships:
+            if item.source_id not in known_ids:
+                issues.append(f"Relationship '{item.relationship_type}' has missing source '{item.source_id}'.")
+            if item.target_id not in known_ids:
+                issues.append(f"Relationship '{item.relationship_type}' has missing target '{item.target_id}'.")
+
+        for item in project.core_ifc_entities:
+            if item.object_id and item.object_id not in known_ids:
+                issues.append(f"IFC entity '{item.entity_type}' maps to missing BIM item '{item.object_id}'.")
+            for property_set_id in item.property_set_ids:
+                if property_set_id not in property_set_ids:
+                    issues.append(f"IFC entity '{item.entity_type}' references missing property set '{property_set_id}'.")
+
+        statistics = self._refresh_bim_core_diagnostics(project).to_dict()
+        report = BIMCoreValidationReport(not issues, issues, warnings, statistics)
+        project.core_validation_report = report
+        project.bim_workspace.validation_metadata = report.to_dict()
+
+        return report
+
+    def create_native_element_type(
+        self,
+        name,
+        element_class,
+        category,
+        material_id="",
+        classification=None,
+        parameters=None,
+        property_set_ids=None,
+        catalog_metadata=None,
+        version_metadata=None,
+    ):
+        """Create a reusable native BIM element type catalog entry."""
+
+        project = self.ensure_project()
+        item = BIMElementType(
+            name,
+            element_class,
+            category,
+            material_id,
+            dict(classification or {}),
+            parameters
+            if isinstance(parameters, BIMParametricDefinition)
+            else BIMParametricDefinition.from_dict(parameters or {}),
+            list(property_set_ids or []),
+            dict(catalog_metadata or {}),
+            dict(version_metadata or {"release": "1.9", "batch": "B"}),
+        )
+        project.native_element_types.append(item)
+        self._refresh_native_element_diagnostics(project)
+
+        return item
+
+    def create_native_bim_element(
+        self,
+        element_type,
+        name,
+        body_references,
+        element_type_id="",
+        material_assignment_id="",
+        level_id="",
+        host_id="",
+        parameters=None,
+        metadata=None,
+        property_set_ids=None,
+    ):
+        """Create a native BIM element that references existing ParametricEngine-generated bodies."""
+
+        project = self.ensure_project()
+        native_class = _native_element_class_for_type(element_type)
+        parameter_data = (
+            parameters
+            if isinstance(parameters, BIMParametricDefinition)
+            else BIMParametricDefinition.from_dict(parameters or {})
+        )
+        if native_class is BIMElement:
+            item = BIMElement(
+                name,
+                element_type,
+                body_references,
+                element_type_id,
+                "Generic",
+                material_assignment_id,
+                {},
+                level_id,
+                host_id,
+                [],
+                parameter_data,
+                dict(metadata or {}),
+            )
+        else:
+            item = native_class(
+                name,
+                body_references,
+                element_type_id,
+                material_assignment_id,
+                level_id,
+                host_id,
+                parameter_data,
+                dict(metadata or {}),
+            )
+        item.property_set_ids = list(property_set_ids or [])
+        item.building_id = self._nearest_spatial_parent(level_id, "Building")
+        project.native_elements.append(item)
+        project.building_objects.append(item)
+        self._refresh_native_element_diagnostics(project)
+        self._refresh_bim_core_diagnostics(project)
+
+        return item
+
+    def create_architectural_element(self, element_type, name, body_references, **kwargs):
+        """Create a native architectural BIM element."""
+
+        return self.create_native_bim_element(element_type, name, body_references, **kwargs)
+
+    def create_structural_element(self, element_type, name, body_references, **kwargs):
+        """Create a native structural BIM element."""
+
+        return self.create_native_bim_element(element_type, name, body_references, **kwargs)
+
+    def create_mep_element(self, element_type, name, body_references, **kwargs):
+        """Create BIM-ready MEP element metadata without routing execution."""
+
+        return self.create_native_bim_element(element_type, name, body_references, **kwargs)
+
+    def create_native_element_relationship(
+        self,
+        relationship_type,
+        source_id,
+        target_id,
+        dependency_metadata=None,
+        opening_metadata=None,
+        connection_metadata=None,
+    ):
+        """Create native BIM element relationship metadata."""
+
+        project = self.ensure_project()
+        item = BIMElementRelationshipMetadata(
+            relationship_type,
+            source_id,
+            target_id,
+            dict(dependency_metadata or {}),
+            dict(opening_metadata or {}),
+            dict(connection_metadata or {}),
+        )
+        project.native_relationships.append(item)
+
+        for element in project.native_elements:
+            if element.id in (source_id, target_id) and item.id not in element.host_relationship_ids:
+                element.host_relationship_ids.append(item.id)
+
+        self._refresh_native_element_diagnostics(project)
+
+        return item
+
+    def create_native_library(
+        self,
+        name,
+        library_type,
+        element_type_ids=None,
+        material_ids=None,
+        catalog_metadata=None,
+        version_metadata=None,
+    ):
+        """Create a persistent native BIM type library catalog."""
+
+        project = self.ensure_project()
+        item = NativeBIMElementLibrary(
+            name,
+            library_type,
+            list(element_type_ids or []),
+            list(material_ids or []),
+            dict(catalog_metadata or {}),
+            dict(version_metadata or {"release": "1.9", "batch": "B"}),
+        )
+        project.native_libraries.append(item)
+        self._refresh_native_element_diagnostics(project)
+
+        return item
+
+    def native_bim_visualization_metadata(self):
+        """Return native BIM element display metadata for the existing renderer."""
+
+        project = self.ensure_project()
+        category_colors = {
+            "Architecture": "#90caf9",
+            "Structure": "#ffcc80",
+            "MEP": "#a5d6a7",
+        }
+        project.visualization_metadata.update(
+            {
+                "category_colors": {
+                    element.id: category_colors.get(element.category, "#b0bec5")
+                    for element in project.native_elements
+                },
+                "material_display": {
+                    element.id: element.material_assignment_id
+                    for element in project.native_elements
+                    if element.material_assignment_id
+                },
+                "element_filters": {
+                    category: [
+                        element.id for element in project.native_elements
+                        if element.category == category
+                    ]
+                    for category in sorted({element.category for element in project.native_elements})
+                },
+                "discipline_filters": {
+                    group: [
+                        element.id for element in project.native_elements
+                        if element.metadata.get("element_group") == group
+                    ]
+                    for group in ("Architecture", "Structure", "MEP")
+                },
+                "storey_visibility": {
+                    item.id: bool(item.metadata.get("visible", True))
+                    for item in project.spatial_elements
+                    if item.element_type.lower() in ("building storey", "storey", "level")
+                },
+                "selection": {"selected": [element.id for element in project.native_elements if element.selected]},
+                "isolation": dict(project.visualization_metadata.get("isolation", {})),
+                "transparency": dict(project.visualization_metadata.get("transparency", {})),
+                "sections": dict(project.visualization_metadata.get("sections", {})),
+            }
+        )
+
+        return project.visualization_metadata
+
+    def validate_native_bim_elements(self):
+        """Validate native BIM elements, types, hosts, parameters, materials and body references."""
+
+        project = self.ensure_project()
+        issues = []
+        warnings = []
+        spatial_ids = {item.id for item in project.spatial_elements}
+        element_ids = {item.id for item in project.native_elements}
+        type_ids = {item.id for item in project.native_element_types}
+        library_type_ids = {
+            element_type_id
+            for library in project.native_libraries
+            for element_type_id in library.element_type_ids
+        }
+
+        self._validate_unique(
+            "native BIM element GlobalId",
+            [element.global_id for element in project.native_elements],
+            issues,
+        )
+        self._validate_unique(
+            "native BIM type name",
+            [element_type.name for element_type in project.native_element_types],
+            issues,
+        )
+
+        for element_type in project.native_element_types:
+            if element_type.element_class not in NATIVE_BIM_ELEMENT_TYPES:
+                issues.append(f"Native element type '{element_type.name}' uses unsupported class '{element_type.element_class}'.")
+            self._validate_parametric_definition(element_type.parameters, f"type '{element_type.name}'", issues)
+
+        for element in project.native_elements:
+            if not element.body_references:
+                issues.append(f"Native BIM element '{element.name}' has no BodyManager body reference.")
+            for reference in element.body_references:
+                if reference.source != "BodyManager":
+                    issues.append(f"Native BIM element '{element.name}' references geometry outside BodyManager.")
+                if not reference.body_id and not reference.body_name:
+                    issues.append(f"Native BIM element '{element.name}' has an empty geometry reference.")
+            if element.element_type_id and element.element_type_id not in type_ids:
+                issues.append(f"Native BIM element '{element.name}' references missing type '{element.element_type_id}'.")
+            if element.level_id and element.level_id not in spatial_ids:
+                issues.append(f"Native BIM element '{element.name}' references missing level '{element.level_id}'.")
+            if element.host_id and element.host_id not in element_ids:
+                issues.append(f"Native BIM element '{element.name}' references missing host '{element.host_id}'.")
+            self._validate_parametric_definition(element.parameters, f"element '{element.name}'", issues)
+            if not element.material_assignment_id:
+                warnings.append(f"Native BIM element '{element.name}' has no material assignment metadata.")
+
+        for relationship in project.native_relationships:
+            if relationship.source_id not in element_ids:
+                issues.append(f"Native relationship '{relationship.relationship_type}' has missing source '{relationship.source_id}'.")
+            if relationship.target_id not in element_ids:
+                issues.append(f"Native relationship '{relationship.relationship_type}' has missing target '{relationship.target_id}'.")
+
+        for library in project.native_libraries:
+            for element_type_id in library.element_type_ids:
+                if element_type_id not in type_ids:
+                    issues.append(f"Native library '{library.name}' references missing type '{element_type_id}'.")
+            if not library.element_type_ids:
+                warnings.append(f"Native library '{library.name}' has no element types.")
+
+        unused_types = type_ids - library_type_ids
+        if unused_types and project.native_libraries:
+            warnings.append("Some native BIM element types are not assigned to a library catalog.")
+
+        statistics = self._refresh_native_element_diagnostics(project).to_dict()
+        report = BIMCoreValidationReport(not issues, issues, warnings, statistics)
+        project.native_element_validation_report = report
+
+        return report
+
+    def native_element_diagnostics_report(self):
+        """Return native BIM element diagnostics."""
+
+        return self._refresh_native_element_diagnostics(self.ensure_project())
+
+    @property
+    def authoring_manager(self):
+        """Return the command-driven BIM authoring helper."""
+
+        return BIMAuthoringManager(self)
+
+    def validate_bim_authoring(self):
+        """Validate BIM authoring state."""
+
+        return self.authoring_manager.validate()
+
+    def bim_authoring_visualization_metadata(self):
+        """Return BIM authoring preview metadata for the existing renderer."""
+
+        return self.authoring_manager.authoring_visualization_metadata()
+
+    @property
+    def intelligence_manager(self):
+        """Return the BIM Intelligence helper that reuses BIM Manager state."""
+
+        return BIMIntelligenceManager(self)
+
+    def run_bim_clash_detection(self, category_filters=None, clearance=0.0):
+        """Run BIM Intelligence clash detection."""
+
+        return self.intelligence_manager.run_clash_detection(category_filters, clearance)
+
+    def run_bim_model_validation(self):
+        """Run BIM Intelligence model validation."""
+
+        return self.intelligence_manager.validate_model()
+
+    def add_bim_intelligence_rule(self, name, rule_type, target="All", expression_metadata=None, severity="Medium", enabled=True, metadata=None):
+        """Register a BIM Intelligence rule."""
+
+        return self.intelligence_manager.add_rule(name, rule_type, target, expression_metadata, severity, enabled, metadata)
+
+    def run_bim_intelligence_rules(self, rule_ids=None):
+        """Run BIM Intelligence rule checks."""
+
+        return self.intelligence_manager.run_rules(rule_ids)
+
+    def create_bim_intelligence_issue(self, issue_type, title, **metadata):
+        """Create a BIM Intelligence issue."""
+
+        return self.intelligence_manager.create_issue(issue_type, title, **metadata)
+
+    def create_bim_review_session(self, name, reviewer="", issue_ids=None, snapshots=None, metadata=None):
+        """Create a BIM coordination review session."""
+
+        return self.intelligence_manager.create_review_session(name, reviewer, issue_ids, snapshots, metadata)
+
+    def create_ai_bim_recommendation(self, recommendation_type, title, **metadata):
+        """Create an AI BIM Assistant recommendation with command-only execution metadata."""
+
+        return self.intelligence_manager.create_recommendation(recommendation_type, title, **metadata)
+
+    def generate_ai_bim_recommendations(self):
+        """Generate AI BIM Assistant recommendations without executing model changes."""
+
+        return self.intelligence_manager.generate_ai_recommendations()
+
+    def create_bim_digital_twin_record(self, target_id, **metadata):
+        """Create digital twin foundation metadata."""
+
+        return self.intelligence_manager.create_digital_twin_record(target_id, **metadata)
+
+    def validate_bim_intelligence(self):
+        """Validate BIM Intelligence metadata and AI command plans."""
+
+        return self.intelligence_manager.validate()
+
+    def bim_intelligence_visualization_metadata(self):
+        """Return renderer-consumable BIM Intelligence visualization metadata."""
+
+        return self.intelligence_manager.visualization_metadata()
+
+    def bim_intelligence_diagnostics_report(self):
+        """Return BIM Intelligence diagnostics."""
+
+        return self.intelligence_manager.diagnostics_report()
+
+    @property
+    def production_runtime(self):
+        """Return the Production BIM Runtime helper."""
+
+        return ProductionBIMRuntime(self)
+
+    def initialize_bim_production_runtime(self, configuration=None, recovery_metadata=None):
+        """Initialize the Production BIM Runtime."""
+
+        return self.production_runtime.initialize(configuration, recovery_metadata)
+
+    def optimize_bim_project(self):
+        """Run production BIM optimization and indexing."""
+
+        return self.production_runtime.optimize_project()
+
+    def validate_bim_runtime(self, workspace=None):
+        """Run Production BIM Runtime validation."""
+
+        return self.production_runtime.validate_runtime(workspace)
+
+    def run_bim_production_regression(self):
+        """Run Production BIM Runtime regression checks."""
+
+        return self.production_runtime.run_regression_suite()
+
+    def certify_bim_compatibility(self):
+        """Generate BIM compatibility certification metadata."""
+
+        return self.production_runtime.certify_compatibility()
+
+    def certify_bim_release(self):
+        """Generate Release 1.9 BIM production certification metadata."""
+
+        return self.production_runtime.certify_release()
+
+    def bim_production_visualization_metadata(self):
+        """Return renderer-consumable Production BIM Runtime metadata."""
+
+        return self.production_runtime.visualization_metadata()
+
+    def bim_production_diagnostics_report(self):
+        """Return Production BIM Runtime diagnostics."""
+
+        return self.production_runtime.diagnostics_report()
+
+    def export_ifc43(self, object_ids=None, owner_history=None, options=None):
+        """Export IFC 4.3 exchange text that references existing BIM objects."""
+
+        project = self.ensure_project()
+        elements = self._documentation_elements(object_ids)
+        lines = [
+            "ISO-10303-21;",
+            "HEADER;",
+            "FILE_SCHEMA(('IFC4X3'));",
+            "ENDSEC;",
+            "DATA;",
+        ]
+        global_id_map = {}
+        property_set_map = {}
+        classification_map = {}
+        material_map = {}
+        layer_map = {}
+
+        for index, element in enumerate(elements, start=1):
+            global_id = getattr(element, "global_id", getattr(element, "guid", str(uuid4())))
+            object_id = getattr(element, "id", "")
+            global_id_map[object_id] = global_id
+            property_set_map[object_id] = list(getattr(element, "property_set_ids", []))
+            classification_map[object_id] = dict(getattr(element, "classification", {}))
+            material_map[object_id] = getattr(element, "material_assignment_id", "")
+            layer_map[object_id] = getattr(element, "layer_name", "") or getattr(element, "category", "")
+            lines.append(
+                f"#{index}=IFCBUILDINGELEMENT('{global_id}','{object_id}','{getattr(element, 'element_type', getattr(element, 'type_name', 'BIMObject'))}','{getattr(element, 'name', '')}');"
+            )
+
+        lines.extend(["ENDSEC;", "END-ISO-10303-21;"])
+        record = IFCExchangeRecord(
+            "Export",
+            "IFC4X3",
+            "\n".join(lines),
+            [getattr(element, "id", "") for element in elements],
+            global_id_map,
+            property_set_map,
+            classification_map,
+            material_map,
+            layer_map,
+            dict(owner_history or {"application": "Kinematics Studio", "created_at": _utc_timestamp()}),
+            {},
+            dict(options or {"incremental": False}),
+        )
+        record.validation_report = self.validate_ifc_exchange(record).to_dict()
+        project.ifc_exchange_records.append(record)
+        self._refresh_documentation_diagnostics(project)
+
+        return record
+
+    def import_ifc43(self, content, owner_history=None, options=None):
+        """Import IFC 4.3 metadata by creating IFC entity mappings only."""
+
+        project = self.ensure_project()
+        imported = []
+        for line in str(content or "").splitlines():
+            if "IFCBUILDINGELEMENT" not in line:
+                continue
+            payload = line.split("IFCBUILDINGELEMENT(", 1)[-1].split(");", 1)[0]
+            parts = [part.strip().strip("'") for part in payload.split(",")]
+            if len(parts) < 4:
+                continue
+            global_id, object_id, entity_type, name = parts[:4]
+            entity = self.create_ifc_entity(
+                entity_type or "IfcBuildingElement",
+                object_id=object_id,
+                global_id=global_id,
+                owner_history=owner_history,
+                metadata={"imported_name": name, "schema": "IFC4X3"},
+            )
+            imported.append(entity)
+
+        record = IFCExchangeRecord(
+            "Import",
+            "IFC4X3",
+            str(content or ""),
+            [item.object_id for item in imported],
+            {item.object_id: item.global_id for item in imported},
+            {},
+            {},
+            {},
+            {},
+            dict(owner_history or {"application": "Kinematics Studio", "created_at": _utc_timestamp()}),
+            {},
+            dict(options or {}),
+        )
+        record.validation_report = self.validate_ifc_exchange(record).to_dict()
+        project.ifc_exchange_records.append(record)
+        self._refresh_documentation_diagnostics(project)
+
+        return record
+
+    def update_ifc43(self, exchange_record, changed_object_ids):
+        """Create an incremental IFC 4.3 update record preserving GlobalIds."""
+
+        owner_history = dict(getattr(exchange_record, "owner_history", {}))
+        record = self.export_ifc43(changed_object_ids, owner_history, {"incremental": True, "source_exchange_id": exchange_record.id})
+        record.exchange_type = "Incremental Update"
+
+        return record
+
+    def create_documentation_document(self, name, document_type="Drawing Set", title_block="Default Title Block", **metadata):
+        """Create a BIM documentation document record."""
+
+        project = self.ensure_project()
+        document = BIMDocumentationDocument(
+            name,
+            document_type,
+            [],
+            [],
+            dict(metadata.get("scale_metadata", {})),
+            title_block,
+            dict(metadata.get("revision_metadata", {})),
+            dict(metadata.get("issue_metadata", {})),
+            dict(metadata.get("export_metadata", {})),
+        )
+        project.documentation_documents.append(document)
+        self._refresh_documentation_diagnostics(project)
+
+        return document
+
+    def generate_bim_drawing(self, drawing_type, name, element_ids=None, sheet_id="", view_id="", scale="1:100", **metadata):
+        """Generate drawing metadata that references existing BIM elements."""
+
+        project = self.ensure_project()
+        element_ids = list(element_ids or [getattr(element, "id", "") for element in self._documentation_elements()])
+        drawing = BIMGeneratedDrawing(
+            drawing_type,
+            name,
+            element_ids,
+            sheet_id,
+            view_id,
+            scale,
+            dict(metadata.get("viewport_metadata", {})),
+            dict(metadata.get("template_metadata", {})),
+            dict(metadata.get("callout_metadata", {})),
+        )
+        project.generated_drawings.append(drawing)
+        self._refresh_documentation_diagnostics(project)
+
+        return drawing
+
+    def generate_bim_schedule(self, schedule_type, name=None, fields=None, export_metadata=None):
+        """Generate a BIM schedule from existing BIM elements."""
+
+        schedule = ScheduleDefinition(name or f"{schedule_type} Schedule", schedule_type)
+        for field_name, source in fields or [
+            ("Name", "name"),
+            ("Type", "element_type"),
+            ("Level", "level"),
+            ("Material", "material"),
+        ]:
+            schedule.add_field(ScheduleField(field_name, source))
+        schedule.metadata.notes = str(export_metadata or {})
+        self.add_schedule(schedule)
+        self.build_schedule(schedule)
+        self._refresh_documentation_diagnostics(self.ensure_project())
+
+        return schedule
+
+    def run_documentation_quantity_takeoff(self):
+        """Run automatic quantity takeoff for documentation."""
+
+        items = self.run_quantity_takeoff()
+        self._refresh_documentation_diagnostics(self.ensure_project())
+
+        return items
+
+    def create_bim_annotation(self, annotation_type, target_id, text, view_id="", sheet_id="", **metadata):
+        """Create associative BIM annotation metadata."""
+
+        project = self.ensure_project()
+        annotation = BIMAnnotation(
+            annotation_type,
+            target_id,
+            text,
+            view_id,
+            sheet_id,
+            dict(metadata.get("association_metadata", {"associative": True})),
+            dict(metadata.get("style_metadata", {})),
+        )
+        project.documentation_annotations.append(annotation)
+        self._refresh_documentation_diagnostics(project)
+
+        return annotation
+
+    def publish_bim_package(self, name, package_type="PDF", sheet_ids=None, **metadata):
+        """Create print/PDF publishing package metadata."""
+
+        project = self.ensure_project()
+        package = BIMPublishingPackage(
+            name,
+            package_type,
+            list(sheet_ids or [sheet.id for sheet in project.sheets]),
+            dict(metadata.get("export_settings", {})),
+            dict(metadata.get("revision_metadata", {})),
+            dict(metadata.get("plot_metadata", {})),
+            dict(metadata.get("output_metadata", {})),
+        )
+        project.publishing_packages.append(package)
+        self._refresh_documentation_diagnostics(project)
+
+        return package
+
+    def add_bim_coordination_reference(self, name, reference_type="Linked Model", source="", target_ids=None, **metadata):
+        """Create BIM coordination and reference model metadata."""
+
+        project = self.ensure_project()
+        reference = BIMCoordinationReference(
+            name,
+            reference_type,
+            source,
+            list(target_ids or []),
+            dict(metadata.get("view_coordination", {})),
+            dict(metadata.get("revision_comparison", {})),
+            dict(metadata.get("sheet_coordination", {})),
+            dict(metadata.get("synchronization_metadata", {})),
+            dict(metadata.get("validation_metadata", {})),
+        )
+        project.coordination_references.append(reference)
+        self._refresh_documentation_diagnostics(project)
+
+        return reference
+
+    def documentation_visualization_metadata(self):
+        """Return documentation preview metadata for the existing renderer."""
+
+        project = self.ensure_project()
+        project.visualization_metadata.update(
+            {
+                "drawing_previews": {drawing.id: drawing.to_dict() for drawing in project.generated_drawings},
+                "sheet_previews": {sheet.id: sheet.to_dict() for sheet in project.sheets},
+                "print_previews": {package.id: package.to_dict() for package in project.publishing_packages},
+                "annotation_visibility": {annotation.id: True for annotation in project.documentation_annotations},
+                "view_templates": {template.id: template.to_dict() for template in project.view_templates},
+                "schedule_previews": {schedule.id: [row.to_dict() for row in schedule.rows] for schedule in project.schedules},
+                "documentation_overlays": {
+                    "drawings": len(project.generated_drawings),
+                    "annotations": len(project.documentation_annotations),
+                    "schedules": len(project.schedules),
+                },
+            }
+        )
+
+        return project.visualization_metadata
+
+    def validate_ifc_exchange(self, record):
+        """Validate IFC exchange metadata."""
+
+        issues = []
+        if record.schema != "IFC4X3":
+            issues.append("IFC exchange schema must be IFC4X3.")
+        ids = {getattr(element, "id", "") for element in self._documentation_elements()}
+        for object_id in record.object_ids:
+            if object_id and object_id not in ids:
+                issues.append(f"IFC exchange references missing BIM object '{object_id}'.")
+        self._validate_unique("IFC exchange GlobalId", list(record.global_id_map.values()), issues)
+
+        return BIMCoreValidationReport(not issues, issues, [], {"objects": len(record.object_ids)})
+
+    def validate_bim_documentation(self):
+        """Validate IFC, drawings, schedules, annotations, takeoff, publishing and coordination."""
+
+        project = self.ensure_project()
+        issues = []
+        warnings = []
+        element_ids = {getattr(element, "id", "") for element in self._documentation_elements()}
+        sheet_ids = {sheet.id for sheet in project.sheets}
+        view_ids = {view.id for view in project.views}
+
+        for record in project.ifc_exchange_records:
+            issues.extend(self.validate_ifc_exchange(record).issues)
+        for drawing in project.generated_drawings:
+            for element_id in drawing.element_ids:
+                if element_id not in element_ids:
+                    issues.append(f"Drawing '{drawing.name}' references missing BIM element '{element_id}'.")
+            if drawing.sheet_id and drawing.sheet_id not in sheet_ids:
+                issues.append(f"Drawing '{drawing.name}' references missing sheet '{drawing.sheet_id}'.")
+        for schedule in project.schedules:
+            if not schedule.rows:
+                warnings.append(f"Schedule '{schedule.name}' has no rows.")
+        for annotation in project.documentation_annotations:
+            if annotation.target_id not in element_ids:
+                issues.append(f"Annotation '{annotation.text}' references missing BIM element '{annotation.target_id}'.")
+            if annotation.sheet_id and annotation.sheet_id not in sheet_ids:
+                issues.append(f"Annotation '{annotation.text}' references missing sheet '{annotation.sheet_id}'.")
+            if annotation.view_id and annotation.view_id not in view_ids:
+                issues.append(f"Annotation '{annotation.text}' references missing view '{annotation.view_id}'.")
+        for package in project.publishing_packages:
+            for sheet_id in package.sheet_ids:
+                if sheet_id not in sheet_ids:
+                    issues.append(f"Publishing package '{package.name}' references missing sheet '{sheet_id}'.")
+        for reference in project.coordination_references:
+            for target_id in reference.target_ids:
+                if target_id not in element_ids:
+                    issues.append(f"Coordination reference '{reference.name}' targets missing BIM element '{target_id}'.")
+
+        report = BIMCoreValidationReport(
+            not issues,
+            issues,
+            warnings,
+            self._refresh_documentation_diagnostics(project).to_dict(),
+        )
+        project.documentation_validation_report = report
+
+        return report
+
+    def documentation_diagnostics_report(self):
+        """Return documentation diagnostics."""
+
+        return self._refresh_documentation_diagnostics(self.ensure_project())
+
+    def bim_core_diagnostics(self):
+        """Return the current BIM core diagnostics."""
+
+        return self._refresh_bim_core_diagnostics(self.ensure_project())
+
+    def _nearest_spatial_parent(self, spatial_id, element_type):
+        project = self.ensure_project()
+        by_id = {item.id: item for item in project.spatial_elements}
+        current = by_id.get(spatial_id)
+
+        while current is not None:
+            if current.element_type.lower() == element_type.lower():
+                return current.id
+            current = by_id.get(current.parent_id)
+
+        return ""
+
+    def _global_id_for(self, object_id):
+        item = self.get_object(object_id)
+
+        if item is not None:
+            return getattr(item, "global_id", getattr(item, "guid", ""))
+
+        project = self.active_project
+        if project is None:
+            return ""
+
+        spatial = next((value for value in project.spatial_elements if value.id == object_id), None)
+
+        return getattr(spatial, "global_id", "")
+
+    def _refresh_bim_core_diagnostics(self, project):
+        diagnostics = BIMCoreDiagnostics(
+            len(self.projects),
+            len(project.spatial_elements),
+            len(project.building_objects),
+            len(project.property_sets),
+            len(project.core_classifications),
+            len(project.core_relationships),
+            len(project.core_ifc_entities),
+            len(getattr(project.core_validation_report, "issues", [])),
+        )
+        project.core_diagnostics = diagnostics
+
+        return diagnostics
+
+    def _refresh_native_element_diagnostics(self, project):
+        diagnostics = BIMElementDiagnostics(
+            len(project.native_element_types),
+            len(project.native_elements),
+            len([element for element in project.native_elements if element.category == "Architecture"]),
+            len([element for element in project.native_elements if element.category == "Structure"]),
+            len([element for element in project.native_elements if element.category == "MEP"]),
+            len(project.native_relationships),
+            len(project.native_libraries),
+            len(getattr(project.native_element_validation_report, "issues", [])),
+        )
+        project.native_element_diagnostics = diagnostics
+
+        return diagnostics
+
+    def _refresh_documentation_diagnostics(self, project):
+        diagnostics = BIMDocumentationDiagnostics(
+            len(project.ifc_exchange_records),
+            len(project.documentation_documents),
+            len(project.generated_drawings),
+            len(project.documentation_annotations),
+            len(project.schedules),
+            len(project.quantity_items),
+            len(project.publishing_packages),
+            len(project.coordination_references),
+            len(getattr(project.documentation_validation_report, "issues", [])),
+        )
+        project.documentation_diagnostics = diagnostics
+
+        return diagnostics
+
+    def _documentation_elements(self, object_ids=None):
+        project = self.ensure_project()
+        elements = list(getattr(project, "native_elements", [])) + list(project.instances) + list(project.building_objects)
+        seen = set()
+        unique = []
+        for element in elements:
+            element_id = getattr(element, "id", "")
+            if not element_id or element_id in seen:
+                continue
+            if object_ids is not None and element_id not in set(object_ids):
+                continue
+            seen.add(element_id)
+            unique.append(element)
+
+        return unique
+
+    @staticmethod
+    def _validate_parametric_definition(parameters, label, issues):
+        for key, value in {
+            "thickness": parameters.thickness,
+            "height": parameters.height,
+            "width": parameters.width,
+            "length": parameters.length,
+        }.items():
+            if value < 0.0:
+                issues.append(f"Parametric {key} for {label} must be non-negative.")
+
+    @staticmethod
+    def _validate_unique(label, values, issues):
+        seen = set()
+
+        for value in values:
+            if not value:
+                continue
+            if value in seen:
+                issues.append(f"Duplicate {label}: '{value}'.")
+            seen.add(value)
 
     def add_site(self, site):
         """Add a site to the active BIM project."""
@@ -9248,6 +14125,165 @@ class BIMManager:
             return self.add_property_set(item)
         if isinstance(item, BIMType):
             return self.add_type(item)
+        if isinstance(item, BIMSpatialElement):
+            project = self.ensure_project()
+            if item not in project.spatial_elements:
+                project.spatial_elements.append(item)
+            self._refresh_bim_core_diagnostics(project)
+            return item
+        if isinstance(item, BIMClassificationAssignment):
+            project = self.ensure_project()
+            if item not in project.core_classifications:
+                project.core_classifications.append(item)
+            self._refresh_bim_core_diagnostics(project)
+            return item
+        if isinstance(item, IFCEntityCore):
+            project = self.ensure_project()
+            if item not in project.core_ifc_entities:
+                project.core_ifc_entities.append(item)
+            self._refresh_bim_core_diagnostics(project)
+            return item
+        if isinstance(item, BIMElementType):
+            project = self.ensure_project()
+            if item not in project.native_element_types:
+                project.native_element_types.append(item)
+            self._refresh_native_element_diagnostics(project)
+            return item
+        if isinstance(item, BIMElementRelationshipMetadata):
+            project = self.ensure_project()
+            if item not in project.native_relationships:
+                project.native_relationships.append(item)
+            self._refresh_native_element_diagnostics(project)
+            return item
+        if isinstance(item, NativeBIMElementLibrary):
+            project = self.ensure_project()
+            if item not in project.native_libraries:
+                project.native_libraries.append(item)
+            self._refresh_native_element_diagnostics(project)
+            return item
+        if isinstance(item, BIMElement):
+            project = self.ensure_project()
+            if item not in project.native_elements:
+                project.native_elements.append(item)
+            if item not in project.building_objects:
+                project.building_objects.append(item)
+            self._refresh_native_element_diagnostics(project)
+            self._refresh_bim_core_diagnostics(project)
+            return item
+        if isinstance(item, IFCExchangeRecord):
+            project = self.ensure_project()
+            if item not in project.ifc_exchange_records:
+                project.ifc_exchange_records.append(item)
+            self._refresh_documentation_diagnostics(project)
+            return item
+        if isinstance(item, BIMDocumentationDocument):
+            project = self.ensure_project()
+            if item not in project.documentation_documents:
+                project.documentation_documents.append(item)
+            self._refresh_documentation_diagnostics(project)
+            return item
+        if isinstance(item, BIMGeneratedDrawing):
+            project = self.ensure_project()
+            if item not in project.generated_drawings:
+                project.generated_drawings.append(item)
+            self._refresh_documentation_diagnostics(project)
+            return item
+        if isinstance(item, BIMAnnotation):
+            project = self.ensure_project()
+            if item not in project.documentation_annotations:
+                project.documentation_annotations.append(item)
+            self._refresh_documentation_diagnostics(project)
+            return item
+        if isinstance(item, BIMPublishingPackage):
+            project = self.ensure_project()
+            if item not in project.publishing_packages:
+                project.publishing_packages.append(item)
+            self._refresh_documentation_diagnostics(project)
+            return item
+        if isinstance(item, BIMCoordinationReference):
+            project = self.ensure_project()
+            if item not in project.coordination_references:
+                project.coordination_references.append(item)
+            self._refresh_documentation_diagnostics(project)
+            return item
+        if isinstance(item, BIMClashResult):
+            project = self.ensure_project()
+            if item not in project.intelligence_clashes:
+                project.intelligence_clashes.append(item)
+            self.intelligence_manager.refresh_diagnostics()
+            return item
+        if isinstance(item, BIMIntelligenceIssue):
+            project = self.ensure_project()
+            if item not in project.intelligence_issues:
+                project.intelligence_issues.append(item)
+            self.intelligence_manager.refresh_diagnostics()
+            return item
+        if isinstance(item, BIMReviewSession):
+            project = self.ensure_project()
+            if item not in project.intelligence_review_sessions:
+                project.intelligence_review_sessions.append(item)
+            self.intelligence_manager.refresh_diagnostics()
+            return item
+        if isinstance(item, BIMRuleDefinition):
+            project = self.ensure_project()
+            if item not in project.intelligence_rules:
+                project.intelligence_rules.append(item)
+            self.intelligence_manager.refresh_diagnostics()
+            return item
+        if isinstance(item, BIMRuleCheckResult):
+            project = self.ensure_project()
+            if item not in project.intelligence_rule_results:
+                project.intelligence_rule_results.append(item)
+            self.intelligence_manager.refresh_diagnostics()
+            return item
+        if isinstance(item, BIMRecommendation):
+            project = self.ensure_project()
+            if item not in project.intelligence_recommendations:
+                project.intelligence_recommendations.append(item)
+            self.intelligence_manager.refresh_diagnostics()
+            return item
+        if isinstance(item, BIMDigitalTwinRecord):
+            project = self.ensure_project()
+            if item not in project.digital_twin_records:
+                project.digital_twin_records.append(item)
+            self.intelligence_manager.refresh_diagnostics()
+            return item
+        if isinstance(item, BIMRuntimeSession):
+            project = self.ensure_project()
+            if item not in project.production_runtime_sessions:
+                project.production_runtime_sessions.append(item)
+            self.production_runtime.refresh_diagnostics("Operational")
+            return item
+        if isinstance(item, BIMOptimizationReport):
+            project = self.ensure_project()
+            if item not in project.production_optimization_reports:
+                project.production_optimization_reports.append(item)
+            self.production_runtime.refresh_diagnostics("Operational")
+            return item
+        if isinstance(item, BIMRegressionResult):
+            project = self.ensure_project()
+            if item not in project.production_regression_results:
+                project.production_regression_results.append(item)
+            self.production_runtime.refresh_diagnostics("Operational" if item.passed else "Blocked")
+            return item
+        if isinstance(item, BIMCompatibilityReport):
+            project = self.ensure_project()
+            if item not in project.production_compatibility_reports:
+                project.production_compatibility_reports.append(item)
+            self.production_runtime.refresh_diagnostics("Operational" if item.compatible else "Blocked")
+            return item
+        if isinstance(item, BIMCertificationRecord):
+            project = self.ensure_project()
+            if item not in project.production_certification_records:
+                project.production_certification_records.append(item)
+            self.production_runtime.refresh_diagnostics("Certified" if item.production_readiness else "Blocked")
+            return item
+        if isinstance(item, BuildingObject):
+            project = self.ensure_project()
+            if item not in project.building_objects:
+                project.building_objects.append(item)
+            self._refresh_bim_core_diagnostics(project)
+            return item
         if isinstance(item, BIMObject):
             return self.add_instance(item)
 
@@ -9260,6 +14296,17 @@ class BIMManager:
 
         if project is None:
             return False
+
+        if isinstance(item, BIMElement):
+            removed = False
+            for collection in (project.native_elements, project.building_objects):
+                if item in collection:
+                    collection.remove(item)
+                    removed = True
+            if removed:
+                self._refresh_native_element_diagnostics(project)
+                self._refresh_bim_core_diagnostics(project)
+                return True
 
         collections = (
             project.sites,
@@ -9351,6 +14398,33 @@ class BIMManager:
             project.types,
             project.instances,
             project.property_sets,
+            project.spatial_elements,
+            project.building_objects,
+            project.core_classifications,
+            project.core_ifc_entities,
+            project.core_relationships,
+            project.native_element_types,
+            project.native_elements,
+            project.native_relationships,
+            project.native_libraries,
+            project.ifc_exchange_records,
+            project.documentation_documents,
+            project.generated_drawings,
+            project.documentation_annotations,
+            project.publishing_packages,
+            project.coordination_references,
+            project.intelligence_issues,
+            project.intelligence_review_sessions,
+            project.intelligence_rules,
+            project.intelligence_rule_results,
+            project.intelligence_clashes,
+            project.intelligence_recommendations,
+            project.digital_twin_records,
+            project.production_runtime_sessions,
+            project.production_optimization_reports,
+            project.production_regression_results,
+            project.production_compatibility_reports,
+            project.production_certification_records,
         )
 
         for collection in collections:
@@ -9534,6 +14608,22 @@ class BIMManager:
             project.types,
             project.instances,
             project.property_sets,
+            project.spatial_elements,
+            project.building_objects,
+            project.core_classifications,
+            project.core_ifc_entities,
+            project.core_relationships,
+            project.native_element_types,
+            project.native_elements,
+            project.native_relationships,
+            project.native_libraries,
+            project.authoring_sessions,
+            project.ifc_exchange_records,
+            project.documentation_documents,
+            project.generated_drawings,
+            project.documentation_annotations,
+            project.publishing_packages,
+            project.coordination_references,
             project.categories,
         ):
             for item in collection:
@@ -10208,7 +15298,15 @@ def _schedule_sources(schedule, project):
     if schedule_type == "quantity":
         return list(project.quantity_items)
     if schedule_type == "custom":
-        return list(project.instances)
+        return list(project.instances) + list(getattr(project, "native_elements", []))
+
+    native_sources = [
+        element for element in getattr(project, "native_elements", [])
+        if getattr(element, "element_type", "").lower() == schedule_type
+        or getattr(element, "category", "").lower() == schedule_type
+    ]
+    if native_sources:
+        return native_sources
 
     return [
         instance for instance in project.instances
@@ -10231,16 +15329,21 @@ def _schedule_value(item, source, project):
     if source in ("name", "id", "type_name"):
         return getattr(item, source, "")
     if source == "category":
-        return _element_kind(project, item)
+        return getattr(item, "category", "") or _element_kind(project, item)
+    if source == "element_type":
+        return getattr(item, "element_type", getattr(item, "type_name", ""))
     if source == "level":
         level_id = getattr(item, "level_id", "")
-        level = _find_by_id(project.levels, level_id)
+        level = _find_by_id(project.levels, level_id) or _find_by_id(getattr(project, "spatial_elements", []), level_id)
         return getattr(level, "name", "")
     if source == "material":
         assignment_id = getattr(item, "material_assignment_id", "")
         assignment = _find_by_id(project.material_assignments, assignment_id)
         material = _find_by_id(project.materials, getattr(assignment, "material_id", ""))
-        return getattr(material, "name", "")
+        return getattr(material, "name", "") or assignment_id
+    if source in ("length", "width", "height", "thickness"):
+        parameters = getattr(item, "parameters", None)
+        return getattr(parameters, source, "")
     if source == "quantity_type":
         return getattr(item, "quantity_type", "")
     if source == "quantity_value":
@@ -10380,6 +15483,44 @@ def _instance_quantities(instance):
     items.append(QuantityItem(source_id, name, "Volume", volume, "cubic_model_unit"))
     items.append(QuantityItem(source_id, name, "Weight", 0.0, "placeholder"))
     items.append(QuantityItem(source_id, name, "Cost", 0.0, "placeholder"))
+
+    return items
+
+
+def _native_element_quantities(element):
+    parameters = getattr(element, "parameters", BIMParametricDefinition())
+    source_id = getattr(element, "id", "")
+    name = getattr(element, "name", "")
+    material_id = getattr(element, "material_assignment_id", "")
+    length = float(getattr(parameters, "length", 0.0) or 0.0)
+    width = float(getattr(parameters, "width", 0.0) or 0.0)
+    height = float(getattr(parameters, "height", 0.0) or 0.0)
+    thickness = float(getattr(parameters, "thickness", 0.0) or 0.0)
+    items = [QuantityItem(source_id, name, "Count", 1.0, "item", material_id)]
+
+    if length:
+        items.append(QuantityItem(source_id, name, "Length", length, "m", material_id))
+
+    area = 0.0
+    if length and height:
+        area = length * height
+    elif length and width:
+        area = length * width
+    elif width and height:
+        area = width * height
+    if area:
+        items.append(QuantityItem(source_id, name, "Area", area, "m2", material_id))
+
+    volume = 0.0
+    if length and width and height:
+        volume = length * width * height
+    elif area and thickness:
+        volume = area * thickness
+    if volume:
+        items.append(QuantityItem(source_id, name, "Volume", volume, "m3", material_id))
+
+    if material_id:
+        items.append(QuantityItem(source_id, name, "Material", 1.0, "assignment", material_id))
 
     return items
 

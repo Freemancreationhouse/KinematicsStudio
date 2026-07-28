@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from uuid import uuid4
 
 from engine.geometry import MeshData, Vector3
+from engine.geometry.solid_modeling import extrude_profile, loft_profiles, revolve_profile, sweep_profile
 
 
 @dataclass
@@ -16335,13 +16336,30 @@ class FeatureManager:
         options = feature.definition.options
         distance = max(abs(float(options.distance)), 1.0)
         feature_type = feature.feature_type
+        parameters = dict(getattr(feature.definition, "parameters", {}) or {})
 
+        if feature_type == "Extrude":
+            return extrude_profile(
+                parameters.get("profile"),
+                distance=distance,
+                symmetric=bool(getattr(options, "mid_plane", False) or parameters.get("symmetric", False)),
+                direction=getattr(options, "direction", "Positive"),
+            )
         if feature_type == "Revolve":
-            return MeshData.box(distance, distance, max(abs(float(options.angle)) / 36.0, 1.0))
+            return revolve_profile(
+                parameters.get("profile"),
+                angle=float(getattr(options, "angle", 360.0)),
+                segments=int(parameters.get("segments", 36)),
+                axis=parameters.get("axis", "Z"),
+            )
         if feature_type == "Sweep":
-            return MeshData.box(distance, max(distance * 0.5, 1.0), max(distance * 0.5, 1.0))
+            return sweep_profile(
+                parameters.get("profile"),
+                parameters.get("path"),
+                segments=int(parameters.get("segments", 16)),
+            )
         if feature_type == "Loft":
-            return MeshData.box(distance, max(distance * 0.75, 1.0), max(distance * 0.75, 1.0))
+            return loft_profiles(parameters.get("profiles"))
         if feature_type == "Thin":
             return MeshData.box(distance, max(distance * 0.15, 1.0), max(distance * 0.75, 1.0))
         if feature_type == "Fillet":
@@ -33122,6 +33140,51 @@ class DependencyManager:
             if edge.source_id == node.id or edge.target_id == node.id
         ]
 
+    def affected_owners(self, owner):
+        """Return dependency-owned objects affected by an owner in graph order."""
+
+        owner_id = getattr(owner, "id", owner)
+        self._refresh_graph_links()
+        node_lookup = {node.id: node for node in self.manager.dependency_nodes}
+        owner_node = next((node for node in self.manager.dependency_nodes if node.owner_id == owner_id), None)
+
+        if owner_node is None:
+            return []
+
+        queue = list(owner_node.child_ids)
+        seen = set()
+        affected_nodes = []
+
+        while queue:
+            node_id = queue.pop(0)
+            if node_id in seen:
+                continue
+            seen.add(node_id)
+            node = node_lookup.get(node_id)
+            if node is None:
+                continue
+            affected_nodes.append(node)
+            queue.extend([child_id for child_id in node.child_ids if child_id not in seen])
+
+        affected_ids = {node.id for node in affected_nodes}
+        ordered = []
+        pending = list(affected_nodes)
+
+        while pending:
+            ready = [
+                node for node in pending
+                if all(parent_id not in affected_ids or parent_id in {item.id for item in ordered} for parent_id in node.parent_ids)
+            ]
+            if not ready:
+                ready = [pending[0]]
+            for node in ready:
+                if node not in ordered:
+                    ordered.append(node)
+                if node in pending:
+                    pending.remove(node)
+
+        return [node.owner_id for node in ordered]
+
     def visible_objects(self):
         """Return dependency metadata visible to selection and read-only renderers."""
 
@@ -33373,10 +33436,19 @@ class RegenerationManager:
         if target is None:
             return None
 
-        state = self.manager.feature_editor.state_for(target)
-        state.dirty = True
-        state.needs_regeneration = True
-        target.metadata.status = "Dirty"
+        affected = self.affected_features(target)
+
+        for item in affected:
+            state = self.manager.feature_editor.state_for(item)
+            state.dirty = True
+            state.needs_regeneration = True
+            item.metadata.status = "Dirty"
+
+        self.manager.dependency_manager.mark_metadata_dirty(
+            target,
+            affected=affected[1:],
+            reason="Feature change marked for incremental regeneration",
+        )
         self.statistics()
         return target
 
@@ -33403,17 +33475,29 @@ class RegenerationManager:
         if target is None:
             return None
 
-        request = RegenerationRequest(target.id, "Single", False, False)
+        request = RegenerationRequest(target.id, "Incremental", False, False)
         self.manager.regeneration_requests.append(request)
-        mesh = self.manager.feature_manager.apply_feature(target, workspace)
+        geometry_result = None
+        mesh = None
+
+        if workspace is not None and not getattr(target, "is_surface_feature", False):
+            geometry_result = self.manager.parametric_manager.generate_feature_geometry(target, workspace)
+
+        if geometry_result is None:
+            mesh = self.manager.feature_manager.apply_feature(target, workspace)
+        else:
+            body = self.manager.body_for(geometry_result.body_id)
+            mesh = self.manager.mesh_entity_for_body(body, workspace)
+
         result = RegenerationResult(
             target.id,
-            "Rebuilt" if mesh is not None else "Failed",
-            "" if mesh is not None else "Target MeshEntity not found",
-            getattr(mesh, "id", "") or getattr(mesh, "name", ""),
+            "Rebuilt" if mesh is not None or geometry_result is not None else "Failed",
+            "Incremental GeometryKernel rebuild" if geometry_result is not None else ("" if mesh is not None else "Target MeshEntity not found"),
+            getattr(mesh, "id", "") or getattr(mesh, "name", "") or getattr(geometry_result, "mesh_entity_id", ""),
         )
         self.manager.regeneration_results.append(result)
-        self.clear_dirty(target)
+        if result.status == "Rebuilt":
+            self.clear_dirty(target)
         return result
 
     def rebuild_downstream(self, feature, workspace=None):
@@ -33424,11 +33508,9 @@ class RegenerationManager:
         if target is None:
             return []
 
-        features = self.manager.feature_manager.features_for_part(target.part_id)
-        start = features.index(target) if target in features else 0
         results = []
 
-        for item in features[start:]:
+        for item in self.affected_features(target):
             results.append(self.rebuild_feature(item, workspace))
 
         return results
@@ -33454,6 +33536,32 @@ class RegenerationManager:
         )
         self.manager.regeneration_statistics = stats
         return stats
+
+    def affected_features(self, feature):
+        """Return changed feature plus affected downstream/dependency features."""
+
+        target = self.manager.feature_manager.feature_for(feature)
+
+        if target is None:
+            return []
+
+        affected_ids = {target.id}
+        features = self.manager.feature_manager.features_for_part(target.part_id)
+        if target in features:
+            start = features.index(target)
+            affected_ids.update(item.id for item in features[start:])
+
+        affected_ids.update(
+            owner_id for owner_id in self.manager.dependency_manager.affected_owners(target)
+            if self.manager.feature_manager.feature_for(owner_id) is not None
+        )
+
+        affected = [
+            item for item in self.manager.features
+            if item.id in affected_ids
+        ]
+        affected.sort(key=lambda item: (item.part_id != target.part_id, getattr(item, "order", 0), item.name))
+        return affected
 
 
 class UpdateManager:

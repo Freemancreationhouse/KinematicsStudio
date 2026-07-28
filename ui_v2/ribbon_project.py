@@ -1,5 +1,8 @@
+from pathlib import Path
+
 from PySide6.QtWidgets import QFileDialog, QGridLayout, QPushButton, QWidget
 
+from engine.commands.occ_import_command import ImportOCCShapeCommand
 from engine.commands import (
     SaveExchangeProfileCommand,
     StoreExchangeValidationReportCommand,
@@ -302,7 +305,7 @@ class ProjectRibbon(QWidget):
             self,
             "Import CAD Exchange",
             "",
-            "CAD Exchange (*.skp *.3dm *.step *.stp *.iges *.igs *.sat *.stl *.obj *.fbx *.abc)",
+            "CAD Exchange (*.skp *.3dm *.step *.stp *.brep *.iges *.igs *.sat *.stl *.obj *.fbx *.abc)",
         )
 
         if not path:
@@ -322,7 +325,19 @@ class ProjectRibbon(QWidget):
             return
 
         import_settings = dialog.settings()
-        app.workspace.import_manager.create_reference(app.workspace, path, None, import_settings)
+        is_occ_exchange = Path(path).suffix.lower() in (".step", ".stp", ".brep")
+
+        if is_occ_exchange:
+            try:
+                app.workspace.command_manager.execute(
+                    ImportOCCShapeCommand(app.engine, app.workspace, path)
+                )
+            except Exception as error:
+                self._show_status_text(f"Import failed: {error}")
+                return
+        else:
+            app.workspace.import_manager.create_reference(app.workspace, path, None, import_settings)
+
         profile = {
             "units": import_settings.units,
             "scale": import_settings.scale,
@@ -344,6 +359,9 @@ class ProjectRibbon(QWidget):
                 import_settings.to_dict(),
             ))
 
+        if is_occ_exchange:
+            self._show_status_text(f"Imported CAD model: {Path(path).name}")
+
         self._refresh()
 
     # --------------------------------
@@ -361,25 +379,37 @@ class ProjectRibbon(QWidget):
             return
 
         format_name = dialog.format_name()
+        extension = "step" if format_name == "step" else format_name
         path, _ = QFileDialog.getSaveFileName(
             self,
             f"Export {format_name.upper()}",
             "",
-            f"{format_name.upper()} Exchange (*.{format_name})",
+            f"{format_name.upper()} Exchange (*.{extension})",
         )
 
         if not path:
             return
 
-        if not path.lower().endswith(f".{format_name}"):
-            path = f"{path}.{format_name}"
+        if not path.lower().endswith(f".{extension}"):
+            path = f"{path}.{extension}"
 
         report = app.workspace.import_manager.validation_manager.validate_workspace(
             app.workspace,
             format_name,
         )
         app.workspace.command_manager.execute(StoreExchangeValidationReportCommand(app.workspace, report))
-        app.export_project(path, format_name)
+
+        if format_name in ("step", "brep"):
+            try:
+                app.engine.export_model(path)
+            except Exception as error:
+                self._show_status_text(f"Export failed: {error}")
+                return
+
+            self._show_status_text(f"Exported CAD model: {Path(path).name}")
+        else:
+            app.export_project(path, format_name)
+
         before = dict(app.workspace.import_manager.adapter_settings.get("cad_export", {}))
         app.workspace.command_manager.execute(UpdateExchangeSettingsCommand(
             app.workspace,
@@ -421,6 +451,16 @@ class ProjectRibbon(QWidget):
     def _app(self):
 
         return getattr(self.tool_manager, "app", None)
+
+    # --------------------------------
+
+    def _show_status_text(self, text):
+
+        canvas = getattr(self.tool_manager, "canvas", None)
+        status_bar = getattr(canvas, "status_bar", None)
+
+        if status_bar is not None:
+            status_bar.show_status_text(text)
 
     # --------------------------------
 

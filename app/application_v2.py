@@ -4,8 +4,9 @@ import traceback
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QApplication, QMessageBox
 
+from ui_v2.branding import BrandAssetLoader, BrandSplashScreen
 from ui_v2.main_window import MainWindow
-from ui_v2.theme import DARK_THEME
+from ui_v2.theme import THEMES
 
 
 def run():
@@ -16,20 +17,27 @@ def run():
     )
 
     app = QApplication(sys.argv)
-    app.setOrganizationName("Kinematics Studio")
-    app.setApplicationName("Kinematics Studio V2")
+    brand_loader = BrandAssetLoader()
+    app.setOrganizationName(brand_loader.config.company)
+    app.setApplicationName(brand_loader.config.application_name)
+    app.setWindowIcon(brand_loader.load_icon())
 
-    app.setStyleSheet(DARK_THEME)
+    app.setStyleSheet(THEMES.get(brand_loader.config.theme, THEMES["Dark"]))
 
     sys.excepthook = _show_unhandled_error
 
+    splash = BrandSplashScreen(brand_loader)
+    splash.show()
+    splash.run_initialization_messages(app)
+
     try:
-        window = MainWindow()
+        window = MainWindow(brand_loader=brand_loader)
     except Exception:
         _show_startup_error()
         raise
 
     window.showMaximized()
+    splash.finish(window)
 
     app.exec()
 

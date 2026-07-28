@@ -1,10 +1,13 @@
 from PySide6.QtCore import Qt, QSettings
+from PySide6.QtGui import QKeySequence, QShortcut
 from PySide6.QtWidgets import (
     QMainWindow,
     QWidget,
     QVBoxLayout,
     QDockWidget,
     QStackedWidget,
+    QApplication,
+    QDialog,
 )
 
 from ui_v2.canvas import Canvas
@@ -27,13 +30,19 @@ from ui_v2.clash_manager_panel import ClashManagerPanel
 from ui_v2.clash_dashboard_panel import ClashDashboardPanel
 from ui_v2.bcf_topic_browser_panel import BCFTopicBrowserPanel
 from ui_v2.command_bar import CommandBar
+from ui_v2.command_palette import CommandPalette
+from ui_v2.branding import AboutDialog, BrandAssetLoader, BrandLandingPage
 from ui_v2.status_bar import StudioStatusBar
+from ui_v2.theme import THEMES
 
 from engine.tools import (
     SelectTool,
     LineTool,
     RectangleTool,
     CircleTool,
+    ArcTool,
+    EllipseTool,
+    PolygonTool,
     PolylineTool,
     ClosedPolylineTool,
     SplineTool,
@@ -69,6 +78,10 @@ from engine.tools import (
     PyramidPrimitiveTool,
     SpherePrimitiveTool,
     TorusPrimitiveTool,
+    ExtrudeTool,
+    LoftTool,
+    RevolveTool,
+    SweepTool,
     SmartSketchTool,
 )
 
@@ -76,11 +89,13 @@ from engine.tools import (
 class MainWindow(QMainWindow):
     """Main application window for the V2 workspace."""
 
-    def __init__(self):
+    def __init__(self, brand_loader=None):
 
         super().__init__()
 
-        self.setWindowTitle("Kinematics Studio V2")
+        self.brand_loader = brand_loader or BrandAssetLoader()
+        self.setWindowTitle(self.brand_loader.config.application_name)
+        self.setWindowIcon(self.brand_loader.load_icon())
 
         self.resize(1800, 1000)
 
@@ -88,7 +103,10 @@ class MainWindow(QMainWindow):
         self._create_central_layout()
         self._create_docks()
         self._create_status_bar()
+        self._create_command_palette()
+        self._create_landing_platform()
         self._wire_ui()
+        self._apply_workspace_first_layout()
         self._restore_window_state()
 
     # ---------------------------------
@@ -107,6 +125,9 @@ class MainWindow(QMainWindow):
         tool_manager.register(LineTool())
         tool_manager.register(RectangleTool())
         tool_manager.register(CircleTool())
+        tool_manager.register(ArcTool())
+        tool_manager.register(EllipseTool())
+        tool_manager.register(PolygonTool())
         tool_manager.register(PolylineTool())
         tool_manager.register(ClosedPolylineTool())
         tool_manager.register(SplineTool())
@@ -142,6 +163,10 @@ class MainWindow(QMainWindow):
         tool_manager.register(PyramidPrimitiveTool())
         tool_manager.register(PrismPrimitiveTool())
         tool_manager.register(CapsulePrimitiveTool())
+        tool_manager.register(ExtrudeTool())
+        tool_manager.register(RevolveTool())
+        tool_manager.register(SweepTool())
+        tool_manager.register(LoftTool())
         tool_manager.register(SmartSketchTool())
 
     # ---------------------------------
@@ -163,6 +188,9 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.view_stack, 1)
 
         self.command_bar = CommandBar()
+        self.command_bar.command.setPlaceholderText(
+            "Type a command or press Ctrl+K for the Command Palette..."
+        )
         layout.addWidget(self.command_bar)
 
     # ---------------------------------
@@ -325,12 +353,37 @@ class MainWindow(QMainWindow):
         self.bcf_dock.setWidget(self.bcf_panel)
         self.addDockWidget(Qt.LeftDockWidgetArea, self.bcf_dock)
 
+        for dock in self._all_docks():
+            dock.setFeatures(
+                QDockWidget.DockWidgetClosable
+                | QDockWidget.DockWidgetMovable
+                | QDockWidget.DockWidgetFloatable
+            )
+            dock.setMinimumWidth(150)
+
     # ---------------------------------
 
     def _create_status_bar(self):
 
         self.studio_status_bar = StudioStatusBar()
         self.setStatusBar(self.studio_status_bar)
+
+    # ---------------------------------
+
+    def _create_command_palette(self):
+        """Create keyboard-first command palette over existing commands and tools."""
+
+        self.command_palette = CommandPalette(self)
+        self.command_palette_shortcut = QShortcut(QKeySequence("Ctrl+K"), self)
+        self.command_palette_shortcut.activated.connect(self.show_command_palette)
+
+    # ---------------------------------
+
+    def _create_landing_platform(self):
+        """Create the configurable landing platform without altering workspaces."""
+
+        self.landing_page = BrandLandingPage(self.brand_loader, self.canvas.app, self)
+        self.landing_dialog = None
 
     # ---------------------------------
 
@@ -413,6 +466,7 @@ class MainWindow(QMainWindow):
         self.bcf_panel.refresh()
         self.project_panel.refresh()
         self.canvas._sync_selection_ui()
+        self.viewport3d._sync_property_panel()
         self.canvas.update()
         self.viewport3d.update()
 
@@ -571,6 +625,158 @@ class MainWindow(QMainWindow):
 
     # ---------------------------------
 
+    def show_command_palette(self):
+        """Open the production command palette."""
+
+        self.command_palette.rebuild_actions()
+        self.command_palette.search.clear()
+        self.command_palette.refresh()
+        self.command_palette.show()
+        self.command_palette.raise_()
+        self.command_palette.activateWindow()
+        self.command_palette.search.setFocus()
+
+    # ---------------------------------
+
+    def show_landing_experience(self):
+        """Open the brand-configured landing experience."""
+
+        dialog = QDialog(self)
+        dialog.setWindowTitle(f"{self.brand_loader.config.application_name} Landing")
+        dialog.setWindowIcon(self.brand_loader.load_icon())
+        layout = QVBoxLayout(dialog)
+        layout.addWidget(BrandLandingPage(self.brand_loader, self.canvas.app, dialog))
+        dialog.resize(960, 640)
+        self.landing_dialog = dialog
+        dialog.show()
+        dialog.raise_()
+        dialog.activateWindow()
+
+    # ---------------------------------
+
+    def show_about_dialog(self):
+        """Open the application-shell about dialog from external brand config."""
+
+        dialog = AboutDialog(self.brand_loader, self)
+        dialog.exec()
+
+    # ---------------------------------
+
+    def apply_theme(self, name):
+        """Apply a certified application theme."""
+
+        stylesheet = THEMES.get(name, THEMES["Dark"])
+        app = QApplication.instance()
+        if app is not None:
+            app.setStyleSheet(stylesheet)
+        else:
+            self.setStyleSheet(stylesheet)
+        self.current_theme = name
+
+    # ---------------------------------
+
+    def enter_focus_mode(self):
+        """Collapse supporting docks so the active viewport becomes the hero."""
+
+        for dock in self._all_docks():
+            dock.setVisible(False)
+        self.command_bar.setVisible(False)
+        self.studio_status_bar.show_status_text("Focus Mode")
+
+    # ---------------------------------
+
+    def enter_presentation_mode(self):
+        """Show a clean presentation layout while preserving engineering state."""
+
+        for dock in self._all_docks():
+            dock.setVisible(False)
+        self.ribbon.setVisible(False)
+        self.command_bar.setVisible(False)
+        self.studio_status_bar.show_status_text("Presentation Mode")
+
+    # ---------------------------------
+
+    def reset_workspace_layout(self):
+        """Restore the certified viewport-first production layout."""
+
+        self.ribbon.setVisible(True)
+        self.command_bar.setVisible(True)
+        for dock in self._all_docks():
+            dock.setVisible(True)
+        self._apply_workspace_first_layout()
+        self.studio_status_bar.show_status_text("Workspace layout reset")
+
+    # ---------------------------------
+
+    def _apply_workspace_first_layout(self):
+        """Apply the default 80/20 viewport-first dock arrangement."""
+
+        left_docks = [
+            self.explorer_dock,
+            self.project_dock,
+            self.reference_dock,
+            self.reference_layer_dock,
+            self.coordination_dock,
+            self.clash_dock,
+            self.clash_dashboard_dock,
+            self.bcf_dock,
+        ]
+        right_docks = [
+            self.property_dock,
+            self.layer_dock,
+            self.dimension_dock,
+            self.pattern_dock,
+            self.block_dock,
+            self.group_dock,
+            self.selection_set_dock,
+            self.constraint_dock,
+        ]
+
+        for first, second in zip(left_docks, left_docks[1:]):
+            self.tabifyDockWidget(first, second)
+        for first, second in zip(right_docks, right_docks[1:]):
+            self.tabifyDockWidget(first, second)
+
+        self.explorer_dock.raise_()
+        self.property_dock.raise_()
+        for dock in left_docks:
+            dock.setMaximumWidth(180)
+        for dock in right_docks:
+            dock.setMaximumWidth(220)
+        self.resizeDocks(left_docks, [160] * len(left_docks), Qt.Horizontal)
+        self.resizeDocks(right_docks, [200] * len(right_docks), Qt.Horizontal)
+        app = QApplication.instance()
+        if app is not None:
+            app.processEvents()
+        for dock in left_docks + right_docks:
+            dock.setMaximumWidth(16777215)
+
+    # ---------------------------------
+
+    def _all_docks(self):
+        """Return all production dock widgets."""
+
+        return [
+            self.explorer_dock,
+            self.property_dock,
+            self.layer_dock,
+            self.dimension_dock,
+            self.pattern_dock,
+            self.block_dock,
+            self.group_dock,
+            self.selection_set_dock,
+            self.constraint_dock,
+            self.project_dock,
+            self.reference_dock,
+            self.reference_layer_dock,
+            self.coordination_dock,
+            self.clash_dock,
+            self.clash_dashboard_dock,
+            self.bcf_dock,
+        ]
+
+    # ---------------------------------
+
     def closeEvent(self, event):
         """Persist window and dock layout before shutdown."""
 
@@ -582,7 +788,10 @@ class MainWindow(QMainWindow):
     def _restore_window_state(self):
         """Restore saved dock placement when available."""
 
-        settings = QSettings("Kinematics Studio", "Kinematics Studio V2")
+        settings = QSettings(
+            self.brand_loader.config.company,
+            self.brand_loader.config.application_name,
+        )
         geometry = settings.value("main_window/geometry")
         state = settings.value("main_window/state")
 
@@ -597,6 +806,9 @@ class MainWindow(QMainWindow):
     def _save_window_state(self):
         """Save dock placement and window geometry for the next launch."""
 
-        settings = QSettings("Kinematics Studio", "Kinematics Studio V2")
+        settings = QSettings(
+            self.brand_loader.config.company,
+            self.brand_loader.config.application_name,
+        )
         settings.setValue("main_window/geometry", self.saveGeometry())
         settings.setValue("main_window/state", self.saveState())

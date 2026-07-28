@@ -24,6 +24,8 @@ class SelectionSetManagerPanel(QWidget):
         "Rectangles",
         "Circles",
         "Arcs",
+        "Ellipses",
+        "Polygons",
         "Blocks",
         "Groups",
         "Text",

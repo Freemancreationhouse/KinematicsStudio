@@ -1,20 +1,13 @@
-from engine.ai.prompt_parser import PromptParser
-from engine.ai.model_generator import ModelGenerator
+from engine.ai.ai_engine import AIEngine
 
 
 class AIAssistant:
+    """Compatibility facade backed by the production AIEngine runtime."""
 
-    def __init__(self):
+    def __init__(self, engine=None):
+        self.engine = engine or AIEngine()
 
-        self.parser = PromptParser()
-        self.generator = ModelGenerator()
+    def execute(self, prompt, workspace=None, session=None, provider_id="", capability="chat", background=False):
+        """Execute a prompt through a registered production provider."""
 
-    # ----------------------------------------
-
-    def execute(self, prompt):
-
-        intent = self.parser.parse(prompt)
-
-        result = self.generator.generate(intent)
-
-        return result
+        return self.engine.execute(prompt, workspace, session, provider_id, capability, background)

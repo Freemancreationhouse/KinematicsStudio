@@ -7,12 +7,14 @@ from engine.entities import (
     BlockReference,
     CircleEntity,
     DiameterDimensionEntity,
+    EllipseEntity,
     HatchEntity,
     LeaderEntity,
     LineEntity,
     LinearDimensionEntity,
     MTextEntity,
     PolylineEntity,
+    PolygonEntity,
     RadiusDimensionEntity,
     RectangleEntity,
     SplineEntity,
@@ -47,6 +49,8 @@ class SelectionFilter:
         "Rectangles": (RectangleEntity,),
         "Circles": (CircleEntity,),
         "Arcs": (ArcEntity,),
+        "Ellipses": (EllipseEntity,),
+        "Polygons": (PolygonEntity,),
         "Blocks": (BlockReference,),
         "Text": (TextEntity,),
         "MText": (MTextEntity,),
@@ -158,6 +162,17 @@ class SelectionManager:
         self._cycle_point = None
         self._cycle_candidates = []
         self._cycle_index = -1
+        self.occ_manager = None
+        self.occ_selection = None
+
+    # --------------------------------
+
+    def bind_occ_selection(self, occ_manager, occ_selection):
+        """Bind existing OpenCascade selection without creating another selection manager."""
+
+        self.occ_manager = occ_manager
+        self.occ_selection = occ_selection
+        self._sync_occ_selection()
 
     # --------------------------------
 
@@ -167,9 +182,10 @@ class SelectionManager:
         self._remember_previous()
         for entity in self.selected:
 
-            entity.selected = False
+            self._set_selected_flag(entity, False)
 
         self.selected.clear()
+        self._sync_occ_selection()
 
     # --------------------------------
 
@@ -182,9 +198,10 @@ class SelectionManager:
 
         if entity not in self.selected:
 
-            entity.selected = True
+            self._set_selected_flag(entity, True)
 
             self.selected.append(entity)
+            self._sync_occ_selection()
 
     # --------------------------------
 
@@ -204,9 +221,10 @@ class SelectionManager:
 
         if entity in self.selected:
 
-            entity.selected = False
+            self._set_selected_flag(entity, False)
 
             self.selected.remove(entity)
+            self._sync_occ_selection()
 
     # --------------------------------
 
@@ -230,6 +248,36 @@ class SelectionManager:
             item for item in self._cycle_candidates
             if item is not entity
         ]
+        self._sync_occ_selection()
+
+    # --------------------------------
+
+    def _set_selected_flag(self, entity, value):
+        """Set an object's selected flag when the object supports one."""
+
+        try:
+            entity.selected = bool(value)
+        except Exception:
+            pass
+
+    # --------------------------------
+
+    def _sync_occ_selection(self):
+        """Mirror selected OCC shapes into the existing OCCSelection helper."""
+
+        if self.occ_manager is None or self.occ_selection is None:
+            return
+
+        shapes = getattr(self.occ_manager, "shapes", [])
+
+        if callable(shapes):
+            shapes = shapes()
+
+        self.occ_selection.clear()
+
+        for entity in self.selected:
+            if entity in shapes:
+                self.occ_selection.select(entity, True)
 
     # --------------------------------
 

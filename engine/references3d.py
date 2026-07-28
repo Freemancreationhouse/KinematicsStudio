@@ -204,6 +204,13 @@ class ReferenceModel:
             "origin_mapping": "Model Origin",
             "coordinate_display": "WCS",
             "validation_status": "Unchecked",
+            "conflict_id": "",
+            "conflict_description": "",
+            "conflict_status": "",
+            "conflict_severity": "",
+            "conflict_priority": "",
+            "conflict_category": "",
+            "conflict_updated_at": "",
             "conflict_placeholder": "",
         }
 
@@ -869,18 +876,50 @@ class CoordinationManager:
             "scale": _vector_to_data(scale or Vector3(1.0, 1.0, 1.0)),
         }))
 
-    def conflict_placeholder(self, description):
-        """Store a future-ready clash/conflict placeholder."""
+    def create_conflict(
+        self,
+        description,
+        reference_id="",
+        reference_name="",
+        severity="Medium",
+        priority="Normal",
+        category="Reference Coordination",
+        comments=None,
+    ):
+        """Store a production coordination conflict metadata record."""
 
+        timestamp = _timestamp()
         conflict = {
             "id": str(uuid4()),
-            "description": description,
-            "status": "Placeholder",
-            "created_at": _timestamp(),
+            "description": str(description or "Coordination conflict"),
+            "status": "Open",
+            "severity": str(severity or "Medium"),
+            "priority": str(priority or "Normal"),
+            "category": str(category or "Reference Coordination"),
+            "reference_id": str(reference_id or ""),
+            "reference_name": str(reference_name or ""),
+            "created_at": timestamp,
+            "updated_at": timestamp,
+            "resolution": "",
+            "comments": list(comments or []),
+            "history": [
+                {
+                    "action": "Created",
+                    "status": "Open",
+                    "timestamp": timestamp,
+                    "description": str(description or "Coordination conflict"),
+                }
+            ],
+            "source": "CoordinationManager",
         }
         self.conflicts.append(conflict)
 
         return conflict
+
+    def conflict_placeholder(self, description):
+        """Backward-compatible alias for production conflict creation."""
+
+        return self.create_conflict(description)
 
     def to_dict(self):
         """Return JSON-safe coordination data."""

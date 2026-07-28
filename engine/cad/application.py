@@ -85,6 +85,7 @@ class CADApplication:
         """Load a project file and replace the active workspace."""
 
         workspace = self.project_serializer.load(path)
+        self.engine.dispose_workspace()
         self.engine.set_workspace(workspace)
         self._restore_project_settings(workspace.project_settings)
         self.project_path = str(path)
@@ -101,6 +102,7 @@ class CADApplication:
         workspace = self.project_templates.create_workspace(
             template_name or ProjectTemplateManager.BLANK
         )
+        self.engine.dispose_workspace()
         self.engine.set_workspace(workspace)
         self.camera3d.home_view()
         self.project_path = None
@@ -110,10 +112,25 @@ class CADApplication:
 
     # --------------------------------
 
+    def close_project(self):
+        """Close the active project and return to a clean blank workspace."""
+
+        self.engine.dispose_workspace()
+        workspace = self.project_templates.create_workspace(ProjectTemplateManager.BLANK)
+        self.engine.set_workspace(workspace)
+        self.camera3d.home_view()
+        self.project_path = None
+        self.last_save_time = None
+        self.autosave.clear_recovery()
+        return workspace
+
+    # --------------------------------
+
     def project_info(self):
         """Return current project metadata for UI display."""
 
         workspace = self.workspace
+        runtime = self.runtime_diagnostics()
 
         return {
             "current_project": workspace.name,
@@ -125,6 +142,8 @@ class CADApplication:
             "layer_count": getattr(workspace.layer_manager, "count", 0),
             "block_count": getattr(workspace.block_manager, "count", 0),
             "group_count": getattr(workspace.group_manager, "count", 0),
+            "runtime_ready": runtime["runtime_validation"].get("production_ready", False),
+            "startup_time_ms": runtime.get("startup_time_ms", 0.0),
         }
 
     # --------------------------------
@@ -161,12 +180,20 @@ class CADApplication:
         workspace = self.autosave.load_recovery()
 
         if workspace is not None:
+            self.engine.dispose_workspace()
             self.engine.set_workspace(workspace)
             self._restore_project_settings(workspace.project_settings)
             self.project_path = None
             self.last_save_time = None
 
         return workspace
+
+    # --------------------------------
+
+    def runtime_diagnostics(self):
+        """Return production runtime diagnostics from the existing CAD engine."""
+
+        return self.engine.diagnostics()
 
     # --------------------------------
 
@@ -214,6 +241,12 @@ class CADApplication:
                 "mode": "3d-ready",
             },
         }
+        settings["runtime"] = {
+            "configuration": "production",
+            "last_workspace": getattr(self.workspace, "name", ""),
+            "diagnostics": self.runtime_diagnostics(),
+        }
+        settings["ai_studio"] = self.engine.ai_engine.to_dict()
         self.workspace.project_settings = settings
 
         return settings
@@ -224,6 +257,7 @@ class CADApplication:
 
         view3d = dict((settings or {}).get("view3d", {}))
         self.camera3d.from_dict(view3d.get("camera", {}))
+        self.engine.ai_engine.from_dict(dict((settings or {}).get("ai_studio", {})))
 
     # --------------------------------
 

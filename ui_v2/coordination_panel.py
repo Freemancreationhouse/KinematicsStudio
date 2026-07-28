@@ -52,7 +52,10 @@ class CoordinationPanel(QWidget):
         buttons = QHBoxLayout()
         self.apply_button = QPushButton("Apply Coordination")
         self.validate_button = QPushButton("Validate")
-        self.conflict_button = QPushButton("Conflict Placeholder")
+        self.conflict_button = QPushButton("Add Conflict")
+        self.conflict_button.setToolTip(
+            "Create a production coordination conflict record through the command system."
+        )
         buttons.addWidget(self.apply_button)
         buttons.addWidget(self.validate_button)
         buttons.addWidget(self.conflict_button)
@@ -77,7 +80,7 @@ class CoordinationPanel(QWidget):
         self.reference.currentTextChanged.connect(self._reference_changed)
         self.apply_button.clicked.connect(self.apply_coordination)
         self.validate_button.clicked.connect(self.validate_reference)
-        self.conflict_button.clicked.connect(self.add_conflict_placeholder)
+        self.conflict_button.clicked.connect(self.add_conflict)
 
     # --------------------------------
 
@@ -150,8 +153,14 @@ class CoordinationPanel(QWidget):
 
     # --------------------------------
 
-    def add_conflict_placeholder(self, text="Potential reference conflict"):
-        """Store a future-ready reference conflict placeholder."""
+    def add_conflict(
+        self,
+        text="Potential reference conflict",
+        severity="Medium",
+        priority="Normal",
+        category="Reference Coordination",
+    ):
+        """Create a production coordination conflict for the selected reference."""
 
         model = self.selected_model()
 
@@ -159,18 +168,51 @@ class CoordinationPanel(QWidget):
             return
 
         before = dict(model.coordination_ui_settings)
+        timestamp = datetime.now(timezone.utc).isoformat()
         conflict = {
             "id": str(uuid4()),
             "description": text,
-            "status": "Placeholder",
-            "created_at": datetime.now(timezone.utc).isoformat(),
+            "status": "Open",
+            "severity": severity,
+            "priority": priority,
+            "category": category,
+            "reference_id": model.id,
+            "reference_name": model.name,
+            "created_at": timestamp,
+            "updated_at": timestamp,
+            "resolution": "",
+            "comments": [],
+            "history": [
+                {
+                    "action": "Created",
+                    "status": "Open",
+                    "timestamp": timestamp,
+                    "description": text,
+                }
+            ],
+            "source": "CoordinationPanel",
         }
         after = dict(before)
+        after["conflict_id"] = conflict["id"]
+        after["conflict_description"] = conflict["description"]
+        after["conflict_status"] = conflict["status"]
+        after["conflict_severity"] = conflict["severity"]
+        after["conflict_priority"] = conflict["priority"]
+        after["conflict_category"] = conflict["category"]
+        after["conflict_updated_at"] = conflict["updated_at"]
         after["conflict_placeholder"] = conflict["description"]
         self.workspace.command_manager.execute(
             UpdateCoordinationUICommand(self.workspace, model, before, after, conflict=conflict)
         )
         self._changed()
+        return conflict
+
+    # --------------------------------
+
+    def add_conflict_placeholder(self, text="Potential reference conflict"):
+        """Backward-compatible alias for production conflict creation."""
+
+        return self.add_conflict(text)
 
     # --------------------------------
 
@@ -193,7 +235,9 @@ class CoordinationPanel(QWidget):
         self.origin_mapping.setCurrentText(settings.get("origin_mapping", "Model Origin"))
         self.coordinate_display.setCurrentText(settings.get("coordinate_display", "WCS"))
         self.validation.setText(settings.get("validation_status", "Unchecked"))
-        self.conflict.setText(settings.get("conflict_placeholder", ""))
+        self.conflict.setText(
+            settings.get("conflict_description", settings.get("conflict_placeholder", ""))
+        )
 
     # --------------------------------
 
@@ -207,6 +251,11 @@ class CoordinationPanel(QWidget):
             "rotation": self._vector(self.rotation_x, self.rotation_y, self.rotation_z),
             "scale": self._vector(self.scale_x, self.scale_y, self.scale_z),
             "validation_status": "Valid",
+            "conflict_id": self.selected_model().coordination_ui_settings.get("conflict_id", ""),
+            "conflict_description": self.conflict.text(),
+            "conflict_status": self.selected_model().coordination_ui_settings.get("conflict_status", ""),
+            "conflict_severity": self.selected_model().coordination_ui_settings.get("conflict_severity", ""),
+            "conflict_priority": self.selected_model().coordination_ui_settings.get("conflict_priority", ""),
             "conflict_placeholder": self.conflict.text(),
         }
 

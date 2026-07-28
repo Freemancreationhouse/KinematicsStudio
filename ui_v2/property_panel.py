@@ -18,6 +18,7 @@ from engine.commands import (
 )
 from engine.geometry import Vector2, Vector3
 from engine.geometry.curves import clone_points
+from engine.entities import ArcEntity, EllipseEntity, PolygonEntity
 
 
 class LayerComboBox(QComboBox):
@@ -48,8 +49,20 @@ class PropertyPanel(QWidget):
         self.on_change = None
         self.selected = []
         self._loading = False
+        self._property_rows = {}
+        self.favorite_fields = {
+            "Entity Type",
+            "Layer",
+            "Visibility",
+            "Length",
+            "Radius",
+            "Width",
+            "Height",
+        }
 
         layout = QFormLayout(self)
+        self.search = QLineEdit()
+        self.search.setPlaceholderText("Search properties...")
 
         self.type = self._read_only_field()
         self.layer = LayerComboBox()
@@ -135,26 +148,46 @@ class PropertyPanel(QWidget):
 
     def _add_rows(self, layout):
 
-        layout.addRow("Entity Type", self.type)
-        layout.addRow("Layer", self.layer)
-        layout.addRow("Visibility", self.visible)
-        layout.addRow("Lock State", self.locked)
-        layout.addRow("Start / Center X", self.x)
-        layout.addRow("Start / Center Y", self.y)
-        layout.addRow("End X", self.x2)
-        layout.addRow("End Y", self.y2)
-        layout.addRow("Length", self.length)
-        layout.addRow("Angle", self.angle)
-        layout.addRow("Width", self.width)
-        layout.addRow("Height", self.height)
-        layout.addRow("Radius", self.radius)
-        layout.addRow("Diameter", self.diameter)
-        layout.addRow("Text", self.content)
-        layout.addRow("Alignment", self.alignment)
-        layout.addRow("Dimension Style", self.dimension_style)
-        layout.addRow("Layer Color", self.color)
-        layout.addRow("Line Type", self.line_type)
-        layout.addRow("Line Weight", self.line_weight)
+        layout.addRow("Search", self.search)
+        self.search.textChanged.connect(self._filter_properties)
+        for label, widget in (
+            ("Entity Type", self.type),
+            ("Layer", self.layer),
+            ("Visibility", self.visible),
+            ("Lock State", self.locked),
+            ("Start / Center X", self.x),
+            ("Start / Center Y", self.y),
+            ("End X", self.x2),
+            ("End Y", self.y2),
+            ("Length", self.length),
+            ("Angle", self.angle),
+            ("Width", self.width),
+            ("Height", self.height),
+            ("Radius", self.radius),
+            ("Diameter", self.diameter),
+            ("Text", self.content),
+            ("Alignment", self.alignment),
+            ("Dimension Style", self.dimension_style),
+            ("Layer Color", self.color),
+            ("Line Type", self.line_type),
+            ("Line Weight", self.line_weight),
+        ):
+            display = f"★ {label}" if label in self.favorite_fields else label
+            layout.addRow(display, widget)
+            label_widget = layout.labelForField(widget)
+            self._property_rows[label.lower()] = (label_widget, widget)
+
+    # -----------------------------------------
+
+    def _filter_properties(self, text):
+        """Filter visible property rows without changing selected data."""
+
+        query = text.strip().lower()
+        for label, (label_widget, widget) in self._property_rows.items():
+            visible = not query or query in label
+            if label_widget is not None:
+                label_widget.setVisible(visible)
+            widget.setVisible(visible)
 
     # -----------------------------------------
 
@@ -278,6 +311,12 @@ class PropertyPanel(QWidget):
             self._show_curve(entity)
         elif getattr(entity, "is_dimension", False):
             self._show_dimension(entity)
+        elif isinstance(entity, ArcEntity):
+            self._show_arc(entity)
+        elif isinstance(entity, EllipseEntity):
+            self._show_ellipse(entity)
+        elif isinstance(entity, PolygonEntity):
+            self._show_polygon(entity)
         elif hasattr(entity, "start") and hasattr(entity, "end"):
             self._show_line(entity)
         elif hasattr(entity, "p1") and hasattr(entity, "p2"):
@@ -1883,7 +1922,7 @@ class PropertyPanel(QWidget):
                 f"Suppressed: {len(getattr(order, 'suppressed_feature_ids', []))}"
             )
             self.line_type.setText(f"Diagnostics: {getattr(diagnostics, 'status', 'Ready')}")
-            self.line_weight.setText("Feature framework metadata only; no geometry generation")
+            self.line_weight.setText("Feature framework metadata; geometry executes through GeometryKernel")
         elif getattr(item, "is_geometry_kernel", False):
             state = getattr(item, "state", None)
             diagnostics = getattr(item, "diagnostics", None)
@@ -1945,7 +1984,7 @@ class PropertyPanel(QWidget):
             self.width.setText(f"Stages: {len(getattr(item, 'stages', []))}")
             self.height.setText(f"Geometry Generation: {getattr(item, 'geometry_generation_enabled', False)}")
             self.line_type.setText("Parameter → Expression → Dependency Graph → Execution Engine")
-            self.line_weight.setText("FeatureManager and BodyManager remain placeholders in Batch A")
+            self.line_weight.setText("FeatureManager and BodyManager execute through the frozen geometry pipeline")
         elif getattr(item, "is_parametric_parameter", False):
             bindings = manager.parameter_manager.bindings_for(item) if manager is not None else []
             expressions = manager.parameter_manager.expressions_for(item) if manager is not None else []
@@ -2521,6 +2560,50 @@ class PropertyPanel(QWidget):
 
     # -----------------------------------------
 
+    def _show_arc(self, entity):
+
+        self.x.setText(self._number(entity.center.x))
+        self.y.setText(self._number(entity.center.y))
+        self.x2.setText(self._number(entity.start_point.x))
+        self.y2.setText(self._number(entity.start_point.y))
+        self.length.setText(self._number(entity.length))
+        self.angle.setText(self._number(entity.start_angle))
+        self.width.setText(self._number(entity.sweep_angle))
+        self.height.setText(self._number(entity.end_angle))
+        self.radius.setText(self._number(entity.radius))
+        self.diameter.setText(self._number(entity.diameter))
+        self.alignment.setText("Clockwise" if getattr(entity, "clockwise", False) else "Counter Clockwise")
+
+    # -----------------------------------------
+
+    def _show_ellipse(self, entity):
+
+        self.x.setText(self._number(entity.center.x))
+        self.y.setText(self._number(entity.center.y))
+        self.length.setText(self._number(entity.perimeter))
+        self.angle.setText(self._number(entity.rotation))
+        self.width.setText(self._number(entity.major_axis))
+        self.height.setText(self._number(entity.minor_axis))
+        self.radius.setText(self._number(entity.radius_x))
+        self.diameter.setText(self._number(entity.radius_y))
+        self.content.setText(f"Area: {self._number(entity.area)}")
+
+    # -----------------------------------------
+
+    def _show_polygon(self, entity):
+
+        self.x.setText(self._number(entity.center.x))
+        self.y.setText(self._number(entity.center.y))
+        self.length.setText(self._number(entity.perimeter))
+        self.angle.setText(self._number(entity.rotation))
+        self.width.setText(self._number(entity.edge_length))
+        self.height.setText(self._number(entity.area))
+        self.radius.setText(self._number(entity.radius))
+        self.diameter.setText(str(entity.sides))
+        self.alignment.setText(entity.mode)
+
+    # -----------------------------------------
+
     def _show_text(self, entity):
 
         self.x.setText(self._number(entity.position.x))
@@ -2770,6 +2853,15 @@ class PropertyPanel(QWidget):
         if getattr(entity, "is_curve", False):
             return self._curve_state(entity, field)
 
+        if isinstance(entity, ArcEntity):
+            return self._arc_state(entity, field)
+
+        if isinstance(entity, EllipseEntity):
+            return self._ellipse_state(entity, field)
+
+        if isinstance(entity, PolygonEntity):
+            return self._polygon_state(entity, field)
+
         if hasattr(entity, "start") and hasattr(entity, "end"):
             return self._line_state(entity, field)
 
@@ -3006,6 +3098,117 @@ class PropertyPanel(QWidget):
             return {}
 
         return {"center": center, "radius": radius}
+
+    # -----------------------------------------
+
+    def _arc_state(self, entity, field):
+
+        center = entity.center.copy()
+        radius = entity.radius
+        start_angle = entity.start_angle
+        end_angle = entity.end_angle
+        clockwise = getattr(entity, "clockwise", False)
+
+        if field == "x":
+            center.x = self._float(self.x, center.x)
+        elif field == "y":
+            center.y = self._float(self.y, center.y)
+        elif field == "radius":
+            radius = max(0.0, self._float(self.radius, radius))
+        elif field == "diameter":
+            radius = max(0.0, self._float(self.diameter, radius * 2.0) / 2.0)
+        elif field == "angle":
+            start_angle = self._float(self.angle, start_angle)
+        elif field == "height":
+            end_angle = self._float(self.height, end_angle)
+        elif field == "width":
+            end_angle = start_angle + self._float(self.width, entity.sweep_angle)
+        elif field == "alignment":
+            clockwise = self.alignment.text().strip().lower().startswith("clock")
+        else:
+            return {}
+
+        return {
+            "center": center,
+            "radius": radius,
+            "start_angle": start_angle,
+            "end_angle": end_angle,
+            "clockwise": clockwise,
+        }
+
+    # -----------------------------------------
+
+    def _ellipse_state(self, entity, field):
+
+        center = entity.center.copy()
+        radius_x = entity.radius_x
+        radius_y = entity.radius_y
+        rotation = entity.rotation
+
+        if field == "x":
+            center.x = self._float(self.x, center.x)
+        elif field == "y":
+            center.y = self._float(self.y, center.y)
+        elif field == "radius":
+            radius_x = max(0.0, self._float(self.radius, radius_x))
+        elif field == "diameter":
+            radius_y = max(0.0, self._float(self.diameter, radius_y))
+        elif field == "width":
+            value = max(0.0, self._float(self.width, entity.major_axis) / 2.0)
+            if radius_x >= radius_y:
+                radius_x = value
+            else:
+                radius_y = value
+        elif field == "height":
+            value = max(0.0, self._float(self.height, entity.minor_axis) / 2.0)
+            if radius_x <= radius_y:
+                radius_x = value
+            else:
+                radius_y = value
+        elif field == "angle":
+            rotation = self._float(self.angle, rotation)
+        else:
+            return {}
+
+        return {
+            "center": center,
+            "radius_x": radius_x,
+            "radius_y": radius_y,
+            "rotation": rotation,
+        }
+
+    # -----------------------------------------
+
+    def _polygon_state(self, entity, field):
+
+        center = entity.center.copy()
+        radius = entity.radius
+        sides = entity.sides
+        rotation = entity.rotation
+        mode = entity.mode
+
+        if field == "x":
+            center.x = self._float(self.x, center.x)
+        elif field == "y":
+            center.y = self._float(self.y, center.y)
+        elif field == "radius":
+            radius = max(0.0, self._float(self.radius, radius))
+        elif field == "diameter":
+            sides = max(3, min(360, int(self._float(self.diameter, sides))))
+        elif field == "angle":
+            rotation = self._float(self.angle, rotation)
+        elif field == "alignment":
+            mode = self.alignment.text().strip() or mode
+        else:
+            return {}
+
+        return {
+            "center": center,
+            "radius": radius,
+            "sides": sides,
+            "rotation": rotation,
+            "mode": mode,
+        }
 
     # -----------------------------------------
 

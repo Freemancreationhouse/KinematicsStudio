@@ -30,10 +30,11 @@ manager.feature_manager.apply_feature(feature, workspace)
 workspace.command_manager.execute(EditProductFeatureCommand(workspace, feature, distance=9.0, operation="Intersect"))
 assert feature.definition.options.distance == 9.0
 assert feature.definition.options.operation == "Intersect"
-assert manager.feature_editor.state_for(feature).dirty is True
+assert mesh.parameters["distance"] == 9.0
+assert manager.feature_editor.state_for(feature).dirty is False
 
 workspace.command_manager.execute(AddFeatureDependencyCommand(workspace, sketch, feature, "SketchToFeature"))
-assert manager.dependency_statistics.edges == 1 or len(manager.dependency_edges) == 1
+assert any(edge.relationship == "SketchToFeature" for edge in manager.dependency_edges)
 
 workspace.command_manager.execute(PropagateProductUpdateCommand(workspace))
 workspace.command_manager.execute(RegenerateProductFeatureCommand(workspace, feature))

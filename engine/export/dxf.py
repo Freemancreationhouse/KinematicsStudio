@@ -2,12 +2,14 @@ from engine.entities import (
     ArcEntity,
     BlockReference,
     CircleEntity,
+    EllipseEntity,
     HatchEntity,
     LeaderEntity,
     LineEntity,
     MTextEntity,
     RectangleEntity,
     PolylineEntity,
+    PolygonEntity,
     SplineEntity,
     TextEntity,
 )
@@ -95,6 +97,10 @@ class DXFExporter(Exporter):
             self._circle(lines, item, entity)
         elif isinstance(entity, ArcEntity):
             self._arc(lines, item, entity)
+        elif isinstance(entity, EllipseEntity):
+            self._ellipse(lines, item, entity)
+        elif isinstance(entity, PolygonEntity):
+            self._polyline(lines, item, entity.points, True)
         elif isinstance(entity, PolylineEntity):
             self._polyline(lines, item, entity.points, entity.closed)
         elif isinstance(entity, SplineEntity):
@@ -197,6 +203,12 @@ class DXFExporter(Exporter):
             "50", f"{entity.start_angle:.6f}",
             "51", f"{entity.end_angle:.6f}",
         ])
+
+    # --------------------------------
+
+    def _ellipse(self, lines, item, entity):
+
+        self._polyline(lines, item, entity.sampled_points(), True)
 
     # --------------------------------
 

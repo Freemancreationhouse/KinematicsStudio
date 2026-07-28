@@ -1,4 +1,4 @@
-from engine.entities import CircleEntity, LineEntity, RectangleEntity
+from engine.entities import ArcEntity, CircleEntity, EllipseEntity, LineEntity, PolygonEntity, RectangleEntity
 from engine.geometry.primitives import rectangle_corners
 from engine.geometry.tolerance import is_zero
 from engine.geometry.transforms import scale_point
@@ -43,6 +43,15 @@ def _handler_for(entity):
     if _is_rectangle(entity):
         return _scale_rectangle
 
+    if isinstance(entity, ArcEntity):
+        return _scale_arc
+
+    if isinstance(entity, EllipseEntity):
+        return _scale_ellipse
+
+    if isinstance(entity, PolygonEntity):
+        return _scale_polygon
+
     if _is_circle(entity):
         return _scale_circle
 
@@ -82,6 +91,34 @@ def _scale_circle(entity, base_point, factor):
             abs(entity.radius * factor)
         )
     ]
+
+
+def _scale_arc(entity, base_point, factor):
+
+    result = entity.clone()
+    result.center = scale_point(entity.center, base_point, factor)
+    result.radius = abs(entity.radius * factor)
+
+    return [result]
+
+
+def _scale_ellipse(entity, base_point, factor):
+
+    result = entity.clone()
+    result.center = scale_point(entity.center, base_point, factor)
+    result.radius_x = abs(entity.radius_x * factor)
+    result.radius_y = abs(entity.radius_y * factor)
+
+    return [result]
+
+
+def _scale_polygon(entity, base_point, factor):
+
+    result = entity.clone()
+    result.center = scale_point(entity.center, base_point, factor)
+    result.radius = abs(entity.radius * factor)
+
+    return [result]
 
 
 def _scale_polyline(entity, base_point, factor):

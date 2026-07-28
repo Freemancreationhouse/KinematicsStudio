@@ -1,6 +1,11 @@
 from PySide6.QtCore import QPointF
 from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPolygonF
 
+try:
+    from engine.cad.occ_mesher import OCCMesher
+except Exception:
+    OCCMesher = None
+
 from engine.geometry import Vector3
 
 
@@ -13,6 +18,7 @@ class Renderer3D:
         self.grid_size = 50
         self.grid_lines = 20
         self.debug_bounds = False
+        self.occ_mesher = OCCMesher() if OCCMesher is not None else None
 
     # --------------------------------
 
@@ -132,6 +138,7 @@ class Renderer3D:
             if self.debug_bounds:
                 self._draw_bounds(painter, entity.bounding_box3d)
 
+        self._draw_occ_shapes(painter, workspace)
         self._draw_sections(painter, workspace)
         self._draw_analysis_overlays(painter, workspace, entities)
         self._draw_measurements(painter, workspace)
@@ -211,12 +218,18 @@ class Renderer3D:
 
     def _draw_mesh_faces(self, painter, entity, color, mode="shaded"):
 
+        self._draw_triangles(painter, entity.triangles(), color, mode)
+
+    # --------------------------------
+
+    def _draw_triangles(self, painter, triangles, color, mode="shaded"):
+
         fill = QColor(color)
         fill.setAlpha(34 if mode == "x_ray" else 80)
         painter.setBrush(fill)
         painter.setPen(QPen(QColor(fill), 1))
 
-        for triangle in entity.triangles():
+        for triangle in triangles:
             polygon = QPolygonF()
 
             for point in triangle:
@@ -230,6 +243,55 @@ class Renderer3D:
 
             if polygon is not None:
                 painter.drawPolygon(polygon)
+
+    # --------------------------------
+
+    def _draw_occ_shapes(self, painter, workspace):
+        """Draw OpenCascade shapes through the existing camera and painter."""
+
+        if self.occ_mesher is None:
+            return
+
+        cad_engine = getattr(self, "cad_engine", None)
+        occ = getattr(cad_engine, "occ", None)
+        occ_selection = getattr(cad_engine, "occ_selection", None)
+
+        if occ is None:
+            return
+
+        shapes = getattr(occ, "shapes", [])
+
+        if callable(shapes):
+            shapes = shapes()
+
+        if not shapes:
+            return
+
+        style = self._visual_style(workspace)
+
+        for shape in shapes:
+            try:
+                vertices, triangles = self.occ_mesher.triangulation(shape)
+            except Exception:
+                continue
+
+            color = QColor("#90caf9")
+
+            if occ_selection is not None and occ_selection.is_selected(shape):
+                color = QColor(getattr(style, "selection_color", "#ffeb3b"))
+
+            self._draw_triangles(
+                painter,
+                (
+                    (
+                        Vector3(vertices[a][0], vertices[a][1], vertices[a][2]),
+                        Vector3(vertices[b][0], vertices[b][1], vertices[b][2]),
+                        Vector3(vertices[c][0], vertices[c][1], vertices[c][2]),
+                    )
+                    for a, b, c in triangles
+                ),
+                color,
+            )
 
     # --------------------------------
 

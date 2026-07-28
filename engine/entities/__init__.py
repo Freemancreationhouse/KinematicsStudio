@@ -16,6 +16,8 @@ from .entity3d import (
     entity3d_from_dict,
 )
 from .arc_entity import ArcEntity
+from .ellipse_entity import EllipseEntity
+from .polygon_entity import PolygonEntity
 from .text_entity import TextEntity
 from .mtext_entity import MTextEntity
 from .leader_entity import LeaderEntity

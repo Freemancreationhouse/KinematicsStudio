@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="320" height="220" viewBox="0 0 320 220" role="img" aria-label="Empty state placeholder">
+  <rect x="24" y="24" width="272" height="172" rx="18" fill="#222831" stroke="#3A4250" stroke-width="2"/>
+  <path d="M76 148 L132 92 L172 132 L204 100 L244 148" fill="none" stroke="#2D8CFF" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="222" cy="70" r="14" fill="#42C983"/>
+  <text x="160" y="190" text-anchor="middle" fill="#AEB8C5" font-family="Segoe UI, Arial, sans-serif" font-size="14">Production-safe placeholder</text>
+</svg>

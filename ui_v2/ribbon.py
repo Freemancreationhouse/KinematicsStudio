@@ -13,12 +13,16 @@ from ui_v2.ribbon_machine import MachineRibbon
 
 
 class Ribbon(QWidget):
+    """Production ribbon exposing only command-connected workspaces."""
+
+    HIDDEN_TABS = {}
 
     def __init__(self, tool_manager):
 
         super().__init__()
 
         self.tool_manager = tool_manager
+        self.hidden_tabs = dict(self.HIDDEN_TABS)
 
         layout = QVBoxLayout(self)
 
@@ -49,11 +53,11 @@ class Ribbon(QWidget):
         )
 
         self.tabs.addTab(
-            AIRibbon(),
+            AIRibbon(tool_manager),
             "AI"
         )
 
         self.tabs.addTab(
-            MachineRibbon(),
+            MachineRibbon(tool_manager),
             "Machine"
         )

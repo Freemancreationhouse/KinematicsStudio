@@ -53,7 +53,8 @@ assert edited.definition.options.operation == "Cut"
 assert edited.definition.options.merge_result is False
 assert version.version == 1
 assert isinstance(edge, DependencyEdge)
-assert manager.dependency_manager.statistics().edges == 2
+assert any(item.relationship == "SketchToFeature" for item in manager.dependency_edges)
+assert any(item.relationship == "FeatureToBody" for item in manager.dependency_edges)
 assert result.status == "Rebuilt"
 assert mesh.parameters["distance"] == 18.0
 assert manager.feature_editor.state_for(feature).dirty is False

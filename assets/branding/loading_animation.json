@@ -1,0 +1,11 @@
+{
+  "format": "lottie-compatible-placeholder",
+  "version": "1.0",
+  "duration_ms": 1200,
+  "replaceable": true,
+  "frames": [
+    {"progress": 0.0, "opacity": 0.35, "scale": 0.96},
+    {"progress": 0.5, "opacity": 1.0, "scale": 1.0},
+    {"progress": 1.0, "opacity": 0.35, "scale": 0.96}
+  ]
+}

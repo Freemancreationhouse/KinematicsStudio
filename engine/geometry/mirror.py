@@ -1,4 +1,5 @@
-from engine.entities import CircleEntity, LineEntity, RectangleEntity
+from engine.entities import ArcEntity, CircleEntity, EllipseEntity, LineEntity, PolygonEntity, RectangleEntity
+from engine.geometry.curves import angle_degrees, point_on_ellipse
 from engine.geometry import Vector2
 from engine.geometry.primitives import is_degenerate_segment, rectangle_corners
 from engine.geometry.transforms import mirror_point, unique_values
@@ -42,6 +43,15 @@ def _handler_for(entity):
 
     if _is_rectangle(entity):
         return _mirror_rectangle
+
+    if isinstance(entity, ArcEntity):
+        return _mirror_arc
+
+    if isinstance(entity, EllipseEntity):
+        return _mirror_ellipse
+
+    if isinstance(entity, PolygonEntity):
+        return _mirror_polygon
 
     if _is_circle(entity):
         return _mirror_circle
@@ -88,6 +98,47 @@ def _mirror_circle(entity, line_start, line_end):
             entity.radius
         )
     ]
+
+
+def _mirror_arc(entity, line_start, line_end):
+
+    result = entity.clone()
+    result.center = mirror_point(entity.center, line_start, line_end)
+    mirrored_start = mirror_point(entity.start_point, line_start, line_end)
+    mirrored_end = mirror_point(entity.end_point, line_start, line_end)
+    result.start_angle = angle_degrees(result.center, mirrored_start)
+    result.end_angle = angle_degrees(result.center, mirrored_end)
+    result.clockwise = not getattr(entity, "clockwise", False)
+
+    return [result]
+
+
+def _mirror_ellipse(entity, line_start, line_end):
+
+    result = entity.clone()
+    result.center = mirror_point(entity.center, line_start, line_end)
+    major_point = point_on_ellipse(
+        entity.center,
+        entity.radius_x,
+        entity.radius_y,
+        entity.rotation,
+        0.0,
+    )
+    mirrored_major = mirror_point(major_point, line_start, line_end)
+    result.rotation = angle_degrees(result.center, mirrored_major)
+
+    return [result]
+
+
+def _mirror_polygon(entity, line_start, line_end):
+
+    result = entity.clone()
+    result.center = mirror_point(entity.center, line_start, line_end)
+    first = entity.points[0] if entity.points else entity.center
+    mirrored_first = mirror_point(first, line_start, line_end)
+    result.rotation = angle_degrees(result.center, mirrored_first)
+
+    return [result]
 
 
 def _mirror_polyline(entity, line_start, line_end):

@@ -1,5 +1,6 @@
 from math import sqrt
 
+from engine.entities import ArcEntity, EllipseEntity, PolygonEntity
 from engine.geometry import Vector2
 from engine.geometry.curves import midpoint, nearest_on_curve, polyline_segments
 from engine.geometry.primitives import segment_intersection
@@ -96,6 +97,15 @@ class SnapManager:
         elif hasattr(entity, "p1") and hasattr(entity, "p2"):
             candidates.extend(self._rectangle_candidates(entity, point))
 
+        elif isinstance(entity, ArcEntity):
+            candidates.extend(self._sampled_curve_candidates(entity, entity.sampled_points(), point, False))
+
+        elif isinstance(entity, EllipseEntity):
+            candidates.extend(self._ellipse_candidates(entity, point))
+
+        elif isinstance(entity, PolygonEntity):
+            candidates.extend(self._curve_candidates(entity, entity.points, point, True))
+
         elif hasattr(entity, "center") and hasattr(entity, "radius"):
             candidates.extend(self._circle_candidates(entity, point))
 
@@ -177,6 +187,46 @@ class SnapManager:
 
     # ------------------------------------------------------------
 
+    def _ellipse_candidates(self, entity, point):
+
+        candidates = []
+
+        if self.center:
+            candidates.append((entity.center, "CENTER", entity))
+
+        if self.quadrant:
+            points = entity.sampled_points()
+            for index in (0, len(points) // 4, len(points) // 2, len(points) * 3 // 4):
+                candidates.append((points[index], "QUAD", entity))
+
+        candidates.extend(self._sampled_curve_candidates(entity, entity.sampled_points(), point, True))
+
+        return candidates
+
+    # ------------------------------------------------------------
+
+    def _sampled_curve_candidates(self, entity, points, point, closed=False):
+
+        candidates = []
+
+        if self.endpoint and not closed and points:
+            candidates.append((points[0], "END", entity))
+            candidates.append((points[-1], "END", entity))
+
+        if self.midpoint:
+            for start, end in polyline_segments(points, closed):
+                candidates.append((midpoint(start, end), "MID", entity))
+
+        if self.nearest:
+            nearest = nearest_on_curve(point, points, closed)
+
+            if nearest is not None:
+                candidates.append((nearest, "NEAR", entity))
+
+        return candidates
+
+    # ------------------------------------------------------------
+
     def _curve_candidates(self, entity, points, point, closed=False):
 
         candidates = []
@@ -242,6 +292,14 @@ class SnapManager:
         for entity in entities:
             if hasattr(entity, "start") and hasattr(entity, "end"):
                 segments.append((entity.start, entity.end))
+            elif isinstance(entity, ArcEntity):
+                samples = entity.sampled_points()
+                segments.extend(polyline_segments(samples, False))
+            elif isinstance(entity, EllipseEntity):
+                samples = entity.sampled_points()
+                segments.extend(polyline_segments(samples, True))
+            elif isinstance(entity, PolygonEntity):
+                segments.extend(polyline_segments(entity.points, True))
             elif hasattr(entity, "points"):
                 segments.extend(polyline_segments(entity.points, getattr(entity, "closed", False)))
             elif hasattr(entity, "control_points"):

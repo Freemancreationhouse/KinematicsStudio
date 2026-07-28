@@ -1,4 +1,5 @@
-from engine.entities import CircleEntity, LineEntity
+from engine.entities import ArcEntity, CircleEntity, EllipseEntity, LineEntity, PolygonEntity
+from engine.geometry.curves import angle_degrees
 from engine.geometry.primitives import rectangle_corners
 from engine.geometry.transforms import rotate_point
 
@@ -38,6 +39,15 @@ def _handler_for(entity):
 
     if _is_rectangle(entity):
         return _rotate_rectangle
+
+    if isinstance(entity, ArcEntity):
+        return _rotate_arc
+
+    if isinstance(entity, EllipseEntity):
+        return _rotate_ellipse
+
+    if isinstance(entity, PolygonEntity):
+        return _rotate_polygon
 
     if _is_circle(entity):
         return _rotate_circle
@@ -80,6 +90,34 @@ def _rotate_circle(entity, base_point, angle_degrees):
             entity.radius
         )
     ]
+
+
+def _rotate_arc(entity, base_point, angle_degrees):
+
+    result = entity.clone()
+    result.center = rotate_point(entity.center, base_point, angle_degrees)
+    result.start_angle = entity.start_angle + angle_degrees
+    result.end_angle = entity.end_angle + angle_degrees
+
+    return [result]
+
+
+def _rotate_ellipse(entity, base_point, angle_degrees):
+
+    result = entity.clone()
+    result.center = rotate_point(entity.center, base_point, angle_degrees)
+    result.rotation = entity.rotation + angle_degrees
+
+    return [result]
+
+
+def _rotate_polygon(entity, base_point, angle_degrees):
+
+    result = entity.clone()
+    result.center = rotate_point(entity.center, base_point, angle_degrees)
+    result.rotation = entity.rotation + angle_degrees
+
+    return [result]
 
 
 def _rotate_polyline(entity, base_point, angle_degrees):

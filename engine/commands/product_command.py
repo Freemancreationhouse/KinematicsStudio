@@ -1,7 +1,72 @@
 from copy import deepcopy
 
-from engine.product import ProductDocument
+from engine.product import FeatureOptions, ProductDocument, ProductPart
 from engine.commands.command import Command
+
+
+def _snapshot_incremental_geometry_state(workspace, manager):
+    """Capture BodyManager/MeshEntity state before incremental regeneration."""
+
+    scene = getattr(workspace, "scene3d", None)
+    state = {
+        "bodies": list(manager.bodies),
+        "scene_entities": list(scene.entities()) if scene is not None else [],
+        "body_state": {},
+        "mesh_state": {},
+    }
+
+    for body in manager.bodies:
+        state["body_state"][body.id] = {
+            "feature_ids": list(getattr(body, "feature_ids", [])),
+            "mesh_entity_id": getattr(body, "mesh_entity_id", ""),
+            "metadata": deepcopy(getattr(body, "metadata", None)),
+            "diagnostics": deepcopy(getattr(body, "diagnostics", None)),
+        }
+        mesh = manager.mesh_entity_for_body(body, workspace)
+        if mesh is not None:
+            mesh_id = getattr(mesh, "id", "") or getattr(mesh, "name", "")
+            state["mesh_state"][mesh_id] = {
+                "mesh": mesh,
+                "mesh_data": deepcopy(mesh.mesh_data),
+                "primitive_type": getattr(mesh, "primitive_type", None),
+                "parameters": deepcopy(getattr(mesh, "parameters", {})),
+            }
+
+    return state
+
+
+def _restore_incremental_geometry_state(workspace, manager, state):
+    """Restore BodyManager/MeshEntity state after undo."""
+
+    if not state:
+        return
+
+    previous_body_ids = {body.id for body in state.get("bodies", [])}
+    for body in list(manager.bodies):
+        if body.id not in previous_body_ids:
+            manager.remove_object(body)
+
+    scene = getattr(workspace, "scene3d", None)
+    if scene is not None:
+        previous_entities = state.get("scene_entities", [])
+        for entity in list(scene.entities()):
+            if entity not in previous_entities:
+                workspace.remove_3d_entity(entity)
+
+    for body in manager.bodies:
+        body_state = state.get("body_state", {}).get(body.id)
+        if body_state is not None:
+            body.feature_ids = list(body_state["feature_ids"])
+            body.mesh_entity_id = body_state["mesh_entity_id"]
+            body.metadata = deepcopy(body_state["metadata"])
+            body.diagnostics = deepcopy(body_state["diagnostics"])
+        mesh = manager.mesh_entity_for_body(body, workspace)
+        mesh_id = getattr(mesh, "id", "") or getattr(mesh, "name", "") if mesh is not None else ""
+        mesh_state = state.get("mesh_state", {}).get(mesh_id)
+        if mesh is not None and mesh_state is not None:
+            mesh.mesh_data = deepcopy(mesh_state["mesh_data"])
+            mesh.parameters = dict(mesh_state["parameters"])
+            mesh.primitive_type = mesh_state["primitive_type"]
 
 
 class CreateProductDocumentCommand(Command):
@@ -215,6 +280,85 @@ class AddProductBodyCommand(AddProductObjectCommand):
 
 class AddProductFeatureCommand(AddProductObjectCommand):
     """Undoable command for adding Product Design feature metadata."""
+
+
+class CreateSolidFeatureCommand(Command):
+    """Create and execute a solid feature through ProductManager and GeometryKernel."""
+
+    def __init__(
+        self,
+        workspace,
+        feature_type,
+        options=None,
+        parameters=None,
+        part=None,
+        profile=None,
+        body=None,
+        name=None,
+    ):
+
+        self.workspace = workspace
+        self.feature_type = str(feature_type)
+        self.options = options or FeatureOptions()
+        self.parameters = dict(parameters or {})
+        self.part = part
+        self.profile = profile
+        self.body = body
+        self.feature_name = name or self.feature_type
+        self.feature = None
+        self.geometry_command = None
+        self.created_part = None
+
+    def execute(self):
+        """Create the feature and execute geometry through the frozen product pipeline."""
+
+        manager = self.workspace.product_manager
+
+        if self.created_part is not None and manager.part_for(self.created_part) is None:
+            manager.add_part(self.created_part)
+
+        if self.feature is not None and manager.feature_manager.feature_for(self.feature) is None:
+            manager.feature_manager.add_item(self.feature)
+
+        if self.feature is None:
+            part = manager.part_for(self.part) if self.part is not None else None
+            if part is None:
+                if manager.active_document is None:
+                    manager.create_document("Product Document")
+                part = ProductPart(f"{self.feature_type} Part")
+                manager.add_part(part)
+                self.created_part = part
+
+            self.feature = manager.feature_manager.create_feature(
+                self.feature_type,
+                part,
+                profile=self.profile,
+                body=self.body,
+                options=self.options,
+                name=self.feature_name,
+            )
+            self.feature.definition.parameters.update(self.parameters)
+
+        self.geometry_command = ExecuteFeatureGeometryCommand(self.workspace, self.feature)
+        self.geometry_command.execute()
+
+        mesh = manager.mesh_entity_for_body(self.feature.result.body_id, self.workspace)
+        if mesh is not None:
+            self.workspace.selection.select(mesh)
+
+    def undo(self):
+        """Remove generated geometry and feature metadata."""
+
+        manager = self.workspace.product_manager
+
+        if self.geometry_command is not None:
+            self.geometry_command.undo()
+
+        if self.feature is not None:
+            manager.remove_object(self.feature)
+
+        if self.created_part is not None:
+            manager.remove_object(self.created_part)
 
 
 class AddEdgeModificationCommand(AddProductObjectCommand):
@@ -709,6 +853,8 @@ class EditProductFeatureCommand(Command):
         self.feature = feature
         self.changes = dict(changes)
         self.previous = None
+        self.previous_geometry_state = None
+        self.previous_selection = None
 
     def execute(self):
         """Apply editable feature changes."""
@@ -724,8 +870,14 @@ class EditProductFeatureCommand(Command):
                 "options": target.definition.options.to_dict(),
                 "parameters": dict(target.definition.parameters),
             }
+            self.previous_geometry_state = _snapshot_incremental_geometry_state(self.workspace, manager)
+            selection = getattr(self.workspace, "selection", None)
+            if selection is not None:
+                self.previous_selection = list(selection.selected)
 
         manager.feature_editor.edit_feature(self.feature, **self.changes)
+        manager.regeneration_manager.rebuild_downstream(self.feature, self.workspace)
+        self._restore_selection()
 
     def undo(self):
         """Restore previous editable feature state."""
@@ -745,7 +897,15 @@ class EditProductFeatureCommand(Command):
         for key, value in self.previous["options"].items():
             setattr(target.definition.options, key, value)
         target.definition.parameters = dict(self.previous["parameters"])
+        _restore_incremental_geometry_state(self.workspace, manager, self.previous_geometry_state)
         manager.regeneration_manager.mark_dirty(target)
+        self._restore_selection()
+
+    def _restore_selection(self):
+        selection = getattr(self.workspace, "selection", None)
+        if selection is None or self.previous_selection is None:
+            return
+        selection.select_many(self.previous_selection)
 
 
 class AddFeatureDependencyCommand(Command):
@@ -788,6 +948,7 @@ class RegenerateProductFeatureCommand(Command):
         self.feature = feature
         self.downstream = bool(downstream)
         self.previous_mesh = {}
+        self.previous_geometry_state = None
 
     def execute(self):
         """Regenerate one feature or downstream features."""
@@ -796,9 +957,10 @@ class RegenerateProductFeatureCommand(Command):
         features = [manager.feature_manager.feature_for(self.feature)]
 
         if self.downstream and features[0] is not None:
-            all_features = manager.feature_manager.features_for_part(features[0].part_id)
-            start = all_features.index(features[0])
-            features = all_features[start:]
+            features = manager.regeneration_manager.affected_features(features[0])
+
+        if self.previous_geometry_state is None:
+            self.previous_geometry_state = _snapshot_incremental_geometry_state(self.workspace, manager)
 
         for feature in [item for item in features if item is not None]:
             body = manager.body_for(feature.definition.body_id or feature.result.body_id)
@@ -820,6 +982,8 @@ class RegenerateProductFeatureCommand(Command):
         """Restore MeshEntity data before regeneration."""
 
         manager = self.workspace.product_manager
+
+        _restore_incremental_geometry_state(self.workspace, manager, self.previous_geometry_state)
 
         for feature_id, (mesh, mesh_data, parameters, primitive_type) in self.previous_mesh.items():
             mesh.mesh_data = mesh_data

@@ -1,0 +1,146 @@
+{
+  "application_name": "Kinematics Studio V2",
+  "company": "Kinematics Studio",
+  "version": "3.0",
+  "build": "Release 3.0 Batch I.5",
+  "tagline": "Professional engineering platform",
+  "primary_color": "#2D8CFF",
+  "secondary_color": "#1F232A",
+  "accent_color": "#42C983",
+  "theme": "Dark",
+  "fonts": {
+    "ui": "Segoe UI",
+    "mono": "Cascadia Mono",
+    "display": "Segoe UI Semibold"
+  },
+  "assets": {
+    "logo": "logo.svg",
+    "logo_dark": "logo_dark.svg",
+    "logo_light": "logo_light.svg",
+    "icon": "icon.ico",
+    "icon_16": "icon_16.png",
+    "icon_32": "icon_32.png",
+    "icon_64": "icon_64.png",
+    "icon_128": "icon_128.png",
+    "icon_256": "icon_256.png",
+    "icon_512": "icon_512.png",
+    "splash_background": "splash_background.png",
+    "landing_background": "landing_background.png",
+    "wallpaper": "wallpaper.jpg",
+    "empty_state": "empty_state.svg",
+    "loading_animation": "loading_animation.json"
+  },
+  "placeholders": {
+    "logo": "placeholders/logo_placeholder.svg",
+    "logo_dark": "placeholders/logo_placeholder.svg",
+    "logo_light": "placeholders/logo_placeholder.svg",
+    "icon": "placeholders/icon_placeholder.ico",
+    "icon_16": "placeholders/icon_placeholder.ico",
+    "icon_32": "placeholders/icon_placeholder.ico",
+    "icon_64": "placeholders/icon_placeholder.ico",
+    "icon_128": "placeholders/icon_placeholder.ico",
+    "icon_256": "placeholders/icon_placeholder.ico",
+    "icon_512": "placeholders/icon_placeholder.ico",
+    "splash_background": "placeholders/landing_placeholder.png",
+    "landing_background": "placeholders/landing_placeholder.png",
+    "wallpaper": "placeholders/wallpaper_placeholder.jpg",
+    "empty_state": "empty_state.svg",
+    "loading_animation": "loading_animation.json"
+  },
+  "splash": {
+    "show_version": true,
+    "show_build": true,
+    "progress_style": "linear",
+    "transition": "fade"
+  },
+  "launch_sequence": [
+    "Load Branding",
+    "Initialize Geometry Kernel",
+    "Initialize Renderer",
+    "Initialize CAD Workspace",
+    "Initialize Parametric Engine",
+    "Initialize GIS Workspace",
+    "Initialize BIM Workspace",
+    "Initialize Simulation Workspace",
+    "Initialize AI Workspace",
+    "Initialize Machine Workspace",
+    "Load Plugins",
+    "Restore Session",
+    "Check Project Recovery",
+    "Open Landing Experience"
+  ],
+  "landing": {
+    "sections": [
+      "Continue Last Project",
+      "Recent Projects",
+      "Pinned Projects",
+      "New Project",
+      "Templates",
+      "Workspace Shortcuts",
+      "Documentation",
+      "Tutorials",
+      "Sample Projects",
+      "Release Notes",
+      "Recent Activity",
+      "News",
+      "Community"
+    ]
+  },
+  "new_project": {
+    "categories": [
+      "CAD",
+      "3D CAD",
+      "Product Design",
+      "Parametric",
+      "GIS",
+      "BIM",
+      "Simulation",
+      "Machine/CAM",
+      "Rendering",
+      "AI"
+    ],
+    "units": [
+      "Millimeters",
+      "Centimeters",
+      "Meters",
+      "Inches",
+      "Feet"
+    ]
+  },
+  "first_run": {
+    "steps": [
+      "Welcome",
+      "Theme Selection",
+      "Default Workspace",
+      "UI Scaling",
+      "Shortcut Profile",
+      "Quick Tour"
+    ],
+    "remember_choices": true
+  },
+  "empty_state": {
+    "message": "No project content yet.",
+    "action": "Create New Project",
+    "documentation": "Open Documentation"
+  },
+  "motion": {
+    "enabled": true,
+    "duration_ms": 180,
+    "transitions": [
+      "fade",
+      "slide",
+      "scale",
+      "workspace",
+      "dock",
+      "dialog",
+      "hover",
+      "selection",
+      "loading"
+    ]
+  },
+  "shell": {
+    "license": "Production placeholder license metadata",
+    "credits": "Production placeholder credits metadata",
+    "about_title": "About Kinematics Studio V2"
+  }
+}

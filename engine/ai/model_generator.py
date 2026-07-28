@@ -1,20 +1,12 @@
+from engine.ai.runtime import AIProviderNotConfiguredError
+
+
 class ModelGenerator:
+    """Legacy facade retained for imports; real generation requires providers."""
 
     def generate(self, intent):
+        """Reject simulated generation and require a production AI provider."""
 
-        return {
-
-            "status": "ok",
-
-            "workspace": intent.workspace,
-
-            "action": intent.action,
-
-            "object": intent.object_type,
-
-            "style": intent.style,
-
-            "message":
-                f"Generating {intent.object_type}..."
-
-        }
+        raise AIProviderNotConfiguredError(
+            "Model generation requires a configured production AI provider."
+        )

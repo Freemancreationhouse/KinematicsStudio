@@ -5,6 +5,9 @@ from .select_tool import SelectTool
 from .line_tool import LineTool
 from .rectangle_tool import RectangleTool
 from .circle_tool import CircleTool
+from .arc_tool import ArcTool
+from .ellipse_tool import EllipseTool
+from .polygon_tool import PolygonTool
 from .curve_tools import PolylineTool, ClosedPolylineTool, SplineTool
 from .text_tool import TextTool
 from .mtext_tool import MTextTool
@@ -43,3 +46,4 @@ from .primitive_3d_tools import (
     SpherePrimitiveTool,
     TorusPrimitiveTool,
 )
+from .solid_feature_tools import ExtrudeTool, LoftTool, RevolveTool, SweepTool

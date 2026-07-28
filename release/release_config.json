@@ -1,0 +1,67 @@
+{
+  "application": {
+    "name": "Kinematics Studio V2",
+    "product_name": "KinematicsStudio",
+    "company": "Kinematics Studio",
+    "version": "3.0.0",
+    "release": "3.0",
+    "batch": "J",
+    "channel": "RC1",
+    "description": "Professional CAD/CAM/BIM/AI/Digital Fabrication platform"
+  },
+  "entry_point": "main_v2.py",
+  "branding_config": "assets/branding/brand.json",
+  "artifact_root": "Release_3.0_RC1",
+  "platforms": {
+    "windows": {
+      "setup": "Setup.exe",
+      "portable_zip": "Portable.zip",
+      "msi": "KinematicsStudio.msi",
+      "installer_tool": "iexpress",
+      "msi_tool": "wix"
+    },
+    "macos": {
+      "app_bundle": "KinematicsStudio.app",
+      "dmg": "KinematicsStudio.dmg",
+      "dmg_tool": "hdiutil",
+      "signing_ready": true,
+      "notarization_ready": true
+    },
+    "linux": {
+      "future": true
+    }
+  },
+  "documentation": {
+    "release_notes": "ReleaseNotes.pdf",
+    "installation_guide": "InstallationGuide.pdf",
+    "user_guide": "UserGuide.pdf",
+    "license": "License.txt"
+  },
+  "include": [
+    "app",
+    "assets",
+    "engine",
+    "ui_v2",
+    "main_v2.py",
+    "requirements.txt",
+    "ARCHITECTURE_FREEZE.md",
+    "AGENTS.md",
+    "ARCHITECTURE.md",
+    "ROADMAP.md",
+    "TASKS.md",
+    "CHANGELOG.md",
+    "SPECIFICATIONS.md",
+    "README.md"
+  ],
+  "exclude": [
+    ".git",
+    ".agents",
+    ".codex",
+    ".pytest_cache",
+    ".tmp_test_output",
+    ".venv",
+    ".venv_py314_backup",
+    "__pycache__",
+    "Release_3.0_RC1"
+  ]
+}

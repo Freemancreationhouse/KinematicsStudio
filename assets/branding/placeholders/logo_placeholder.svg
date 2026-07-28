@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="128" viewBox="0 0 512 128" role="img" aria-label="Brand placeholder logo">
+  <rect width="512" height="128" rx="20" fill="#2B313B"/>
+  <rect x="36" y="36" width="56" height="56" rx="12" fill="#2D8CFF"/>
+  <text x="116" y="78" fill="#F4F7FB" font-family="Segoe UI, Arial, sans-serif" font-size="34" font-weight="600">Brand Placeholder</text>
+</svg>

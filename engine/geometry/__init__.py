@@ -16,6 +16,13 @@ from .bounding_sphere import BoundingSphere
 from .frustum import Frustum
 from .mesh import Edge, Face, MeshData, Vertex
 from .primitives3d import MeshBuilder, PrimitiveGenerator
+from .solid_modeling import (
+    extrude_profile,
+    loft_profiles,
+    mesh_statistics,
+    revolve_profile,
+    sweep_profile,
+)
 from .curves import (
     catmull_rom_points,
     clone_points,

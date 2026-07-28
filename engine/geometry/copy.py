@@ -1,4 +1,4 @@
-from engine.entities import CircleEntity, LineEntity, RectangleEntity
+from engine.entities import ArcEntity, CircleEntity, EllipseEntity, LineEntity, PolygonEntity, RectangleEntity
 from engine.geometry.transforms import translate_point
 
 
@@ -38,6 +38,15 @@ def _handler_for(entity):
     if _is_rectangle(entity):
         return _copy_rectangle
 
+    if isinstance(entity, ArcEntity):
+        return _copy_generic
+
+    if isinstance(entity, EllipseEntity):
+        return _copy_generic
+
+    if isinstance(entity, PolygonEntity):
+        return _copy_generic
+
     if _is_circle(entity):
         return _copy_circle
 
@@ -72,6 +81,14 @@ def _copy_circle(entity, dx, dy):
             entity.radius
         )
     ]
+
+
+def _copy_generic(entity, dx, dy):
+
+    result = entity.clone()
+    result.move(dx, dy)
+
+    return [result]
 
 
 def _is_line(entity):

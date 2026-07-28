@@ -17,3 +17,7 @@ dist/
 # OS
 .DS_Store
 Thumbs.db
+
+Release_3.0_RC1/
+.tmp_test_output/
+.pytest_cache/

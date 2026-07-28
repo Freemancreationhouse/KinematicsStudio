@@ -4,11 +4,13 @@ from engine.entities import (
     ArcEntity,
     BlockReference,
     CircleEntity,
+    EllipseEntity,
     HatchEntity,
     LeaderEntity,
     LineEntity,
     MTextEntity,
     PolylineEntity,
+    PolygonEntity,
     RectangleEntity,
     SplineEntity,
     TextEntity,
@@ -95,6 +97,10 @@ class PDFExporter(Exporter):
             return self._circle(item, mapper, entity)
         if isinstance(entity, ArcEntity):
             return self._circle(item, mapper, entity)
+        if isinstance(entity, EllipseEntity):
+            return self._polyline(item, mapper, entity.sampled_points(), True)
+        if isinstance(entity, PolygonEntity):
+            return self._polyline(item, mapper, entity.points, True)
         if isinstance(entity, PolylineEntity):
             return self._polyline(item, mapper, entity.points, entity.closed)
         if isinstance(entity, SplineEntity):
