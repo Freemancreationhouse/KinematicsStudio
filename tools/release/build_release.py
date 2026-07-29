@@ -63,7 +63,8 @@ class ReleaseBuilder:
         self._write_version_manifest()
         self._stage_portable_application()
         self._build_windows_portable_zip()
-        self._build_windows_installer_placeholder()
+        self._generate_inno_build_config()
+        self._build_windows_installer()
         self._build_macos_app()
         self._build_macos_dmg()
         self._build_documentation()
@@ -239,20 +240,98 @@ class ReleaseBuilder:
         self._zip_directory(self.staging_dir / "KinematicsStudio", portable)
         self._record_artifact(portable, "windows_portable_zip", "zip", "PASS")
 
-    def _build_windows_installer_placeholder(self):
+    def _generate_inno_build_config(self):
+        generated_dir = self.root / "installer" / "generated"
+        generated_dir.mkdir(parents=True, exist_ok=True)
+        version_path = self.buildinfo_dir / "Version.json"
+        version_data = json.loads(version_path.read_text(encoding="utf-8"))
+        app = self.config["application"]
+        portable_source = self.staging_dir / app["product_name"]
+        icon_path = self.root / "assets" / "branding" / "icon.ico"
+        if not icon_path.exists():
+            icon_path = self.root / "installer" / "assets" / "icon.ico"
+        defines = {
+            "AppName": "Kinematics Studio",
+            "AppVersion": version_data["version"],
+            "ReleaseRoot": str(self.artifact_root.resolve()),
+            "PortableSource": str(portable_source.resolve()),
+            "InstallerOutputDir": str((self.windows_dir / "Installer").resolve()),
+            "AppLauncher": f"{app['product_name']}.bat",
+            "InstalledIconPath": "assets\\branding\\icon.ico",
+            "Publisher": "Freeman Creations House",
+            "ProductCode": "{{CF15D6E8-54D1-4937-B44B-936E9EEE1B31}",
+            "UpgradeCode": "{965134AE-8D3F-4C2B-9C2A-7D623B0B0F0D}",
+            "CompanyURL": "https://freemancreationshouse.com",
+            "SupportURL": "https://freemancreationshouse.com/support",
+            "SetupIconFile": str(icon_path.resolve()),
+            "InstallerLicenseFile": str((self.root / "installer" / "assets" / "license.txt").resolve()),
+            "WizardImageFile": str((self.root / "installer" / "assets" / "wizard.bmp").resolve()),
+            "WizardSmallImageFile": str((self.root / "installer" / "assets" / "wizard_small.bmp").resolve()),
+            "OutputBaseFilename": f"{app['product_name']}Setup",
+        }
+        config = generated_dir / "build.issinc"
+        lines = [
+            f'#define {name} "{self._inno_define_value(value)}"'
+            for name, value in defines.items()
+        ]
+        config.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+    def _build_windows_installer(self):
         installer_dir = self.windows_dir / "Installer"
         installer_dir.mkdir(parents=True, exist_ok=True)
-        readme = installer_dir / "README.txt"
-        readme.write_text(
-            "Kinematics Studio\n\n"
-            "Windows installer generation has been\n"
-            "migrated to the new Inno Setup release\n"
-            "pipeline.\n\n"
-            "Run installer/KinematicsStudio.iss\n"
-            "after the release build completes.\n",
-            encoding="utf-8",
+        log = installer_dir / "InstallerBuild.log"
+        setup = installer_dir / "KinematicsStudioSetup.exe"
+        iscc = self.tooling.get("iscc")
+        if not iscc:
+            reason = "Inno Setup compiler ISCC.exe is not installed or was not found."
+            log.write_text(reason + "\n", encoding="utf-8")
+            self.manifest["installer_build"] = {
+                "status": "UNSUPPORTED_ON_THIS_HOST",
+                "compiler": None,
+                "log": str(log.relative_to(self.root)),
+                "reason": reason,
+            }
+            self._unsupported("windows_installer", setup, reason)
+            self._record_artifact(log, "windows_installer_build_log", "log", "UNSUPPORTED_ON_THIS_HOST")
+            return
+
+        result = subprocess.run(
+            [iscc, str(self.root / "installer" / "KinematicsStudio.iss")],
+            cwd=str(self.root),
+            capture_output=True,
+            text=True,
         )
-        self._record_artifact(readme, "windows_installer_placeholder", "txt", "PASS")
+        output = (
+            f"Command: {iscc} {self.root / 'installer' / 'KinematicsStudio.iss'}\n"
+            f"ExitCode: {result.returncode}\n\n"
+            "[stdout]\n"
+            f"{result.stdout}\n\n"
+            "[stderr]\n"
+            f"{result.stderr}\n"
+        )
+        log.write_text(output, encoding="utf-8")
+        self._record_artifact(log, "windows_installer_build_log", "log", "PASS" if result.returncode == 0 else "FAILED")
+
+        if result.returncode == 0 and setup.exists():
+            self.manifest["installer_build"] = {
+                "status": "PASS",
+                "compiler": iscc,
+                "log": str(log.relative_to(self.root)),
+                "artifact": str(setup.relative_to(self.root)),
+            }
+            self._record_artifact(setup, "windows_installer", "exe", "PASS")
+            return
+
+        reason = "Inno Setup compilation failed." if result.returncode != 0 else "Inno Setup completed but KinematicsStudioSetup.exe was not found."
+        self.manifest["installer_build"] = {
+            "status": "FAILED",
+            "compiler": iscc,
+            "log": str(log.relative_to(self.root)),
+            "target": str(setup.relative_to(self.root)),
+            "reason": reason,
+            "exit_code": result.returncode,
+        }
+        self._record_artifact(setup, "windows_installer", "exe", "FAILED")
 
     def _build_macos_app(self):
         app_name = self.config["platforms"]["macos"]["app_bundle"]
@@ -315,6 +394,7 @@ class ReleaseBuilder:
         for path in self.documentation_dir.iterdir():
             if path.is_file():
                 self._record_artifact(path, f"documentation_{path.stem}", path.suffix.lstrip("."), "PASS")
+        self._record_artifact(self.documentation_dir, "documentation", "directory", "PASS")
 
     def _write_pdf(self, path, title, body):
         try:
@@ -353,8 +433,12 @@ class ReleaseBuilder:
 
     def _write_build_manifest(self):
         path = self.buildinfo_dir / "BuildManifest.json"
+        checksum = self.checksums_dir / "SHA256.txt"
+        if not self._has_artifact("sha256_checksums"):
+            self._record_artifact(checksum, "sha256_checksums", "txt", "PASS")
+        if not self._has_artifact("build_manifest"):
+            self._record_artifact(path, "build_manifest", "json", "PASS")
         path.write_text(json.dumps(self.manifest, indent=2), encoding="utf-8")
-        self._record_artifact(path, "build_manifest", "json", "PASS")
 
     def _write_checksums(self):
         lines = []
@@ -364,7 +448,6 @@ class ReleaseBuilder:
                 lines.append(f"{digest}  {path.relative_to(self.artifact_root).as_posix()}")
         checksum = self.checksums_dir / "SHA256.txt"
         checksum.write_text("\n".join(lines) + "\n", encoding="utf-8")
-        self._record_artifact(checksum, "sha256_checksums", "txt", "PASS")
 
     def _cleanup_internal_build_dirs(self):
         """Remove internal staging folders from the distributable artifact tree."""
@@ -386,9 +469,6 @@ class ReleaseBuilder:
             self.buildinfo_dir / "BuildManifest.json",
         ]
         missing = [str(path) for path in required if not path.exists()]
-        installer_dir = self.windows_dir / "Installer"
-        if installer_dir.exists() and not (installer_dir / "README.txt").exists():
-            missing.append(str(installer_dir / "README.txt"))
         if missing:
             raise RuntimeError(f"Release artifact validation failed: {missing}")
         if self.manifest["dependency_audit"].get("status") != "PASS":
@@ -410,14 +490,25 @@ class ReleaseBuilder:
         self._record_artifact(record_path, artifact_type, "unsupported.json", "UNSUPPORTED")
 
     def _record_artifact(self, path, artifact_type, format_name, status):
+        artifact_path = Path(path)
+        record = {
+            "type": artifact_type,
+            "format": format_name,
+            "path": str(artifact_path.relative_to(self.root) if artifact_path.is_absolute() else artifact_path),
+            "status": status,
+        }
+        if artifact_path.exists() and artifact_path.is_file():
+            record["size"] = artifact_path.stat().st_size
+            record["sha256"] = hashlib.sha256(artifact_path.read_bytes()).hexdigest()
         self.manifest["artifacts"].append(
-            {
-                "type": artifact_type,
-                "format": format_name,
-                "path": str(Path(path).relative_to(self.root) if Path(path).is_absolute() else path),
-                "status": status,
-            }
+            record
         )
+
+    def _has_artifact(self, artifact_type):
+        return any(artifact["type"] == artifact_type for artifact in self.manifest["artifacts"])
+
+    def _inno_define_value(self, value):
+        return str(value).replace('"', '""')
 
     def _copy_tree(self, src, dst, ignore=None):
         if dst.exists():
@@ -481,8 +572,22 @@ class ReleaseBuilder:
             raise RuntimeError(f"Bundled resource audit failed: {missing}")
 
     def _discover_tooling(self):
-        names = ["pyinstaller", "nuitka", "cxfreeze", "briefcase", "iscc", "hdiutil"]
-        return {name: shutil.which(name) for name in names}
+        names = ["pyinstaller", "nuitka", "cxfreeze", "briefcase", "hdiutil"]
+        tooling = {name: shutil.which(name) for name in names}
+        tooling["iscc"] = self._find_iscc()
+        return tooling
+
+    def _find_iscc(self):
+        found = shutil.which("iscc")
+        if found:
+            return found
+        for path in (
+            Path(r"C:\Program Files\Inno Setup 6\ISCC.exe"),
+            Path(r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe"),
+        ):
+            if path.exists():
+                return str(path)
+        return None
 
     def _git_commit(self):
         result = subprocess.run(

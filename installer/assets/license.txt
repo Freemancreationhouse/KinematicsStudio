@@ -1,0 +1,6 @@
+Kinematics Studio
+
+Copyright Freeman Creations House.
+
+This license text is a production-safe placeholder for the Windows installer.
+Replace this file with the final Kinematics Studio license before public distribution.
