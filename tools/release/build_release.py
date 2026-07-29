@@ -63,8 +63,7 @@ class ReleaseBuilder:
         self._write_version_manifest()
         self._stage_portable_application()
         self._build_windows_portable_zip()
-        self._build_windows_setup()
-        self._build_windows_msi()
+        self._build_windows_installer_placeholder()
         self._build_macos_app()
         self._build_macos_dmg()
         self._build_documentation()
@@ -103,8 +102,6 @@ class ReleaseBuilder:
 
         self._bundle_python_runtime(app_stage)
         self._write_launcher_scripts(app_stage)
-        self._build_windows_launcher(app_stage)
-        self._write_install_script(app_stage)
         self._audit_dependencies(app_stage)
         self._audit_resources(app_stage)
 
@@ -179,9 +176,6 @@ class ReleaseBuilder:
                 ".coverage",
                 "coverage",
                 "htmlcov",
-                "*.compile.ps1",
-                "*.compile.log",
-                "*.cs",
             ]
         )
 
@@ -240,152 +234,25 @@ class ReleaseBuilder:
             encoding="utf-8",
         )
 
-    def _write_install_script(self, app_stage):
-        installer = app_stage / "install.bat"
-        installer.write_text(
-            "@echo off\n"
-            "setlocal\n"
-            "set TARGET=%LocalAppData%\\KinematicsStudio\\KinematicsStudioV2\n"
-            "mkdir \"%TARGET%\" 2>nul\n"
-            "xcopy /E /I /Y \"%~dp0*\" \"%TARGET%\" >nul\n"
-            "powershell -NoProfile -ExecutionPolicy Bypass -Command "
-            "\"$s=(New-Object -COM WScript.Shell).CreateShortcut([Environment]::GetFolderPath('Desktop')+'\\Kinematics Studio V2.lnk');"
-            "$s.TargetPath='%TARGET%\\KinematicsStudio.exe';$s.WorkingDirectory='%TARGET%';$s.Save();"
-            "$m=[Environment]::GetFolderPath('StartMenu')+'\\Programs\\Kinematics Studio';New-Item -ItemType Directory -Force -Path $m|Out-Null;"
-            "$s=(New-Object -COM WScript.Shell).CreateShortcut($m+'\\Kinematics Studio V2.lnk');"
-            "$s.TargetPath='%TARGET%\\KinematicsStudio.exe';$s.WorkingDirectory='%TARGET%';$s.Save();"
-            "$u=(New-Object -COM WScript.Shell).CreateShortcut($m+'\\Uninstall Kinematics Studio V2.lnk');"
-            "$u.TargetPath='%TARGET%\\uninstall.bat';$u.WorkingDirectory='%TARGET%';$u.Save()\"\n"
-            "echo Kinematics Studio V2 installed to %TARGET%\n",
-            encoding="utf-8",
-        )
-        uninstaller = app_stage / "uninstall.bat"
-        uninstaller.write_text(
-            "@echo off\n"
-            "setlocal\n"
-            "cd /d %~dp0\\..\n"
-            "rmdir /S /Q KinematicsStudioV2\n"
-            "echo Kinematics Studio V2 removed.\n",
-            encoding="utf-8",
-        )
-
-    def _build_windows_launcher(self, app_stage):
-        exe = app_stage / "KinematicsStudio.exe"
-        source = r'''
-using System;
-using System.Diagnostics;
-using System.IO;
-
-public static class KinematicsStudioLauncher {
-    public static int Main(string[] args) {
-        string root = AppDomain.CurrentDomain.BaseDirectory;
-        string python = Path.Combine(root, "Runtime", "Python", "python.exe");
-        string script = Path.Combine(root, "main_v2.py");
-        string site = Path.Combine(root, "Runtime", "site-packages");
-        string plugins = Path.Combine(site, "PySide6", "plugins", "platforms");
-        if (!File.Exists(python) || !File.Exists(script) || !Directory.Exists(site)) {
-            return 2;
-        }
-        if (args.Length > 0 && args[0] == "--self-test") {
-            return Directory.Exists(plugins) ? 0 : 3;
-        }
-        ProcessStartInfo info = new ProcessStartInfo();
-        info.FileName = python;
-        info.Arguments = "\"" + script + "\"";
-        info.WorkingDirectory = root;
-        info.UseShellExecute = false;
-        info.EnvironmentVariables["PYTHONHOME"] = Path.Combine(root, "Runtime", "Python");
-        info.EnvironmentVariables["PYTHONPATH"] = site + ";" + root;
-        info.EnvironmentVariables["QT_QPA_PLATFORM_PLUGIN_PATH"] = plugins;
-        Process.Start(info);
-        return 0;
-    }
-}
-'''
-        self._compile_csharp(source, exe, [])
-        if not exe.exists() or exe.stat().st_size <= 0:
-            raise RuntimeError("Portable launcher executable was not generated")
-        self.manifest["optimization"]["removed"].append(
-            {
-                "path": "KinematicsStudio.cs / KinematicsStudio.compile.ps1",
-                "reason": "Launcher compilation sources are build leftovers and are not required at runtime.",
-            }
-        )
-
     def _build_windows_portable_zip(self):
         portable = self.windows_dir / self.config["platforms"]["windows"]["portable_zip"]
         self._zip_directory(self.staging_dir / "KinematicsStudio", portable)
         self._record_artifact(portable, "windows_portable_zip", "zip", "PASS")
 
-    def _build_windows_setup(self):
-        setup = self.windows_dir / self.config["platforms"]["windows"]["setup"]
-        source = r'''
-using System;
-using System.IO;
-
-public static class KinematicsStudioSetup {
-    public static int Main(string[] args) {
-        string setupDir = AppDomain.CurrentDomain.BaseDirectory;
-        try {
-            string zip = Path.Combine(setupDir, "Portable.zip");
-            if (!File.Exists(zip)) return 2;
-            if (args.Length > 0 && args[0] == "--self-test") return 0;
-            string root = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "KinematicsStudio", "KinematicsStudioV2");
-            if (Directory.Exists(root)) Directory.Delete(root, true);
-            Directory.CreateDirectory(root);
-            int extractExit = Run("powershell.exe", "-NoProfile -ExecutionPolicy Bypass -Command \"Expand-Archive -LiteralPath '" + EscapePowerShell(zip) + "' -DestinationPath '" + EscapePowerShell(root) + "' -Force\"");
-            if (extractExit != 0) return 6;
-            string appRoot = Path.Combine(root, "KinematicsStudio");
-            string exe = Path.Combine(appRoot, "KinematicsStudio.exe");
-            string uninstall = Path.Combine(appRoot, "uninstall.bat");
-            File.WriteAllText(uninstall, "@echo off\r\ncd /d \"" + Path.GetDirectoryName(root) + "\"\r\nrmdir /S /Q \"" + root + "\"\r\necho Kinematics Studio V2 removed.\r\n");
-            string menu = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.StartMenu), "Programs", "Kinematics Studio");
-            Directory.CreateDirectory(menu);
-            string desktopShortcut = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory), "Kinematics Studio V2.lnk");
-            string startShortcut = Path.Combine(menu, "Kinematics Studio V2.lnk");
-            string uninstallShortcut = Path.Combine(menu, "Uninstall Kinematics Studio V2.lnk");
-            string script = Path.Combine(appRoot, "CreateShortcuts.ps1");
-            File.WriteAllText(script,
-                "$ErrorActionPreference='Stop'\r\n" +
-                "$w=New-Object -ComObject WScript.Shell\r\n" +
-                "$s=$w.CreateShortcut('" + EscapePowerShell(desktopShortcut) + "');$s.TargetPath='" + EscapePowerShell(exe) + "';$s.WorkingDirectory='" + EscapePowerShell(appRoot) + "';$s.Save()\r\n" +
-                "$s=$w.CreateShortcut('" + EscapePowerShell(startShortcut) + "');$s.TargetPath='" + EscapePowerShell(exe) + "';$s.WorkingDirectory='" + EscapePowerShell(appRoot) + "';$s.Save()\r\n" +
-                "$s=$w.CreateShortcut('" + EscapePowerShell(uninstallShortcut) + "');$s.TargetPath='" + EscapePowerShell(uninstall) + "';$s.WorkingDirectory='" + EscapePowerShell(appRoot) + "';$s.Save()\r\n");
-            int shortcutExit = Run("powershell.exe", "-NoProfile -ExecutionPolicy Bypass -File \"" + script + "\"");
-            bool ok = File.Exists(exe) && File.Exists(desktopShortcut) && File.Exists(startShortcut) && File.Exists(uninstallShortcut);
-            return ok && shortcutExit == 0 ? 0 : 5;
-        } catch (Exception ex) {
-            try { File.WriteAllText(Path.Combine(setupDir, "SetupError.log"), ex.ToString()); } catch {}
-            return 99;
-        }
-    }
-    private static int Run(string file, string arguments) {
-        System.Diagnostics.ProcessStartInfo info = new System.Diagnostics.ProcessStartInfo();
-        info.FileName = file;
-        info.Arguments = arguments;
-        info.UseShellExecute = false;
-        info.CreateNoWindow = true;
-        System.Diagnostics.Process process = System.Diagnostics.Process.Start(info);
-        process.WaitForExit();
-        return process.ExitCode;
-    }
-    private static string EscapePowerShell(string value) {
-        return value.Replace("'", "''");
-    }
-}
-'''
-        self._compile_csharp(source, setup, ["System.IO.Compression.FileSystem.dll"])
-        if setup.exists() and setup.stat().st_size > 0:
-            self._record_artifact(setup, "windows_setup_exe", "exe", "PASS")
-        else:
-            raise RuntimeError("Windows setup executable was not generated")
-
-    def _build_windows_msi(self):
-        msi = self.windows_dir / self.config["platforms"]["windows"]["msi"]
-        if self.tooling.get("candle") and self.tooling.get("light"):
-            self._unsupported("windows_msi", msi, "WiX invocation is configured but not implemented on this host")
-        else:
-            self._unsupported("windows_msi", msi, "WiX Toolset not available")
+    def _build_windows_installer_placeholder(self):
+        installer_dir = self.windows_dir / "Installer"
+        installer_dir.mkdir(parents=True, exist_ok=True)
+        readme = installer_dir / "README.txt"
+        readme.write_text(
+            "Kinematics Studio\n\n"
+            "Windows installer generation has been\n"
+            "migrated to the new Inno Setup release\n"
+            "pipeline.\n\n"
+            "Run installer/KinematicsStudio.iss\n"
+            "after the release build completes.\n",
+            encoding="utf-8",
+        )
+        self._record_artifact(readme, "windows_installer_placeholder", "txt", "PASS")
 
     def _build_macos_app(self):
         app_name = self.config["platforms"]["macos"]["app_bundle"]
@@ -441,7 +308,7 @@ public static class KinematicsStudioSetup {
         (self.documentation_dir / self.config["documentation"]["license"]).write_text(license_text, encoding="utf-8")
         for name, title, body in (
             ("release_notes", "Release Notes", "Release 3.0 RC1 release-engineering artifact set."),
-            ("installation_guide", "Installation Guide", "Install from Windows Setup.exe or Portable.zip; macOS bundle is prepared for signing/notarization."),
+            ("installation_guide", "Installation Guide", "Use Windows Portable.zip or generate the installer with installer/KinematicsStudio.iss; macOS bundle is prepared for signing/notarization."),
             ("user_guide", "User Guide", "Launch Kinematics Studio, use the landing page, create/open projects, and switch workspaces."),
         ):
             self._write_pdf(self.documentation_dir / self.config["documentation"][name], title, body)
@@ -502,7 +369,7 @@ public static class KinematicsStudioSetup {
     def _cleanup_internal_build_dirs(self):
         """Remove internal staging folders from the distributable artifact tree."""
 
-        for path in (self.staging_dir, self.windows_dir / "_setup_payload"):
+        for path in (self.staging_dir,):
             if path.exists():
                 shutil.rmtree(path)
 
@@ -518,8 +385,6 @@ public static class KinematicsStudioSetup {
             self.buildinfo_dir / "Version.json",
             self.buildinfo_dir / "BuildManifest.json",
         ]
-        if (self.windows_dir / "KinematicsStudio.exe").exists():
-            required.append(self.windows_dir / "KinematicsStudio.exe")
         missing = [str(path) for path in required if not path.exists()]
         if missing:
             raise RuntimeError(f"Release artifact validation failed: {missing}")
@@ -555,40 +420,6 @@ public static class KinematicsStudioSetup {
         if dst.exists():
             shutil.rmtree(dst)
         shutil.copytree(src, dst, ignore=ignore or self._ignore_patterns())
-
-    def _compile_csharp(self, source, output, references):
-        """Compile a small Windows launcher/setup executable without app changes."""
-
-        output = Path(output)
-        output.parent.mkdir(parents=True, exist_ok=True)
-        source_path = output.with_suffix(".cs")
-        script_path = output.with_suffix(".compile.ps1")
-        source_path.write_text(source, encoding="utf-8")
-        refs = "@(" + ",".join(f"'{item}'" for item in references) + ")"
-        script_path.write_text(
-            "$ErrorActionPreference = 'Stop'\n"
-            f"$refs = {refs}\n"
-            f"if ($refs.Count -gt 0) {{ Add-Type -Path '{source_path}' -ReferencedAssemblies $refs -OutputAssembly '{output}' -OutputType WindowsApplication }}\n"
-            f"else {{ Add-Type -Path '{source_path}' -OutputAssembly '{output}' -OutputType WindowsApplication }}\n",
-            encoding="utf-8",
-        )
-        powershell = self.tooling.get("powershell") or "powershell"
-        result = subprocess.run(
-            [powershell, "-NoProfile", "-ExecutionPolicy", "Bypass", "-File", str(script_path)],
-            cwd=str(self.root),
-            capture_output=True,
-            text=True,
-            timeout=120,
-        )
-        if result.returncode != 0:
-            log = output.with_suffix(".compile.log")
-            log.write_text(result.stdout + "\n" + result.stderr, encoding="utf-8")
-            raise RuntimeError(f"C# launcher compilation failed: {log}")
-        for build_file in (source_path, script_path):
-            try:
-                build_file.unlink()
-            except OSError:
-                pass
 
     def _zip_directory(self, src, dst):
         if dst.exists():
@@ -647,7 +478,7 @@ public static class KinematicsStudioSetup {
             raise RuntimeError(f"Bundled resource audit failed: {missing}")
 
     def _discover_tooling(self):
-        names = ["pyinstaller", "nuitka", "cxfreeze", "briefcase", "iexpress", "iscc", "makensis", "candle", "light", "hdiutil", "powershell"]
+        names = ["pyinstaller", "nuitka", "cxfreeze", "briefcase", "iscc", "hdiutil"]
         return {name: shutil.which(name) for name in names}
 
     def _git_commit(self):
