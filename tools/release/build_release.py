@@ -386,6 +386,9 @@ class ReleaseBuilder:
             self.buildinfo_dir / "BuildManifest.json",
         ]
         missing = [str(path) for path in required if not path.exists()]
+        installer_dir = self.windows_dir / "Installer"
+        if installer_dir.exists() and not (installer_dir / "README.txt").exists():
+            missing.append(str(installer_dir / "README.txt"))
         if missing:
             raise RuntimeError(f"Release artifact validation failed: {missing}")
         if self.manifest["dependency_audit"].get("status") != "PASS":
