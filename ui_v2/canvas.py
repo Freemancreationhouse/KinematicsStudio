@@ -2,14 +2,13 @@ from PySide6.QtCore import Qt, QPointF
 from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import QWidget
 
-from engine.cad import CADApplication
 from engine.geometry import Vector2, BoundingBox
 
 
 class Canvas(QWidget):
     """Interactive drawing viewport for the V2 CAD workspace."""
 
-    def __init__(self):
+    def __init__(self, app):
 
         super().__init__()
 
@@ -17,7 +16,7 @@ class Canvas(QWidget):
         self.setFocusPolicy(Qt.StrongFocus)
         self.setCursor(Qt.CrossCursor)
 
-        self.app = CADApplication()
+        self.app = app
 
         self.camera = self.app.camera
         self.property_panel = None
