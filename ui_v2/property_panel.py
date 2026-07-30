@@ -45,7 +45,7 @@ class PropertyPanel(QWidget):
 
         super().__init__()
 
-        self.workspace = None
+        self._workspace_provider = None
         self.on_change = None
         self.selected = []
         self._loading = False
@@ -97,9 +97,31 @@ class PropertyPanel(QWidget):
     def set_workspace(self, workspace, on_change=None):
         """Attach the workspace used for command-driven property edits."""
 
-        self.workspace = workspace
+        self._workspace_provider = workspace
         self.on_change = on_change
         self._populate_layers()
+
+    @property
+    def workspace(self):
+        """Return the current active workspace from the attached provider."""
+
+        provider = self._workspace_provider
+        if provider is None:
+            return None
+
+        current_workspace = getattr(provider, "current_workspace", None)
+        if callable(current_workspace):
+            return current_workspace()
+
+        current = getattr(provider, "current", None)
+        if current is not None:
+            return current
+
+        workspace = getattr(provider, "workspace", None)
+        if workspace is not None:
+            return workspace
+
+        return provider
 
     # -----------------------------------------
 

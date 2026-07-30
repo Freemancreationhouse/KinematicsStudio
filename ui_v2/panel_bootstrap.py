@@ -23,8 +23,15 @@ class PanelBootstrap:
     """Registers production workspace panels with a WorkspacePanelManager."""
 
     @staticmethod
-    def register_all(*, panel_manager: Any, app: Any) -> None:
+    def register_all(
+        *,
+        panel_manager: Any,
+        app: Any,
+        workspace_provider: Any | None = None,
+    ) -> None:
         """Register every production panel as a lazy on-demand factory."""
+
+        workspace = workspace_provider or app
 
         panel_manager.register_panel(
             panel_id="explorer",
@@ -43,91 +50,91 @@ class PanelBootstrap:
         panel_manager.register_panel(
             panel_id="layer_manager",
             title="Layer Manager",
-            factory=lambda: LayerManagerPanel(app.workspace),
+            factory=lambda: LayerManagerPanel(workspace),
             singleton=True,
             category="CAD",
         )
         panel_manager.register_panel(
             panel_id="dimension_manager",
             title="Dimension Manager",
-            factory=lambda: DimensionManagerPanel(app.workspace),
+            factory=lambda: DimensionManagerPanel(workspace),
             singleton=True,
             category="CAD",
         )
         panel_manager.register_panel(
             panel_id="pattern_manager",
             title="Pattern Manager",
-            factory=lambda: PatternManagerPanel(app.workspace),
+            factory=lambda: PatternManagerPanel(workspace),
             singleton=True,
             category="CAD",
         )
         panel_manager.register_panel(
             panel_id="block_manager",
             title="Block Manager",
-            factory=lambda: BlockManagerPanel(app.workspace),
+            factory=lambda: BlockManagerPanel(workspace),
             singleton=True,
             category="CAD",
         )
         panel_manager.register_panel(
             panel_id="group_manager",
             title="Group Manager",
-            factory=lambda: GroupManagerPanel(app.workspace),
+            factory=lambda: GroupManagerPanel(workspace),
             singleton=True,
             category="CAD",
         )
         panel_manager.register_panel(
             panel_id="selection_sets",
             title="Selection Sets",
-            factory=lambda: SelectionSetManagerPanel(app.workspace),
+            factory=lambda: SelectionSetManagerPanel(workspace),
             singleton=True,
             category="Selection",
         )
         panel_manager.register_panel(
             panel_id="constraint_manager",
             title="Constraint Manager",
-            factory=lambda: ConstraintManagerPanel(app.workspace),
+            factory=lambda: ConstraintManagerPanel(workspace),
             singleton=True,
             category="Constraints",
         )
         panel_manager.register_panel(
             panel_id="reference_browser",
             title="Reference Browser",
-            factory=lambda: ReferenceBrowserPanel(app.workspace),
+            factory=lambda: ReferenceBrowserPanel(workspace),
             singleton=True,
             category="References",
         )
         panel_manager.register_panel(
             panel_id="reference_layers",
             title="Reference Layers",
-            factory=lambda: ReferenceLayerPanel(app.workspace),
+            factory=lambda: ReferenceLayerPanel(workspace),
             singleton=True,
             category="References",
         )
         panel_manager.register_panel(
             panel_id="coordination",
             title="Coordination",
-            factory=lambda: CoordinationPanel(app.workspace),
+            factory=lambda: CoordinationPanel(workspace),
             singleton=True,
             category="Coordination",
         )
         panel_manager.register_panel(
             panel_id="clash_manager",
             title="Clash Manager",
-            factory=lambda: ClashManagerPanel(app.workspace),
+            factory=lambda: ClashManagerPanel(workspace),
             singleton=True,
             category="BIM Coordination",
         )
         panel_manager.register_panel(
             panel_id="clash_dashboard",
             title="Clash Dashboard",
-            factory=lambda: ClashDashboardPanel(app.workspace),
+            factory=lambda: ClashDashboardPanel(workspace),
             singleton=True,
             category="BIM Coordination",
         )
         panel_manager.register_panel(
             panel_id="bcf_topic_browser",
             title="BCF Topic Browser",
-            factory=lambda: BCFTopicBrowserPanel(app.workspace),
+            factory=lambda: BCFTopicBrowserPanel(workspace),
             singleton=True,
             category="BIM Coordination",
         )

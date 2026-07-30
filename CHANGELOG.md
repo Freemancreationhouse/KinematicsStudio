@@ -16,6 +16,8 @@ All notable changes to this project are documented here.
 
 - CADApplication ownership moved from Canvas to MainWindow.
 - Runtime dependency injection introduced for CADApplication.
+- Replaced fixed Workspace references with runtime Workspace provider.
+- UI components now resolve the active Workspace dynamically.
 
 ## Improved
 

@@ -26,8 +26,9 @@ class WorkspaceConnectionController(QObject):
         command_palette: Any,
         panel_manager: Any,
         tool_manager: Any,
-        command_manager: Any,
-        workspace: Any,
+        command_manager: Any | None = None,
+        workspace: Any | None = None,
+        workspace_provider: Any | None = None,
         app: Any | None = None,
         parent: QObject | None = None,
     ) -> None:
@@ -45,8 +46,8 @@ class WorkspaceConnectionController(QObject):
         self.panel_manager = panel_manager
         self.app = app
         self.tool_manager = tool_manager
-        self.command_manager = command_manager
-        self.workspace = workspace
+        self.workspace_provider = workspace_provider or app or workspace
+        self._fallback_command_manager = command_manager
 
         self._qt_connections: list[tuple[Any, Callable[..., Any]]] = []
         self._previous_callbacks: dict[tuple[int, str], tuple[Any, str, Any]] = {}
@@ -66,6 +67,7 @@ class WorkspaceConnectionController(QObject):
         self._connect_command_manager()
         self._connect_tool_manager()
         self._connect_workspace()
+        self._connect_project_lifecycle()
         self._connect_panel_manager()
         self._connected = True
         self.refresh_all()
@@ -200,7 +202,7 @@ class WorkspaceConnectionController(QObject):
         self._call_if_available(
             self.property_panel,
             "set_workspace",
-            self.workspace,
+            self.workspace_provider,
             self._handle_property_changed,
         )
 
@@ -234,6 +236,21 @@ class WorkspaceConnectionController(QObject):
             getattr(self.panel_manager, "panelClosed", None),
             self._handle_panel_closed,
         )
+
+    def _connect_project_lifecycle(self) -> None:
+        """Refresh routed UI state after project lifecycle operations."""
+
+        for method_name in (
+            "new_project",
+            "open_project",
+            "close_project",
+            "recover_project",
+        ):
+            self._chain_method(
+                self.app,
+                method_name,
+                self._handle_project_loaded,
+            )
 
     def _update_property_panel(self) -> None:
         """Push current selection state into the property panel."""
@@ -327,10 +344,12 @@ class WorkspaceConnectionController(QObject):
     def _handle_project_loaded(self, *args: Any) -> None:
         """Refresh routed shell state after project loading."""
 
+        self._connect_command_manager()
+        self._connect_workspace()
         self._call_if_available(
             self.property_panel,
             "set_workspace",
-            self.workspace,
+            self.workspace_provider,
             self._handle_property_changed,
         )
         self.refresh_all()
@@ -420,6 +439,38 @@ class WorkspaceConnectionController(QObject):
             return None
         return getattr(selection, "selected", selection)
 
+    @property
+    def workspace(self) -> Any:
+        """Return the current active workspace without storing it."""
+
+        provider = self.workspace_provider
+        if provider is None:
+            return None
+
+        current_workspace = getattr(provider, "current_workspace", None)
+        if callable(current_workspace):
+            return current_workspace()
+
+        current = getattr(provider, "current", None)
+        if current is not None:
+            return current
+
+        workspace = getattr(provider, "workspace", None)
+        if workspace is not None:
+            return workspace
+
+        return provider
+
+    @property
+    def command_manager(self) -> Any:
+        """Return the command manager for the current active workspace."""
+
+        workspace = self.workspace
+        manager = getattr(workspace, "command_manager", None)
+        if manager is not None:
+            return manager
+        return self._fallback_command_manager
+
     def _connect_signal(self, signal: Any, slot: Callable[..., Any]) -> None:
         """Connect a Qt signal and track it for safe disconnection."""
 
@@ -452,6 +503,34 @@ class WorkspaceConnectionController(QObject):
             callback(*args, **kwargs)
 
         setattr(obj, attr_name, chained_callback)
+
+    def _chain_method(
+        self,
+        obj: Any,
+        method_name: str,
+        after_call: Callable[..., Any],
+    ) -> None:
+        """Wrap an object method and run a callback after successful execution."""
+
+        if obj is None or not hasattr(obj, method_name):
+            return
+
+        key = (id(obj), method_name)
+        if key in self._previous_callbacks:
+            return
+
+        previous = getattr(obj, method_name)
+        if not callable(previous):
+            return
+
+        self._previous_callbacks[key] = (obj, method_name, previous)
+
+        def chained_method(*args: Any, **kwargs: Any) -> Any:
+            result = previous(*args, **kwargs)
+            after_call(result)
+            return result
+
+        setattr(obj, method_name, chained_method)
 
     def _call_if_available(self, obj: Any, method_name: str, *args: Any) -> bool:
         """Call a named method when present and callable."""

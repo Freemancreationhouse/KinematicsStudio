@@ -20,6 +20,8 @@ Application State
 
 - [ ] Runtime Ownership Audit
 - [x] Single CADApplication
+- [x] Workspace Provider
+- [x] Shared Active Workspace
 - [ ] Single CADEngine
 - [ ] Single WorkspaceManager
 - [ ] Single Workspace

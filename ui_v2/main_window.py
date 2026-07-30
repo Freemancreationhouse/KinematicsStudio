@@ -5,6 +5,7 @@ from PySide6.QtGui import QAction, QCloseEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication, QDialog, QMainWindow, QVBoxLayout
 
 from engine.cad import CADApplication
+from engine.services.workspace_provider import WorkspaceProvider
 from engine.tools import (
     AlignedDimensionTool,
     AngularDimensionTool,
@@ -95,6 +96,7 @@ class MainWindow(QMainWindow):
         PanelBootstrap.register_all(
             panel_manager=self.panel_manager,
             app=self.cad_application,
+            workspace_provider=self.workspace_provider,
         )
         self._create_command_palette()
         self._create_landing_platform()
@@ -108,6 +110,7 @@ class MainWindow(QMainWindow):
         """Create the existing 2D and 3D viewport widgets."""
 
         self.cad_application = CADApplication()
+        self.workspace_provider = WorkspaceProvider(self.cad_application)
         self.canvas = Canvas(self.cad_application)
         self.viewport3d = Viewport3D(self.cad_application)
 
@@ -227,9 +230,8 @@ class MainWindow(QMainWindow):
             command_palette=self.command_palette,
             panel_manager=self.panel_manager,
             app=self.cad_application,
+            workspace_provider=self.workspace_provider,
             tool_manager=self.cad_application.tool_manager,
-            command_manager=self.cad_application.workspace.command_manager,
-            workspace=self.cad_application.workspace,
             parent=self,
         )
 
