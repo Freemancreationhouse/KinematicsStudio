@@ -18,6 +18,8 @@ All notable changes to this project are documented here.
 - Runtime dependency injection introduced for CADApplication.
 - Replaced fixed Workspace references with runtime Workspace provider.
 - UI components now resolve the active Workspace dynamically.
+- PropertyPanel no longer executes commands directly.
+- Command execution centralized through application service/controller.
 
 ## Improved
 

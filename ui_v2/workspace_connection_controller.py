@@ -26,6 +26,7 @@ class WorkspaceConnectionController(QObject):
         command_palette: Any,
         panel_manager: Any,
         tool_manager: Any,
+        property_command_service: Any | None = None,
         command_manager: Any | None = None,
         workspace: Any | None = None,
         workspace_provider: Any | None = None,
@@ -44,6 +45,7 @@ class WorkspaceConnectionController(QObject):
         self.status_bar = status_bar
         self.command_palette = command_palette
         self.panel_manager = panel_manager
+        self.property_command_service = property_command_service
         self.app = app
         self.tool_manager = tool_manager
         self.workspace_provider = workspace_provider or app or workspace
@@ -52,6 +54,7 @@ class WorkspaceConnectionController(QObject):
         self._qt_connections: list[tuple[Any, Callable[..., Any]]] = []
         self._previous_callbacks: dict[tuple[int, str], tuple[Any, str, Any]] = {}
         self._connected = False
+        self._property_edit_connected = False
 
     def connect_all(self) -> None:
         """Connect all injected objects through this controller."""
@@ -87,6 +90,7 @@ class WorkspaceConnectionController(QObject):
                 setattr(obj, attr_name, previous_value)
         self._previous_callbacks.clear()
         self._connected = False
+        self._property_edit_connected = False
 
     def refresh_all(self) -> None:
         """Refresh property, status, and on-demand panels."""
@@ -205,6 +209,12 @@ class WorkspaceConnectionController(QObject):
             self.workspace_provider,
             self._handle_property_changed,
         )
+        if not self._property_edit_connected:
+            self._connect_signal(
+                getattr(self.property_panel, "editRequested", None),
+                self._handle_property_edit_requested,
+            )
+            self._property_edit_connected = True
 
         selection = getattr(self.workspace, "selection", None)
         self._chain_callback(
@@ -340,6 +350,14 @@ class WorkspaceConnectionController(QObject):
 
         self._refresh_panels()
         self._update_status_bar()
+
+    def _handle_property_edit_requested(self, request: Any) -> None:
+        """Execute a property-panel edit through the application service."""
+
+        service = self.property_command_service
+        if service is None:
+            return
+        self._call_if_available(service, "execute", request)
 
     def _handle_project_loaded(self, *args: Any) -> None:
         """Refresh routed shell state after project loading."""

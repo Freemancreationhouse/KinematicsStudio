@@ -1,20 +1,12 @@
 import math
 
+from PySide6.QtCore import Signal
 from PySide6.QtWidgets import (
     QCheckBox,
     QComboBox,
     QFormLayout,
     QLineEdit,
     QWidget,
-)
-
-from engine.commands import (
-    RotateEntity3DCommand,
-    ScaleEntity3DCommand,
-    TranslateEntity3DCommand,
-    UpdateConstraintCommand,
-    UpdateEntityCommand,
-    UpdateLayerCommand,
 )
 from engine.geometry import Vector2, Vector3
 from engine.geometry.curves import clone_points
@@ -39,7 +31,9 @@ class LayerComboBox(QComboBox):
 
 
 class PropertyPanel(QWidget):
-    """Displays and edits selected entity properties through commands."""
+    """Displays selected entity properties and emits edit requests."""
+
+    editRequested = Signal(object)
 
     def __init__(self):
 
@@ -2760,7 +2754,7 @@ class PropertyPanel(QWidget):
         if layer is None or layer is self._entity_layer(entity):
             return
 
-        self._execute_entity_update(entity, {"layer_id": layer.id})
+        self._request_entity_update(entity, {"layer_id": layer.id})
 
     # -----------------------------------------
 
@@ -2770,7 +2764,7 @@ class PropertyPanel(QWidget):
             return
 
         if getattr(self.selected[0], "is_constraint", False):
-            self._execute_constraint_update(
+            self._request_constraint_update(
                 self.selected[0],
                 {
                     "enabled": bool(state),
@@ -2779,7 +2773,7 @@ class PropertyPanel(QWidget):
             )
             return
 
-        self._execute_entity_update(self.selected[0], {"visible": bool(state)})
+        self._request_entity_update(self.selected[0], {"visible": bool(state)})
 
     # -----------------------------------------
 
@@ -2789,7 +2783,7 @@ class PropertyPanel(QWidget):
             return
 
         if getattr(self.selected[0], "is_constraint", False):
-            self._execute_constraint_update(
+            self._request_constraint_update(
                 self.selected[0],
                 {
                     "suppressed": bool(state),
@@ -2798,7 +2792,7 @@ class PropertyPanel(QWidget):
             )
             return
 
-        self._execute_entity_update(self.selected[0], {"locked": bool(state)})
+        self._request_entity_update(self.selected[0], {"locked": bool(state)})
 
     # -----------------------------------------
 
@@ -2811,18 +2805,18 @@ class PropertyPanel(QWidget):
         state = self._edited_geometry_state(entity, field)
 
         if state:
-            command = state.pop("__command__", None)
+            request = state.pop("__request__", None)
 
-            if command is not None:
-                self.workspace.command_manager.execute(command)
+            if request is not None:
+                self._request_edit(request)
                 self._changed()
                 return
 
             if getattr(entity, "is_constraint", False):
-                self._execute_constraint_update(entity, state)
+                self._request_constraint_update(entity, state)
                 return
 
-            self._execute_entity_update(entity, state)
+            self._request_entity_update(entity, state)
 
     # -----------------------------------------
 
@@ -2855,8 +2849,12 @@ class PropertyPanel(QWidget):
         if after == before:
             return
 
-        command = UpdateLayerCommand(self.workspace, layer, before, after)
-        self.workspace.command_manager.execute(command)
+        self._request_edit({
+            "type": "layer_update",
+            "layer": layer,
+            "before": before,
+            "after": after,
+        })
         self._changed()
 
     # -----------------------------------------
@@ -2949,11 +2947,11 @@ class PropertyPanel(QWidget):
                 target.z = self._float(self.content, target.z)
 
             return {
-                "__command__": TranslateEntity3DCommand(
-                    self.workspace,
-                    [entity],
-                    target - position,
-                )
+                "__request__": {
+                    "type": "translate_3d",
+                    "entities": [entity],
+                    "delta": target - position,
+                }
             }
 
         if field in ("length", "angle", "radius"):
@@ -2967,12 +2965,11 @@ class PropertyPanel(QWidget):
                 delta.z = self._float(self.radius, rotation.z) - rotation.z
 
             return {
-                "__command__": RotateEntity3DCommand(
-                    self.workspace,
-                    [entity],
-                    delta,
-                    pivot=self.workspace.transform_gizmo.pivot_for_selection([entity]),
-                )
+                "__request__": {
+                    "type": "rotate_3d",
+                    "entities": [entity],
+                    "rotation": delta,
+                }
             }
 
         if field in ("width", "height", "diameter"):
@@ -2992,39 +2989,20 @@ class PropertyPanel(QWidget):
             )
 
             return {
-                "__command__": ScaleEntity3DCommand(
-                    self.workspace,
-                    [entity],
-                    factor,
-                    pivot=self.workspace.transform_gizmo.pivot_for_selection([entity]),
-                )
+                "__request__": {
+                    "type": "scale_3d",
+                    "entities": [entity],
+                    "scale": factor,
+                }
             }
 
         if field == "alignment" and self.workspace is not None:
-            gizmo = getattr(self.workspace, "transform_gizmo", None)
-            coordinate_manager = getattr(self.workspace, "coordinate_system_manager", None)
-            plane_manager = getattr(self.workspace, "construction_plane_manager", None)
-
-            if gizmo is not None:
-                tokens = self.alignment.text().strip().lower().split()
-
-                for token in tokens:
-                    if token in ("world", "local"):
-                        gizmo.set_coordinate_mode(token)
-                    elif token in ("center", "origin", "individual", "bounding_box_center"):
-                        gizmo.set_pivot_mode(token)
-
-            if coordinate_manager is not None:
-                for token in self.alignment.text().strip().split():
-                    if token in coordinate_manager.names():
-                        coordinate_manager.activate(token)
-
-            if plane_manager is not None:
-                for token in self.alignment.text().strip().split():
-                    if token in plane_manager.names():
-                        plane_manager.set_active(token)
-
-            return {}
+            return {
+                "__request__": {
+                    "type": "workspace_3d_context",
+                    "text": self.alignment.text(),
+                }
+            }
 
         if hasattr(entity, "position") and field in ("x", "y"):
             position = entity.position.copy()
@@ -3565,7 +3543,7 @@ class PropertyPanel(QWidget):
 
     # -----------------------------------------
 
-    def _execute_entity_update(self, entity, after_values):
+    def _request_entity_update(self, entity, after_values):
 
         before = self._entity_state(entity, after_values)
         after = dict(before)
@@ -3575,18 +3553,17 @@ class PropertyPanel(QWidget):
             self.show_selection(self.selected)
             return
 
-        command = UpdateEntityCommand(
-            entity,
-            workspace=self.workspace,
-            before=before,
-            after=after,
-        )
-        self.workspace.command_manager.execute(command)
+        self._request_edit({
+            "type": "entity_update",
+            "entity": entity,
+            "before": before,
+            "after": after,
+        })
         self._changed()
 
     # -----------------------------------------
 
-    def _execute_constraint_update(self, constraint, after_values):
+    def _request_constraint_update(self, constraint, after_values):
 
         before = self._entity_state(constraint, after_values)
         after = dict(before)
@@ -3596,9 +3573,20 @@ class PropertyPanel(QWidget):
             self.show_selection(self.selected)
             return
 
-        command = UpdateConstraintCommand(self.workspace, constraint, before, after)
-        self.workspace.command_manager.execute(command)
+        self._request_edit({
+            "type": "constraint_update",
+            "constraint": constraint,
+            "before": before,
+            "after": after,
+        })
         self._changed()
+
+    # -----------------------------------------
+
+    def _request_edit(self, request):
+        """Emit a property edit request for application-level execution."""
+
+        self.editRequested.emit(request)
 
     # -----------------------------------------
 

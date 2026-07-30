@@ -5,6 +5,7 @@ from PySide6.QtGui import QAction, QCloseEvent, QKeySequence, QShortcut
 from PySide6.QtWidgets import QApplication, QDialog, QMainWindow, QVBoxLayout
 
 from engine.cad import CADApplication
+from engine.services.property_command_service import PropertyCommandService
 from engine.services.workspace_provider import WorkspaceProvider
 from engine.tools import (
     AlignedDimensionTool,
@@ -111,6 +112,9 @@ class MainWindow(QMainWindow):
 
         self.cad_application = CADApplication()
         self.workspace_provider = WorkspaceProvider(self.cad_application)
+        self.property_command_service = PropertyCommandService(
+            self.workspace_provider
+        )
         self.canvas = Canvas(self.cad_application)
         self.viewport3d = Viewport3D(self.cad_application)
 
@@ -229,6 +233,7 @@ class MainWindow(QMainWindow):
             status_bar=self.studio_status_bar,
             command_palette=self.command_palette,
             panel_manager=self.panel_manager,
+            property_command_service=self.property_command_service,
             app=self.cad_application,
             workspace_provider=self.workspace_provider,
             tool_manager=self.cad_application.tool_manager,

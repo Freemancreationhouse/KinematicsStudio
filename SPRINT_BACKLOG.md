@@ -40,6 +40,7 @@ UI Integration
 - [ ] Explorer
 - [ ] Layer Panel
 - [ ] Property Panel
+- [x] Property Panel Routing
 - [ ] Status Bar
 - [ ] Command Palette
 - [ ] Command Bar

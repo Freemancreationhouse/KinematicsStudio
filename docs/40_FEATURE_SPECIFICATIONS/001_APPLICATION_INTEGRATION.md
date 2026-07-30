@@ -175,14 +175,50 @@ Architecture Decisions:
 
 Remaining Tasks:
 
-- Task 1.4 â€” Property Panel Routing
 - Task 1.5 â€” Command Routing Cleanup
+
+---
+
+## Task 1.4
+
+Property Panel Routing
+
+Status:
+
+COMPLETE
+
+Summary:
+
+- PropertyPanel now emits edit requests instead of creating or executing commands.
+- PropertyCommandService centralizes entity, layer, constraint and 3D transform command execution.
+- WorkspaceConnectionController routes PropertyPanel edit requests to the application service layer.
+
+Files Modified:
+
+- engine/services/property_command_service.py
+- ui_v2/property_panel.py
+- ui_v2/workspace_connection_controller.py
+- ui_v2/main_window.py
+- docs/40_FEATURE_SPECIFICATIONS/001_APPLICATION_INTEGRATION.md
+- PROJECT_STATUS.md
+- SPRINT_BACKLOG.md
+- CHANGELOG.md
+
+Architecture Decisions:
+
+- PropertyPanel remains a display and edit-request UI component only.
+- Command construction and execution are centralized outside the UI.
+- WorkspaceConnectionController is the routing boundary between UI edit requests and application services.
+
+Remaining Tasks:
+
+- Task 1.5 - Command Routing Cleanup
+- Task 1.6 - Workspace Lifecycle
 
 ---
 
 ## Pending Tasks
 
-- Task 1.4 — Property Panel Routing
 - Task 1.5 — Command Routing Cleanup
 - Task 1.6 — Workspace Lifecycle
 - Task 1.7 — UI Synchronization

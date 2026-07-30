@@ -85,9 +85,9 @@ Sprint 1
 
 # Current Task
 
-Task 1.4
+Task 1.5
 
-Property Panel Routing
+Command Routing Cleanup
 
 Status:
 
@@ -116,3 +116,5 @@ Architecture documents remain LOCKED.
 Task 1.2 Complete: CADApplication ownership moved from Canvas to MainWindow.
 
 Task 1.3 Complete: Fixed Workspace references replaced with runtime Workspace provider.
+
+Task 1.4 Complete: PropertyPanel command execution moved to PropertyCommandService.
