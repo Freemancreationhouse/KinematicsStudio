@@ -65,6 +65,7 @@ class WorkspaceConnectionController(QObject):
         tool_manager: Any,
         project_service: Any | None = None,
         property_command_service: Any | None = None,
+        selection_service: Any | None = None,
         command_manager: Any | None = None,
         workspace: Any | None = None,
         workspace_provider: Any | None = None,
@@ -85,6 +86,7 @@ class WorkspaceConnectionController(QObject):
         self.panel_manager = panel_manager
         self.project_service = project_service
         self.property_command_service = property_command_service
+        self.selection_service = selection_service
         self.app = app
         self.tool_manager = tool_manager
         self.workspace_provider = workspace_provider or app or workspace
@@ -298,7 +300,12 @@ class WorkspaceConnectionController(QObject):
             )
             self._property_edit_connected = True
 
-        selection = getattr(self.workspace, "selection", None)
+        service_selection = getattr(self.selection_service, "selection", None)
+        selection = (
+            service_selection()
+            if callable(service_selection)
+            else getattr(self.workspace, "selection", None)
+        )
         self._chain_callback(
             selection,
             "on_change",
@@ -1138,6 +1145,10 @@ class WorkspaceConnectionController(QObject):
 
     def _current_selection(self) -> Any:
         """Return the current workspace selection payload."""
+
+        selected = getattr(self.selection_service, "selected", None)
+        if callable(selected):
+            return selected()
 
         selection = getattr(self.workspace, "selection", None)
         if selection is None:

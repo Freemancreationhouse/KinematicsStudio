@@ -289,7 +289,7 @@ Architecture Decisions:
 Remaining Tasks:
 
 - Task 1.7 - UI Synchronization
-- Task 1.8 - Rendering Synchronization
+- Task 1.8 - Selection Synchronization
 
 ---
 
@@ -326,14 +326,55 @@ Architecture Decisions:
 
 Remaining Tasks:
 
-- Task 1.8 - Rendering Synchronization
+- Task 1.8 - Selection Synchronization
 - Task 1.9 - Project Lifecycle Verification
+
+---
+
+## Task 1.8
+
+Selection Synchronization
+
+Status:
+
+COMPLETE
+
+Summary:
+
+- SelectionManager now publishes selection changes through a UI-free on_change notification.
+- SelectionService is provider-aware and acts as the centralized selection mutation/read API for active shell components.
+- Canvas and Viewport3D route selection mutations through SelectionService.
+- WorkspaceConnectionController observes the current SelectionManager through SelectionService and routes selection changes through synchronize_ui("SelectionChanged").
+
+Files Modified:
+
+- engine/workspace/selection_manager.py
+- engine/services/selection_service.py
+- ui_v2/main_window.py
+- ui_v2/canvas.py
+- ui_v2/viewport3d.py
+- ui_v2/workspace_connection_controller.py
+- docs/40_FEATURE_SPECIFICATIONS/001_APPLICATION_INTEGRATION.md
+- PROJECT_STATUS.md
+- SPRINT_BACKLOG.md
+- CHANGELOG.md
+
+Architecture Decisions:
+
+- SelectionManager remains the single source of truth for selected entities.
+- SelectionService is the centralized application-service interface for selection reads and mutations.
+- UI widgets observe selection through WorkspaceConnectionController synchronization events instead of refreshing unrelated UI directly.
+- Existing direct SelectionManager mutations from commands and legacy panels still synchronize because SelectionManager now emits one core change notification.
+
+Remaining Tasks:
+
+- Task 1.9 - Project Lifecycle Verification
+- Task 1.10 - Sprint Validation
 
 ---
 
 ## Pending Tasks
 
-- Task 1.8 — Rendering Synchronization
 - Task 1.9 — Project Lifecycle Verification
 - Task 1.10 — Sprint Validation
 

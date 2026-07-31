@@ -12,10 +12,28 @@ class SelectionService:
 
         self._workspace = workspace
 
+    def workspace(self) -> Any:
+        """Return the current workspace from a workspace or provider."""
+
+        provider = self._workspace
+        current_workspace = getattr(provider, "current_workspace", None)
+        if callable(current_workspace):
+            return current_workspace()
+
+        current = getattr(provider, "current", None)
+        if current is not None:
+            return current
+
+        workspace = getattr(provider, "workspace", None)
+        if workspace is not None and workspace is not provider:
+            return workspace
+
+        return provider
+
     def selection(self) -> Any:
         """Return the underlying workspace selection manager."""
 
-        return getattr(self._workspace, "selection", None)
+        return getattr(self.workspace(), "selection", None)
 
     def selected(self) -> list[Any]:
         """Return the current selected entities as a list."""
@@ -67,25 +85,30 @@ class SelectionService:
 
         return entity in self.selected()
 
-    def select(self, entity: Any) -> Any:
+    def select(self, entity: Any, additive: bool = False) -> Any:
         """Select a single entity through the existing selection manager."""
 
         selection = self.selection()
         if selection is None:
             return None
-        return self._call_first(selection, ("select",), entity)
+        return self._call_first(selection, ("select",), entity, additive)
 
-    def select_many(self, items: Iterable[Any]) -> Any:
+    def select_many(self, items: Iterable[Any], additive: bool = False) -> Any:
         """Select many entities through the existing selection manager."""
 
         entities = list(items)
         selection = self.selection()
         if selection is None:
             return None
-        result = self._call_first(selection, ("select_many",), entities)
-        if result is not None:
-            return result
-        self.clear()
+        select_many = getattr(selection, "select_many", None)
+        if callable(select_many):
+            try:
+                select_many(entities, additive)
+            except TypeError:
+                select_many(entities)
+            return self.selected()
+        if not additive:
+            self.clear()
         for entity in entities:
             self._call_first(selection, ("select",), entity, True)
         return self.selected()
@@ -132,7 +155,7 @@ class SelectionService:
         selection = self.selection()
         if selection is None:
             return []
-        result = self._call_first(selection, ("invert",), self._workspace)
+        result = self._call_first(selection, ("invert",), self.workspace())
         if result is not None:
             return list(result)
 
@@ -186,11 +209,12 @@ class SelectionService:
     def _selectable_entities(self) -> list[Any]:
         """Return selectable workspace entities using existing workspace APIs."""
 
-        selectable = getattr(self._workspace, "selectable_entities", None)
+        workspace = self.workspace()
+        selectable = getattr(workspace, "selectable_entities", None)
         if callable(selectable):
             return list(selectable())
 
-        entities = getattr(self._workspace, "entities", None)
+        entities = getattr(workspace, "entities", None)
         if entities is None:
             return []
         return list(entities)

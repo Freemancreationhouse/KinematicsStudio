@@ -19,6 +19,7 @@ class Canvas(QWidget):
         self.app = app
 
         self.camera = self.app.camera
+        self.selection_service = None
         self.status_bar = None
         self.panning = False
         self.pan_last = None
@@ -233,7 +234,7 @@ class Canvas(QWidget):
                 if (
                     entity not in selectable
                 ):
-                    selection.deselect(entity)
+                    self._selection_service().deselect(entity)
 
     # ------------------------------------------------
 
@@ -243,6 +244,13 @@ class Canvas(QWidget):
             world = self._world(pos)
             self.status_bar.show_coordinates(world, self.camera)
             self._sync_snap_ui()
+
+    # ------------------------------------------------
+
+    def _selection_service(self):
+        """Return the injected selection service or a workspace-selection adapter."""
+
+        return self.selection_service or self.app.workspace.selection
 
     # ------------------------------------------------
 

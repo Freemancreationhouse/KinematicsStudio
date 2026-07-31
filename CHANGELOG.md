@@ -26,6 +26,8 @@ All notable changes to this project are documented here.
 - All project actions now routed through a single controller.
 - Centralized UI synchronization pipeline.
 - UI refreshes routed through synchronization service/events.
+- Centralized Selection synchronization.
+- All UI components observe one SelectionManager.
 
 ## Improved
 

@@ -24,6 +24,7 @@ class Viewport3D(QWidget):
         self.controller = CameraController3D(app.camera3d)
         self.picking = PickingManager3D()
         self.status_bar = None
+        self.selection_service = None
         self._drag_mode = None
         self._gizmo_axis = None
         self._last_position = None
@@ -281,13 +282,12 @@ class Viewport3D(QWidget):
 
         ray = self.app.camera3d.screen_ray(position.x(), position.y())
         hit = self.picking.pick(self.app.workspace, ray)
-        selection = self.app.workspace.selection
 
         if hit is None:
             if not additive:
-                selection.clear()
+                self._selection_service().clear()
         else:
-            selection.select(hit.entity, additive)
+            self._selection_service().select(hit.entity, additive)
 
         self._pick_gizmo_axis(ray)
 
@@ -311,6 +311,13 @@ class Viewport3D(QWidget):
         dy = position.y() - self._press_position.y()
 
         return (dx * dx + dy * dy) <= 9.0
+
+    # --------------------------------
+
+    def _selection_service(self):
+        """Return the injected selection service or active selection manager."""
+
+        return self.selection_service or self.app.workspace.selection
 
     # --------------------------------
 

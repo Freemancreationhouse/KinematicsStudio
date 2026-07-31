@@ -67,6 +67,7 @@ Scene Integration
 
 Selection Integration
 
+- [x] Selection Synchronization
 - [ ] Shared Selection
 - [ ] Property Updates
 - [ ] Explorer Updates

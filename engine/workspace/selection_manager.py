@@ -164,6 +164,7 @@ class SelectionManager:
         self._cycle_index = -1
         self.occ_manager = None
         self.occ_selection = None
+        self.on_change = None
 
     # --------------------------------
 
@@ -179,6 +180,7 @@ class SelectionManager:
     def clear(self):
         """Clear the current selection while preserving previous selection."""
 
+        had_selection = bool(self.selected)
         self._remember_previous()
         for entity in self.selected:
 
@@ -186,6 +188,8 @@ class SelectionManager:
 
         self.selected.clear()
         self._sync_occ_selection()
+        if had_selection:
+            self._changed()
 
     # --------------------------------
 
@@ -202,6 +206,7 @@ class SelectionManager:
 
             self.selected.append(entity)
             self._sync_occ_selection()
+            self._changed()
 
     # --------------------------------
 
@@ -225,6 +230,7 @@ class SelectionManager:
 
             self.selected.remove(entity)
             self._sync_occ_selection()
+            self._changed()
 
     # --------------------------------
 
@@ -278,6 +284,14 @@ class SelectionManager:
         for entity in self.selected:
             if entity in shapes:
                 self.occ_selection.select(entity, True)
+
+    # --------------------------------
+
+    def _changed(self):
+        """Notify observers that the selection state changed."""
+
+        if callable(self.on_change):
+            self.on_change(self)
 
     # --------------------------------
 

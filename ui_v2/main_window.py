@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QApplication, QDialog, QMainWindow, QVBoxLayout
 from engine.cad import CADApplication
 from engine.services.project_service import ProjectService
 from engine.services.property_command_service import PropertyCommandService
+from engine.services.selection_service import SelectionService
 from engine.services.workspace_provider import WorkspaceProvider
 from engine.tools import (
     AlignedDimensionTool,
@@ -114,11 +115,14 @@ class MainWindow(QMainWindow):
         self.cad_application = CADApplication()
         self.workspace_provider = WorkspaceProvider(self.cad_application)
         self.project_service = ProjectService(self.cad_application)
+        self.selection_service = SelectionService(self.workspace_provider)
         self.property_command_service = PropertyCommandService(
             self.workspace_provider
         )
         self.canvas = Canvas(self.cad_application)
+        self.canvas.selection_service = self.selection_service
         self.viewport3d = Viewport3D(self.cad_application)
+        self.viewport3d.selection_service = self.selection_service
 
     def _register_tools(self) -> None:
         """Register all production tools with the existing tool manager."""
@@ -238,6 +242,7 @@ class MainWindow(QMainWindow):
             panel_manager=self.panel_manager,
             project_service=self.project_service,
             property_command_service=self.property_command_service,
+            selection_service=self.selection_service,
             app=self.cad_application,
             workspace_provider=self.workspace_provider,
             tool_manager=self.cad_application.tool_manager,
