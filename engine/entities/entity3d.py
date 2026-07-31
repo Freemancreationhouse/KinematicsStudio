@@ -1,4 +1,12 @@
-from engine.geometry import BoundingBox3D, BoundingSphere, Matrix4, MeshData, Vector3
+from engine.geometry import (
+    BoundingBox,
+    BoundingBox3D,
+    BoundingSphere,
+    Matrix4,
+    MeshData,
+    Vector2,
+    Vector3,
+)
 
 
 class Entity3D:
@@ -34,6 +42,19 @@ class Entity3D:
     # --------------------------------
 
     @property
+    def bounding_box(self):
+        """Return this entity's XY orthographic bounds for 2D views."""
+
+        box = BoundingBox()
+
+        for point in self.bounding_box3d.corners():
+            box.add(Vector2(point.x, point.y))
+
+        return box
+
+    # --------------------------------
+
+    @property
     def bounding_sphere(self):
         """Return this entity's coarse bounding sphere."""
 
@@ -60,6 +81,26 @@ class Entity3D:
         """Return line segments for wire rendering."""
 
         return []
+
+    # --------------------------------
+
+    def move(self, dx, dy):
+        """Move the entity in the XY plane for shared 2D/3D editing."""
+
+        self.set_transform_state(
+            position=self.position3d + Vector3(float(dx), float(dy), 0.0)
+        )
+
+    # --------------------------------
+
+    def hit_test(self, point):
+        """Return True when a 2D pick point intersects projected bounds."""
+
+        box = self.bounding_box
+        return (
+            box.min.x <= point.x <= box.max.x and
+            box.min.y <= point.y <= box.max.y
+        )
 
     # --------------------------------
 

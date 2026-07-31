@@ -190,7 +190,7 @@ class SnapManager3D:
     def _entity_candidates(self, entity):
 
         candidates = []
-        points = list(entity.points())
+        points = self._entity_points(entity)
 
         if self._filter_enabled("VERTEX"):
             candidates.extend(
@@ -210,7 +210,7 @@ class SnapManager3D:
             if box is not None and box.valid:
                 candidates.append(self._result(box.center, "OBJECT_CENTER", entity))
 
-        segments = list(entity.segments())
+        segments = self._entity_segments(entity)
 
         if self._filter_enabled("FACE_MIDPOINT") or self._filter_enabled("EDGE"):
             for start, end in segments:
@@ -234,6 +234,67 @@ class SnapManager3D:
             )
 
         return candidates
+
+    # --------------------------------
+
+    def _entity_points(self, entity):
+        """Return 3D snap points for native 3D or projected 2D entities."""
+
+        points = getattr(entity, "points", None)
+        if callable(points):
+            return [self._to_vector3(point) for point in points()]
+
+        sampled = getattr(entity, "sampled_points", None)
+        if callable(sampled):
+            return [self._to_vector3(point) for point in sampled()]
+
+        boundary = getattr(entity, "current_boundary_points", None)
+        if callable(boundary):
+            return [self._to_vector3(point) for point in boundary()]
+
+        if points is not None:
+            return [self._to_vector3(point) for point in points]
+
+        if hasattr(entity, "start") and hasattr(entity, "end"):
+            return [self._to_vector3(entity.start), self._to_vector3(entity.end)]
+
+        if hasattr(entity, "p1") and hasattr(entity, "p2"):
+            return [self._to_vector3(entity.p1), self._to_vector3(entity.p2)]
+
+        if hasattr(entity, "center"):
+            return [self._to_vector3(entity.center)]
+
+        if hasattr(entity, "position"):
+            return [self._to_vector3(entity.position)]
+
+        return []
+
+    # --------------------------------
+
+    def _entity_segments(self, entity):
+        """Return 3D snap segments for native 3D or projected 2D entities."""
+
+        segments = getattr(entity, "segments", None)
+        if callable(segments):
+            return [
+                (self._to_vector3(start), self._to_vector3(end))
+                for start, end in segments()
+            ]
+
+        points = self._entity_points(entity)
+        if len(points) > 1:
+            return list(zip(points, points[1:]))
+
+        return []
+
+    # --------------------------------
+
+    def _to_vector3(self, point):
+        """Convert a 2D or 3D point-like object to Vector3."""
+
+        if hasattr(point, "z"):
+            return Vector3(float(point.x), float(point.y), float(point.z))
+        return Vector3(float(point.x), float(point.y), 0.0)
 
     # --------------------------------
 

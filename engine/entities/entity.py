@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from engine.geometry import BoundingBox
+from engine.geometry import BoundingBox, BoundingBox3D, BoundingSphere, Vector3
 
 
 class Entity(ABC):
@@ -68,3 +68,23 @@ class Entity(ABC):
             return self.color
 
         return "#e0e0e0"
+
+    # --------------------------------
+
+    @property
+    def bounding_box3d(self):
+        """Return this 2D entity's shared-scene bounds on the XY plane."""
+
+        box = BoundingBox3D()
+        bounds = self.bounding_box
+        box.add(Vector3(bounds.min.x, bounds.min.y, 0.0))
+        box.add(Vector3(bounds.max.x, bounds.max.y, 0.0))
+        return box
+
+    # --------------------------------
+
+    @property
+    def bounding_sphere(self):
+        """Return a 3D picking sphere for the projected XY bounds."""
+
+        return BoundingSphere.from_box(self.bounding_box3d)

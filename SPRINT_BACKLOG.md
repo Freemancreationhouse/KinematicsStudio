@@ -26,7 +26,7 @@ Application State
 - [ ] Single CADEngine
 - [ ] Single WorkspaceManager
 - [ ] Single Workspace
-- [ ] Single Scene
+- [x] Single Scene
 - [ ] Single SelectionManager
 - [ ] Single CommandManager
 
@@ -55,11 +55,11 @@ UI Integration
 
 Scene Integration
 
-- [ ] Shared Scene
-- [ ] Shared Entity Storage
+- [x] Shared Scene
+- [x] Shared Entity Storage
 - [ ] Shared Cameras
 - [ ] Shared Renderer
-- [ ] View Synchronization
+- [x] Viewport Synchronization
 
 ---
 

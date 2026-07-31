@@ -327,7 +327,6 @@ Architecture Decisions:
 Remaining Tasks:
 
 - Task 1.8 - Selection Synchronization
-- Task 1.9 - Project Lifecycle Verification
 
 ---
 
@@ -368,14 +367,97 @@ Architecture Decisions:
 
 Remaining Tasks:
 
-- Task 1.9 - Project Lifecycle Verification
+- Task 1.9 - Viewport Synchronization
+- Task 1.10 - Sprint Validation
+
+---
+
+
+## Task 1.9
+
+Viewport Synchronization
+
+Status:
+
+COMPLETE
+
+Summary:
+
+- Added a centralized ViewportSynchronizationService for synchronized 2D and 3D viewport refreshes.
+- Canvas and Viewport3D continue to observe the same active CADApplication workspace instead of owning scenes.
+- WorkspaceConnectionController now routes scene, entity, selection, camera and view changes through one viewport synchronization pipeline.
+- View switching uses WorkspaceViewportArea without recreating geometry or runtime state.
+
+Files Modified:
+
+- ui_v2/viewport_synchronization_service.py
+- ui_v2/main_window.py
+- ui_v2/workspace_connection_controller.py
+- docs/40_FEATURE_SPECIFICATIONS/001_APPLICATION_INTEGRATION.md
+- PROJECT_STATUS.md
+- SPRINT_BACKLOG.md
+- CHANGELOG.md
+
+Architecture Decisions:
+
+- CADEngine remains the owner of the active Workspace and camera instances.
+- Canvas and Viewport3D remain render-only viewport widgets that resolve model state through the shared CADApplication.
+- ViewportSynchronizationService owns no scene, geometry, renderer or camera; it coordinates repaint requests for injected viewports.
+
+Remaining Tasks:
+
+- Task 1.10 - Sprint Validation
+
+---
+
+## Task 1.9A
+
+Shared Scene Graph
+
+Status:
+
+COMPLETE
+
+Summary:
+
+- Implemented one shared workspace entity store for both 2D and 3D views.
+- Scene3D now acts as a compatibility facade over Workspace.entities instead of owning a separate entity list.
+- Canvas and Viewport3D render from the same active Workspace model through the existing CADApplication runtime.
+- 3D renderer projects 2D entities onto the XY plane, and the 2D renderer draws 3D wire geometry in orthographic projection.
+- DeleteCommand now removes and restores entities through the active Workspace when invoked from engine-backed 3D workflows.
+- Project persistence filters shared entities so 2D and 3D entities are not duplicated in saved project data.
+
+Files Modified:
+
+- engine/scene3d.py
+- engine/workspace/workspace.py
+- engine/render/renderer.py
+- engine/render/renderer3d.py
+- engine/snap/snap_manager3d.py
+- engine/entities/entity.py
+- engine/entities/entity3d.py
+- engine/storage/project.py
+- engine/commands/delete_command.py
+- docs/40_FEATURE_SPECIFICATIONS/001_APPLICATION_INTEGRATION.md
+- PROJECT_STATUS.md
+- SPRINT_BACKLOG.md
+- CHANGELOG.md
+
+Architecture Decisions:
+
+- Workspace.entities is the single authoritative entity store.
+- Workspace.scene and Workspace.scene3d reference the same shared-scene facade for compatibility.
+- Viewports and renderers remain read-only consumers of the active Workspace model.
+- No entity copying, mirroring or duplicate scene ownership was introduced.
+
+Remaining Tasks:
+
 - Task 1.10 - Sprint Validation
 
 ---
 
 ## Pending Tasks
 
-- Task 1.9 — Project Lifecycle Verification
 - Task 1.10 — Sprint Validation
 
 ---

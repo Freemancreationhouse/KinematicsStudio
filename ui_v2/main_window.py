@@ -72,6 +72,7 @@ from ui_v2.viewport3d import Viewport3D
 from ui_v2.workspace_connection_controller import WorkspaceConnectionController
 from ui_v2.workspace_panel_manager import WorkspacePanelManager
 from ui_v2.workspace_shell import WorkspaceShell
+from ui_v2.viewport_synchronization_service import ViewportSynchronizationService
 from ui_v2.workspace_viewport_area import WorkspaceViewportArea
 
 
@@ -231,6 +232,10 @@ class MainWindow(QMainWindow):
     def _create_connection_controller(self) -> None:
         """Create the single UI connection controller."""
 
+        self.viewport_synchronization_service = ViewportSynchronizationService(
+            workspace_provider=self.workspace_provider,
+            viewport_area=self.viewport_area,
+        )
         self.workspace_connection_controller = WorkspaceConnectionController(
             ribbon=self.ribbon,
             left_toolbox=self.left_toolbox,
@@ -243,6 +248,9 @@ class MainWindow(QMainWindow):
             project_service=self.project_service,
             property_command_service=self.property_command_service,
             selection_service=self.selection_service,
+            viewport_synchronization_service=(
+                self.viewport_synchronization_service
+            ),
             app=self.cad_application,
             workspace_provider=self.workspace_provider,
             tool_manager=self.cad_application.tool_manager,

@@ -85,9 +85,9 @@ Sprint 1
 
 # Current Task
 
-Task 1.9
+Task 1.10
 
-Project Lifecycle Verification
+Sprint Validation
 
 Status:
 
@@ -126,3 +126,7 @@ Task 1.6 Complete: Project lifecycle centralized through ProjectService.
 Task 1.7 Complete: UI refreshes centralized through synchronization events.
 
 Task 1.8 Complete: Selection synchronization centralized through SelectionService and SelectionManager events.
+
+Task 1.9 Complete: Viewport synchronization centralized across shared 2D and 3D scene observers.
+
+Task 1.9A Complete: Workspace entities now provide one shared scene graph for 2D and 3D viewports.

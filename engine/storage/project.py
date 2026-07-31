@@ -82,9 +82,13 @@ class ProjectSerializer:
             if settings is not None
             else getattr(workspace, "project_settings", {})
         )
+        project_entities = [
+            entity for entity in workspace.entities
+            if not getattr(entity, "is_3d", False)
+        ]
         entity_ids = {
             entity: index
-            for index, entity in enumerate(workspace.entities)
+            for index, entity in enumerate(project_entities)
         }
 
         return {
@@ -94,7 +98,7 @@ class ProjectSerializer:
                 "name": workspace.name,
                 "entities": [
                     self._entity_to_data(entity, entity_ids)
-                    for entity in workspace.entities
+                    for entity in project_entities
                 ],
                 "layers": self._layers_to_data(workspace),
                 "blocks": self._blocks_to_data(workspace, entity_ids),

@@ -77,7 +77,44 @@ class Renderer:
         for entity in tuple(visible):
 
             if self._entity_in_view(entity):
-                entity.draw(painter)
+                if getattr(entity, "is_3d", False):
+                    self._draw_projected_3d_entity(painter, entity)
+                else:
+                    entity.draw(painter)
+
+    # ------------------------------------------------
+
+    def _draw_projected_3d_entity(self, painter, entity):
+        """Draw 3D wire geometry as an orthographic XY projection."""
+
+        color = QColor(getattr(entity, "display_color", "#FFFFFF"))
+
+        if getattr(entity, "selected", False):
+            color = QColor("#4fc3f7")
+
+        painter.save()
+        pen = QPen(color, 2)
+        pen.setCosmetic(True)
+        painter.setPen(pen)
+
+        segments = getattr(entity, "segments", None)
+        if callable(segments):
+            for start, end in segments():
+                painter.drawLine(
+                    QLineF(
+                        float(start.x),
+                        float(start.y),
+                        float(end.x),
+                        float(end.y),
+                    )
+                )
+
+        points = getattr(entity, "points", None)
+        if callable(points):
+            for point in points():
+                painter.drawEllipse(QPointF(float(point.x), float(point.y)), 2.5, 2.5)
+
+        painter.restore()
 
     # ------------------------------------------------
 
@@ -99,7 +136,12 @@ class Renderer:
         if self.camera is None:
             return True
 
-        box = entity.bounding_box
+        box = getattr(entity, "bounding_box", None)
+        if box is None and getattr(entity, "is_3d", False):
+            box = self._projected_3d_bounds(entity)
+        if box is None:
+            return True
+
         view_left = self.camera.position.x
         view_top = self.camera.position.y
         view_right = view_left + self._last_width / self.camera.zoom
@@ -111,6 +153,30 @@ class Renderer:
             box.max.y < view_top or
             box.min.y > view_bottom
         )
+
+    # ------------------------------------------------
+
+    def _projected_3d_bounds(self, entity):
+        """Return XY bounds for a 3D entity using the existing 2D box type."""
+
+        from engine.geometry import BoundingBox, Vector2
+
+        box = BoundingBox()
+        points = []
+
+        entity_points = getattr(entity, "points", None)
+        if callable(entity_points):
+            points.extend(entity_points())
+
+        entity_segments = getattr(entity, "segments", None)
+        if callable(entity_segments):
+            for start, end in entity_segments():
+                points.extend((start, end))
+
+        for point in points:
+            box.add(Vector2(float(point.x), float(point.y)))
+
+        return box
 
     # ------------------------------------------------
 

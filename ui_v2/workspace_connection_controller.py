@@ -66,6 +66,7 @@ class WorkspaceConnectionController(QObject):
         project_service: Any | None = None,
         property_command_service: Any | None = None,
         selection_service: Any | None = None,
+        viewport_synchronization_service: Any | None = None,
         command_manager: Any | None = None,
         workspace: Any | None = None,
         workspace_provider: Any | None = None,
@@ -87,6 +88,7 @@ class WorkspaceConnectionController(QObject):
         self.project_service = project_service
         self.property_command_service = property_command_service
         self.selection_service = selection_service
+        self.viewport_synchronization_service = viewport_synchronization_service
         self.app = app
         self.tool_manager = tool_manager
         self.workspace_provider = workspace_provider or app or workspace
@@ -157,7 +159,7 @@ class WorkspaceConnectionController(QObject):
         if "panels" in surfaces:
             self._refresh_panels()
         if "viewport" in surfaces:
-            self._refresh_viewport()
+            self._refresh_viewport(event_name, payload)
 
     def _synchronization_surfaces(self, event_name: str) -> set[str]:
         """Return the UI surfaces affected by a synchronization event."""
@@ -168,13 +170,18 @@ class WorkspaceConnectionController(QObject):
             "ProjectOpened": all_surfaces,
             "ProjectClosed": all_surfaces,
             "WorkspaceChanged": all_surfaces,
-            "SelectionChanged": {"property_panel", "status_bar"},
+            "SceneChanged": {"status_bar", "panels", "viewport"},
+            "EntityAdded": {"status_bar", "panels", "viewport"},
+            "EntityRemoved": {"status_bar", "panels", "viewport"},
+            "EntityModified": {"status_bar", "panels", "viewport"},
+            "SelectionChanged": {"property_panel", "status_bar", "viewport"},
+            "CameraChanged": {"status_bar", "viewport"},
             "ActiveToolChanged": {"property_panel", "status_bar"},
             "DocumentModified": {"status_bar", "panels", "viewport"},
             "CommandHistoryChanged": {"status_bar", "panels", "viewport"},
             "PropertyChanged": {"property_panel", "status_bar", "panels", "viewport"},
             "LayerChanged": {"property_panel", "status_bar", "panels", "viewport"},
-            "ViewChanged": {"status_bar"},
+            "ViewChanged": {"status_bar", "viewport"},
             "PanelChanged": {"status_bar"},
         }
         return set(event_map.get(event_name, all_surfaces))
@@ -189,11 +196,13 @@ class WorkspaceConnectionController(QObject):
             self._call_if_available(self.viewport_area, "show_2d")
             self._call_if_available(self.left_toolbox, "set_active_action", action_id)
             self._focus_active_view()
+            self.synchronize_ui("ViewChanged")
             return
         if action_id == "view_3d":
             self._call_if_available(self.viewport_area, "show_3d")
             self._call_if_available(self.left_toolbox, "set_active_action", action_id)
             self._focus_active_view()
+            self.synchronize_ui("ViewChanged")
             return
         if action_id == "panels":
             self.panelsRequested.emit()
@@ -381,16 +390,26 @@ class WorkspaceConnectionController(QObject):
 
         self._call_if_available(self.panel_manager, "refresh_all")
 
-    def _refresh_viewport(self) -> None:
-        """Refresh the active viewport when a synchronized event needs repaint."""
+    def _refresh_viewport(
+        self,
+        event_name: str = "FullRefresh",
+        payload: Any | None = None,
+    ) -> None:
+        """Refresh synchronized viewports when a state event needs repaint."""
 
-        active_view = None
-        active_view_method = getattr(self.viewport_area, "active_view", None)
-        if callable(active_view_method):
-            active_view = active_view_method()
-        if active_view is None:
-            active_view = getattr(self.viewport_area, "active_view", None)
-        self._call_if_available(active_view, "update")
+        if self.viewport_synchronization_service is not None:
+            self._call_if_available(
+                self.viewport_synchronization_service,
+                "synchronize",
+                event_name,
+                payload,
+            )
+            return
+
+        for accessor_name in ("canvas", "viewport3d"):
+            accessor = getattr(self.viewport_area, accessor_name, None)
+            viewport = accessor() if callable(accessor) else accessor
+            self._call_if_available(viewport, "update")
 
     def _handle_left_toolbox_action(self, action_id: str) -> None:
         """Route an action emitted by the left toolbox."""

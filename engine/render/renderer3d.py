@@ -135,8 +135,9 @@ class Renderer3D:
         for entity in entities:
             self._draw_entity(painter, workspace, entity)
 
-            if self.debug_bounds:
-                self._draw_bounds(painter, entity.bounding_box3d)
+            bounds = self._entity_bounds3d(entity)
+            if self.debug_bounds and bounds is not None:
+                self._draw_bounds(painter, bounds)
 
         self._draw_occ_shapes(painter, workspace)
         self._draw_sections(painter, workspace)
@@ -183,11 +184,125 @@ class Renderer3D:
         pen.setCosmetic(True)
         painter.setPen(pen)
 
-        for start, end in entity.segments():
+        for start, end in self._entity_segments3d(entity):
             self._draw_line(painter, start, end)
 
-        for point in entity.points():
+        for point in self._entity_points3d(entity):
             self._draw_point(painter, point, color)
+
+    # --------------------------------
+
+    def _entity_bounds3d(self, entity):
+        """Return 3D bounds for native 3D or projected 2D entities."""
+
+        bounds = getattr(entity, "bounding_box3d", None)
+        if bounds is not None:
+            return bounds
+
+        points = self._entity_points3d(entity)
+        segments = self._entity_segments3d(entity)
+        all_points = list(points)
+        for start, end in segments:
+            all_points.extend((start, end))
+
+        if not all_points:
+            return None
+
+        from engine.geometry import BoundingBox3D
+
+        box = BoundingBox3D()
+        for point in all_points:
+            box.add(point)
+        return box
+
+    # --------------------------------
+
+    def _entity_segments3d(self, entity):
+        """Return renderable 3D line segments for an entity."""
+
+        segments = getattr(entity, "segments", None)
+        if callable(segments):
+            return [
+                (self._to_vector3(start), self._to_vector3(end))
+                for start, end in segments()
+            ]
+
+        points = self._entity_points2d(entity)
+        if len(points) > 1:
+            return [
+                (self._to_vector3(start), self._to_vector3(end))
+                for start, end in zip(points, points[1:])
+            ]
+
+        return []
+
+    # --------------------------------
+
+    def _entity_points3d(self, entity):
+        """Return renderable 3D points for an entity."""
+
+        points = getattr(entity, "points", None)
+        if callable(points):
+            return [self._to_vector3(point) for point in points()]
+
+        points = self._entity_points2d(entity)
+        return [self._to_vector3(point) for point in points]
+
+    # --------------------------------
+
+    def _entity_points2d(self, entity):
+        """Return common 2D entity points for projection into 3D."""
+
+        sampled = getattr(entity, "sampled_points", None)
+        if callable(sampled):
+            return list(sampled())
+
+        boundary = getattr(entity, "current_boundary_points", None)
+        if callable(boundary):
+            return list(boundary())
+
+        points = getattr(entity, "points", None)
+        if points is not None and not callable(points):
+            return list(points)
+
+        if hasattr(entity, "start") and hasattr(entity, "end"):
+            return [entity.start, entity.end]
+
+        if hasattr(entity, "p1") and hasattr(entity, "p2"):
+            p1 = entity.p1
+            p2 = entity.p2
+            return [
+                p1,
+                type(p1)(p2.x, p1.y),
+                p2,
+                type(p1)(p1.x, p2.y),
+                p1,
+            ]
+
+        if hasattr(entity, "center") and hasattr(entity, "radius"):
+            center = entity.center
+            radius = float(getattr(entity, "radius", 0.0))
+            return [
+                type(center)(center.x - radius, center.y),
+                type(center)(center.x, center.y - radius),
+                type(center)(center.x + radius, center.y),
+                type(center)(center.x, center.y + radius),
+                type(center)(center.x - radius, center.y),
+            ]
+
+        if hasattr(entity, "position"):
+            return [entity.position]
+
+        return []
+
+    # --------------------------------
+
+    def _to_vector3(self, point):
+        """Convert a 2D or 3D point-like object to Vector3."""
+
+        if hasattr(point, "z"):
+            return Vector3(float(point.x), float(point.y), float(point.z))
+        return Vector3(float(point.x), float(point.y), 0.0)
 
     # --------------------------------
 

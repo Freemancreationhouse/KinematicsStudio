@@ -169,6 +169,8 @@ class Workspace:
         self.snap_manager3d = SnapManager3D()
         self.transform_gizmo = TransformGizmo()
         self.entities = WorkspaceEntityList(self)
+        self.scene3d.set_entity_source(self.entities)
+        self.scene = self.scene3d
 
         self.selection = SelectionManager()
 
@@ -197,9 +199,6 @@ class Workspace:
 
         self.selection.clear()
         self.command_manager.clear()
-        self.entities.clear()
-        for entity in list(self.scene3d.entities()):
-            self.unregister_layer_entity(entity)
         self.scene3d.clear()
         self.measurement_manager.measurements.clear()
         self.section_manager.sections.clear()
@@ -298,24 +297,22 @@ class Workspace:
     # --------------------------------
 
     def add_3d_entity(self, entity):
-        """Store a 3D scene entity in this workspace."""
+        """Store a 3D entity in the shared workspace scene."""
 
-        self.assign_layer(entity)
         return self.scene3d.add_entity(entity)
 
     # --------------------------------
 
     def remove_3d_entity(self, entity):
-        """Remove a 3D scene entity from this workspace."""
+        """Remove a 3D entity from the shared workspace scene."""
 
-        self.unregister_layer_entity(entity)
         self.selection.unregister_entity(entity)
         return self.scene3d.remove_entity(entity)
 
     # --------------------------------
 
     def visible_3d_entities(self):
-        """Return visible 3D scene entities."""
+        """Return visible entities for 3D rendering."""
 
         return [
             entity for entity in self.scene3d.visible_entities()
@@ -783,7 +780,7 @@ class Workspace:
         if target is None or target is default:
             return False
 
-        for entity in list(self.entities) + list(self.scene3d.entities()):
+        for entity in list(self.entities):
             if self._entity_layer(entity) is target:
                 self.assign_layer(entity, default)
 
