@@ -217,9 +217,44 @@ Remaining Tasks:
 
 ---
 
+## Task 1.5
+
+Ribbon Action Routing
+
+Status:
+
+COMPLETE
+
+Summary:
+
+- Ribbon now emits action identifiers instead of executing tools, commands, project operations or workspace logic.
+- WorkspaceConnectionController now receives Ribbon actions and performs the routed application behavior.
+- Existing project, import/export, view, panel, tool, AI and Machine/CAM ribbon actions are preserved through centralized routing.
+
+Files Modified:
+
+- ui_v2/ribbon.py
+- ui_v2/workspace_connection_controller.py
+- docs/40_FEATURE_SPECIFICATIONS/001_APPLICATION_INTEGRATION.md
+- PROJECT_STATUS.md
+- SPRINT_BACKLOG.md
+- CHANGELOG.md
+
+Architecture Decisions:
+
+- Ribbon remains a presentation-only widget.
+- Tool selections are emitted through toolSelected and routed by WorkspaceConnectionController.
+- General ribbon commands are emitted through actionTriggered and routed by WorkspaceConnectionController.
+
+Remaining Tasks:
+
+- Task 1.6 - Workspace Lifecycle
+- Task 1.7 - UI Synchronization
+
+---
+
 ## Pending Tasks
 
-- Task 1.5 — Command Routing Cleanup
 - Task 1.6 — Workspace Lifecycle
 - Task 1.7 — UI Synchronization
 - Task 1.8 — Rendering Synchronization

@@ -1,13 +1,11 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from pathlib import Path
 from typing import Callable
 
-from PySide6.QtCore import QSize, Qt
+from PySide6.QtCore import QSize, Qt, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
-    QFileDialog,
     QFrame,
     QGridLayout,
     QHBoxLayout,
@@ -16,45 +14,9 @@ from PySide6.QtWidgets import (
     QScrollArea,
     QSizePolicy,
     QTabWidget,
-    QToolButton,
     QVBoxLayout,
     QWidget,
 )
-
-from engine.commands import (
-    CancelAITaskCommand,
-    CancelManufacturingJobCommand,
-    CaptureAIDiagnosticsCommand,
-    CaptureAIContextCommand,
-    CaptureMachineDiagnosticsCommand,
-    CreateAISessionCommand,
-    CreateMachineProfileCommand,
-    CreateManufacturingJobCommand,
-    ExecuteManufacturingJobCommand,
-    ExportManufacturingJobCommand,
-    GenerateToolpathCommand,
-    PauseManufacturingJobCommand,
-    PostProcessManufacturingJobCommand,
-    QueueManufacturingJobCommand,
-    ResumeManufacturingJobCommand,
-    RetryAIPromptCommand,
-    SaveExchangeProfileCommand,
-    SimulateManufacturingJobCommand,
-    StoreExchangeValidationReportCommand,
-    SubmitAIPromptCommand,
-    UpdateExchangeSettingsCommand,
-    ValidateAIProvidersCommand,
-    ValidateAIPromptCommand,
-)
-from engine.commands.occ_boolean_command import OCCBooleanCommand
-from engine.commands.occ_import_command import ImportOCCShapeCommand
-from engine.storage import ProjectTemplateManager
-from ui_v2.exchange_dialogs import (
-    ExchangeExportDialog,
-    ExchangeImportDialog,
-    ExchangeValidationReportPanel,
-)
-from ui_v2.import_options_dialog import ImportOptionsDialog
 
 
 @dataclass(frozen=True)
@@ -181,14 +143,14 @@ class Ribbon(QWidget):
     """Compact professional CAD ribbon for Kinematics Studio."""
 
     HIDDEN_TABS: set[str] = set()
+    actionTriggered = Signal(str)
+    toolSelected = Signal(str)
 
     def __init__(self, app) -> None:
-        """Create the ribbon using the injected CAD application runtime."""
+        """Create the presentation-only ribbon."""
 
         super().__init__()
 
-        self.app = app
-        self.tool_manager = getattr(app, "tool_manager", app)
         self.setObjectName("Ribbon")
         self.setMaximumHeight(120)
         self.setMinimumHeight(104)
@@ -247,32 +209,32 @@ class Ribbon(QWidget):
             (
                 "Project",
                 (
-                    self._command("New", "N", "Create a blank project.", self._new_blank, True),
-                    self._command("Open", "O", "Open an existing project.", self._open),
-                    self._command("Save", "S", "Save the current project.", self._save),
-                    self._command("Save As", "⇧S", "Save the project to a new file.", self._save_as),
+                    self._command("New", "N", "Create a blank project.", lambda: self._emit_action("project:new:blank"), True),
+                    self._command("Open", "O", "Open an existing project.", lambda: self._emit_action("project:open")),
+                    self._command("Save", "S", "Save the current project.", lambda: self._emit_action("project:save")),
+                    self._command("Save As", "⇧S", "Save the project to a new file.", lambda: self._emit_action("project:save_as")),
                 ),
             ),
             (
                 "Templates",
                 (
-                    self._command("Architectural", "A", "Create from architectural template.", self._new_architectural),
-                    self._command("Mechanical", "M", "Create from mechanical template.", self._new_mechanical),
-                    self._command("Recover", "R", "Recover the latest autosave.", self._recover),
-                    self._command("Auto Save", "⟳", "Toggle autosave.", self._toggle_autosave),
+                    self._command("Architectural", "A", "Create from architectural template.", lambda: self._emit_action("project:new:architectural")),
+                    self._command("Mechanical", "M", "Create from mechanical template.", lambda: self._emit_action("project:new:mechanical")),
+                    self._command("Recover", "R", "Recover the latest autosave.", lambda: self._emit_action("project:recover")),
+                    self._command("Auto Save", "⟳", "Toggle autosave.", lambda: self._emit_action("project:toggle_autosave")),
                 ),
             ),
             (
                 "Import / Export",
                 (
-                    self._command("Import 3D", "I", "Import an external 3D reference.", self._import_3d, True),
-                    self._command("Import CAD", "⇩", "Import professional CAD exchange data.", self._import_cad_exchange),
-                    self._command("Export CAD", "⇧", "Export professional CAD exchange data.", self._export_cad_exchange),
-                    self._command("Validate", "✓", "Show exchange validation report.", self._show_validation_report),
-                    self._command("DXF", "D", "Export DXF drawing.", lambda: self._export("dxf", "DXF Drawing (*.dxf)")),
-                    self._command("SVG", "V", "Export SVG drawing.", lambda: self._export("svg", "SVG Drawing (*.svg)")),
-                    self._command("PDF", "P", "Export PDF drawing.", lambda: self._export("pdf", "PDF Drawing (*.pdf)")),
-                    self._command("PNG", "G", "Export PNG image.", lambda: self._export("png", "PNG Image (*.png)")),
+                    self._command("Import 3D", "I", "Import an external 3D reference.", lambda: self._emit_action("import:3d"), True),
+                    self._command("Import CAD", "⇩", "Import professional CAD exchange data.", lambda: self._emit_action("import:cad_exchange")),
+                    self._command("Export CAD", "⇧", "Export professional CAD exchange data.", lambda: self._emit_action("export:cad_exchange")),
+                    self._command("Validate", "✓", "Show exchange validation report.", lambda: self._emit_action("exchange:show_validation_report")),
+                    self._command("DXF", "D", "Export DXF drawing.", lambda: self._emit_action("export:dxf")),
+                    self._command("SVG", "V", "Export SVG drawing.", lambda: self._emit_action("export:svg")),
+                    self._command("PDF", "P", "Export PDF drawing.", lambda: self._emit_action("export:pdf")),
+                    self._command("PNG", "G", "Export PNG image.", lambda: self._emit_action("export:png")),
                 ),
             ),
         )
@@ -354,8 +316,8 @@ class Ribbon(QWidget):
             (
                 "History",
                 (
-                    self._command("Undo", "↶", "Undo the previous command.", self._undo),
-                    self._command("Redo", "↷", "Redo the next command.", self._redo),
+                    self._command("Undo", "↶", "Undo the previous command.", lambda: self._emit_action("command:undo")),
+                    self._command("Redo", "↷", "Redo the next command.", lambda: self._emit_action("command:redo")),
                 ),
             ),
         )
@@ -391,9 +353,9 @@ class Ribbon(QWidget):
             (
                 "Boolean",
                 (
-                    self._command("Union", "∪", "Boolean union.", lambda: self._boolean("union")),
-                    self._command("Subtract", "−", "Boolean subtract.", lambda: self._boolean("subtract")),
-                    self._command("Intersect", "∩", "Boolean intersect.", lambda: self._boolean("intersect")),
+                    self._command("Union", "∪", "Boolean union.", lambda: self._emit_action("boolean:union")),
+                    self._command("Subtract", "−", "Boolean subtract.", lambda: self._emit_action("boolean:subtract")),
+                    self._command("Intersect", "∩", "Boolean intersect.", lambda: self._emit_action("boolean:intersect")),
                 ),
             ),
         )
@@ -427,8 +389,8 @@ class Ribbon(QWidget):
             (
                 "Inspection",
                 (
-                    self._command("Fit View", "F", "Fit visible drawing.", self._fit_view, True),
-                    self._command("Zoom Extents", "Z", "Zoom to drawing extents.", self._zoom_extents),
+                    self._command("Fit View", "F", "Fit visible drawing.", lambda: self._emit_action("view:fit"), True),
+                    self._command("Zoom Extents", "Z", "Zoom to drawing extents.", lambda: self._emit_action("view:zoom_extents")),
                     self._panel("Constraints", "C", "constraint_manager"),
                     self._panel("Selection Sets", "S", "selection_sets"),
                 ),
@@ -442,23 +404,23 @@ class Ribbon(QWidget):
             (
                 "Machine",
                 (
-                    self._machine("Profile", "M", self._machine_profile, True),
-                    self._machine("Create Job", "J", self._create_job),
-                    self._machine("Toolpath", "T", self._generate_toolpath),
-                    self._machine("Simulate", "▶", self._simulate),
+                    self._machine("Profile", "M", lambda: self._emit_action("machine:profile"), True),
+                    self._machine("Create Job", "J", lambda: self._emit_action("machine:create_job")),
+                    self._machine("Toolpath", "T", lambda: self._emit_action("machine:generate_toolpath")),
+                    self._machine("Simulate", "▶", lambda: self._emit_action("machine:simulate")),
                 ),
             ),
             (
                 "Output",
                 (
-                    self._machine("Post", "P", self._post_process),
-                    self._machine("Export", "E", self._machine_export),
-                    self._machine("Queue", "Q", self._queue_job),
-                    self._machine("Execute", "▷", self._execute_job),
-                    self._machine("Pause", "Ⅱ", self._pause),
-                    self._machine("Resume", "▶", self._resume),
-                    self._machine("Cancel", "×", self._cancel_job),
-                    self._machine("Diagnostics", "?", self._machine_diagnostics),
+                    self._machine("Post", "P", lambda: self._emit_action("machine:post_process")),
+                    self._machine("Export", "E", lambda: self._emit_action("machine:export")),
+                    self._machine("Queue", "Q", lambda: self._emit_action("machine:queue_job")),
+                    self._machine("Execute", "▷", lambda: self._emit_action("machine:execute_job")),
+                    self._machine("Pause", "Ⅱ", lambda: self._emit_action("machine:pause")),
+                    self._machine("Resume", "▶", lambda: self._emit_action("machine:resume")),
+                    self._machine("Cancel", "×", lambda: self._emit_action("machine:cancel_job")),
+                    self._machine("Diagnostics", "?", lambda: self._emit_action("machine:diagnostics")),
                 ),
             ),
         )
@@ -470,19 +432,19 @@ class Ribbon(QWidget):
             (
                 "Context",
                 (
-                    self._ai("Capture", "C", self._capture_context, True),
-                    self._ai("New Session", "N", self._new_ai_session),
-                    self._ai("Diagnostics", "?", self._ai_diagnostics),
+                    self._ai("Capture", "C", lambda: self._emit_action("ai:capture_context"), True),
+                    self._ai("New Session", "N", lambda: self._emit_action("ai:new_session")),
+                    self._ai("Diagnostics", "?", lambda: self._emit_action("ai:diagnostics")),
                 ),
             ),
             (
                 "Prompt",
                 (
-                    self._ai("Validate", "✓", self._validate_prompt),
-                    self._ai("Queue", "Q", self._queue_prompt),
-                    self._ai("Cancel", "×", self._cancel_ai_task),
-                    self._ai("Retry", "↻", self._retry_ai_task),
-                    self._ai("Providers", "P", self._validate_providers),
+                    self._ai("Validate", "✓", lambda: self._emit_action("ai:validate_prompt")),
+                    self._ai("Queue", "Q", lambda: self._emit_action("ai:queue_prompt")),
+                    self._ai("Cancel", "×", lambda: self._emit_action("ai:cancel_task")),
+                    self._ai("Retry", "↻", lambda: self._emit_action("ai:retry_task")),
+                    self._ai("Providers", "P", lambda: self._emit_action("ai:validate_providers")),
                 ),
             ),
         )
@@ -494,18 +456,18 @@ class Ribbon(QWidget):
             (
                 "Viewport",
                 (
-                    self._command("2D View", "2D", "Switch to 2D view.", self._show_2d_view, True),
-                    self._command("3D View", "3D", "Switch to 3D view.", self._show_3d_view, True),
-                    self._command("Fit View", "F", "Fit visible drawing.", self._fit_view),
-                    self._command("Zoom Extents", "Z", "Zoom to extents.", self._zoom_extents),
+                    self._command("2D View", "2D", "Switch to 2D view.", lambda: self._emit_action("view_2d"), True),
+                    self._command("3D View", "3D", "Switch to 3D view.", lambda: self._emit_action("view_3d"), True),
+                    self._command("Fit View", "F", "Fit visible drawing.", lambda: self._emit_action("view:fit")),
+                    self._command("Zoom Extents", "Z", "Zoom to extents.", lambda: self._emit_action("view:zoom_extents")),
                 ),
             ),
             (
                 "Layout",
                 (
-                    self._command("Focus", "◉", "Enter focus mode.", self._focus_mode),
-                    self._command("Presentation", "□", "Enter presentation mode.", self._presentation_mode),
-                    self._command("Reset Layout", "↺", "Reset workspace layout.", self._reset_layout),
+                    self._command("Focus", "◉", "Enter focus mode.", lambda: self._emit_action("focus_mode")),
+                    self._command("Presentation", "□", "Enter presentation mode.", lambda: self._emit_action("presentation_mode")),
+                    self._command("Reset Layout", "↺", "Reset workspace layout.", lambda: self._emit_action("reset_workspace_layout")),
                 ),
             ),
         )
@@ -558,7 +520,7 @@ class Ribbon(QWidget):
             text,
             icon,
             f"Activate {text}.",
-            lambda name=tool_name: self.tool_manager.activate(name),
+            lambda name=tool_name: self._emit_tool(name),
             large,
         )
 
@@ -575,7 +537,7 @@ class Ribbon(QWidget):
             text,
             icon,
             f"Open {text}.",
-            lambda target=panel_id: self._route_action(f"panel:{target}"),
+            lambda target=panel_id: self._emit_action(f"panel:{target}"),
             large,
         )
 
@@ -601,602 +563,15 @@ class Ribbon(QWidget):
 
         return self._command(text, icon, f"Machine/CAM: {text}.", callback, large)
 
-    def _app(self):
-        """Return the active CAD application facade when available."""
+    def _emit_action(self, action_id: str) -> None:
+        """Emit a presentation action identifier for controller routing."""
 
-        return getattr(self.tool_manager, "app", None)
+        self.actionTriggered.emit(action_id)
 
-    def _workspace(self):
-        """Return the active workspace when available."""
+    def _emit_tool(self, tool_name: str) -> None:
+        """Emit a tool selection identifier for controller routing."""
 
-        app = self._app()
-        return getattr(app, "workspace", None)
-
-    def _main_window(self):
-        """Return the owning main window when available."""
-
-        return getattr(self.tool_manager, "main_window", None)
-
-    def _route_action(self, action_id: str) -> None:
-        """Route a shell action through the main window controller."""
-
-        main_window = self._main_window()
-        controller = getattr(main_window, "workspace_connection_controller", None)
-        if controller is not None:
-            controller.route_action(action_id)
-
-    def _status(self, message: str) -> None:
-        """Show status text through the active application shell."""
-
-        main_window = self._main_window()
-        status_bar = getattr(main_window, "studio_status_bar", None)
-        if status_bar is not None:
-            status_bar.show_status_text(message)
-
-    def _save(self) -> None:
-        """Save the current project."""
-
-        app = self._app()
-        if app is None:
-            return
-        if app.project_path is None:
-            self._save_as()
-            return
-        app.save_project()
-
-    def _save_as(self) -> None:
-        """Save the current project to a chosen path."""
-
-        app = self._app()
-        if app is None:
-            return
-        path, _ = QFileDialog.getSaveFileName(
-            self,
-            "Save Kinematics Studio Project",
-            "",
-            "Kinematics Studio Project (*.ksproj)",
-        )
-        if path:
-            app.save_project(path)
-
-    def _open(self) -> None:
-        """Open an existing project."""
-
-        app = self._app()
-        if app is None:
-            return
-        path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Open Kinematics Studio Project",
-            "",
-            "Kinematics Studio Project (*.ksproj)",
-        )
-        if path:
-            app.open_project(path)
-
-    def _new_blank(self) -> None:
-        """Create a blank project."""
-
-        self._new_project(ProjectTemplateManager.BLANK)
-
-    def _new_architectural(self) -> None:
-        """Create an architectural project."""
-
-        self._new_project(ProjectTemplateManager.ARCHITECTURAL)
-
-    def _new_mechanical(self) -> None:
-        """Create a mechanical project."""
-
-        self._new_project(ProjectTemplateManager.MECHANICAL)
-
-    def _new_project(self, template_name: str) -> None:
-        """Create a project from a template."""
-
-        app = self._app()
-        if app is not None:
-            app.new_project(template_name)
-
-    def _toggle_autosave(self) -> None:
-        """Toggle autosave on the application facade."""
-
-        app = self._app()
-        if app is None:
-            return
-        if app.autosave.enabled:
-            app.autosave.stop()
-            self._status("Autosave disabled.")
-        else:
-            app.autosave.start()
-            self._status("Autosave enabled.")
-
-    def _recover(self) -> None:
-        """Recover an autosave project when available."""
-
-        app = self._app()
-        if app is not None and app.has_recovery():
-            app.recover_project()
-
-    def _export(self, format_name: str, file_filter: str) -> None:
-        """Export the active project."""
-
-        app = self._app()
-        if app is None:
-            return
-        path, _ = QFileDialog.getSaveFileName(
-            self,
-            f"Export {format_name.upper()}",
-            "",
-            file_filter,
-        )
-        if path:
-            if not path.lower().endswith(f".{format_name}"):
-                path = f"{path}.{format_name}"
-            app.export_project(path, format_name)
-
-    def _import_3d(self) -> None:
-        """Import an external 3D reference."""
-
-        app = self._app()
-        if app is None:
-            return
-        path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Import 3D Reference",
-            "",
-            "3D References (*.obj *.stl *.ply *.off *.gltf *.glb *.fbx *.3ds *.step *.stp *.iges *.igs)",
-        )
-        if not path:
-            return
-
-        remembered = app.workspace.project_settings.get("import_options", {})
-        dialog = ImportOptionsDialog(
-            self,
-            app.workspace.import_manager.last_result
-            and getattr(app.workspace.import_manager.last_result, "settings", None)
-            or None,
-            path,
-        )
-        if remembered:
-            from engine.import3d import ImportSettings
-
-            dialog.set_settings(ImportSettings.from_dict(remembered))
-
-        if dialog.exec() != dialog.Accepted:
-            return
-
-        settings = dialog.settings()
-        app.workspace.import_manager.create_reference(
-            app.workspace,
-            path,
-            None,
-            settings,
-        )
-        if settings.remember_settings:
-            app.workspace.project_settings["import_options"] = settings.to_dict()
-
-    def _import_cad_exchange(self) -> None:
-        """Import professional CAD exchange references."""
-
-        app = self._app()
-        if app is None:
-            return
-        path, _ = QFileDialog.getOpenFileName(
-            self,
-            "Import CAD Exchange",
-            "",
-            "CAD Exchange (*.skp *.3dm *.step *.stp *.brep *.iges *.igs *.sat *.stl *.obj *.fbx *.abc)",
-        )
-        if not path:
-            return
-
-        settings = None
-        remembered = app.workspace.import_manager.adapter_settings.get("cad_import", {})
-        if remembered:
-            from engine.import3d import ImportSettings
-
-            settings = ImportSettings.from_dict(remembered)
-
-        dialog = ExchangeImportDialog(self, app.workspace, path, settings)
-        if dialog.exec() != dialog.Accepted:
-            return
-
-        import_settings = dialog.settings()
-        is_occ_exchange = Path(path).suffix.lower() in (".step", ".stp", ".brep")
-
-        if is_occ_exchange:
-            app.workspace.command_manager.execute(
-                ImportOCCShapeCommand(app.engine, app.workspace, path)
-            )
-        else:
-            app.workspace.import_manager.create_reference(
-                app.workspace,
-                path,
-                None,
-                import_settings,
-            )
-
-        profile = {
-            "units": import_settings.units,
-            "scale": import_settings.scale,
-            "up_axis": import_settings.up_axis,
-            "forward_axis": import_settings.forward_axis,
-        }
-        app.workspace.command_manager.execute(
-            SaveExchangeProfileCommand(
-                app.workspace,
-                dialog.profile_name(),
-                profile,
-            )
-        )
-        if import_settings.remember_settings:
-            before = dict(
-                app.workspace.import_manager.adapter_settings.get("cad_import", {})
-            )
-            app.workspace.command_manager.execute(
-                UpdateExchangeSettingsCommand(
-                    app.workspace,
-                    "cad_import",
-                    before,
-                    import_settings.to_dict(),
-                )
-            )
-
-    def _export_cad_exchange(self) -> None:
-        """Export professional CAD exchange data."""
-
-        app = self._app()
-        if app is None:
-            return
-        dialog = ExchangeExportDialog(self, app.workspace)
-        if dialog.exec() != dialog.Accepted:
-            return
-
-        format_name = dialog.format_name()
-        extension = "step" if format_name == "step" else format_name
-        path, _ = QFileDialog.getSaveFileName(
-            self,
-            f"Export {format_name.upper()}",
-            "",
-            f"{format_name.upper()} Exchange (*.{extension})",
-        )
-        if not path:
-            return
-        if not path.lower().endswith(f".{extension}"):
-            path = f"{path}.{extension}"
-
-        report = app.workspace.import_manager.validation_manager.validate_workspace(
-            app.workspace,
-            format_name,
-        )
-        app.workspace.command_manager.execute(
-            StoreExchangeValidationReportCommand(app.workspace, report)
-        )
-        if format_name in ("step", "brep"):
-            app.engine.export_model(path)
-        else:
-            app.export_project(path, format_name)
-
-        before = dict(app.workspace.import_manager.adapter_settings.get("cad_export", {}))
-        app.workspace.command_manager.execute(
-            UpdateExchangeSettingsCommand(
-                app.workspace,
-                "cad_export",
-                before,
-                dialog.profile_settings(),
-            )
-        )
-
-    def _show_validation_report(self) -> None:
-        """Show the latest import/export validation report."""
-
-        app = self._app()
-        if app is None:
-            return
-        panel = ExchangeValidationReportPanel(
-            self,
-            app.workspace.import_manager.validation_manager.last_report,
-        )
-        panel.exec()
-
-    def _undo(self) -> None:
-        """Undo the latest command."""
-
-        workspace = self._workspace()
-        if workspace is not None:
-            workspace.command_manager.undo()
-
-    def _redo(self) -> None:
-        """Redo the latest command."""
-
-        workspace = self._workspace()
-        if workspace is not None:
-            workspace.command_manager.redo()
-
-    def _fit_view(self) -> None:
-        """Fit the active 2D canvas view."""
-
-        canvas = getattr(self.tool_manager, "canvas", None)
-        if canvas is not None:
-            canvas.fit_view()
-
-    def _zoom_extents(self) -> None:
-        """Zoom the active 2D canvas to extents."""
-
-        canvas = getattr(self.tool_manager, "canvas", None)
-        if canvas is not None:
-            canvas.zoom_extents()
-
-    def _show_2d_view(self) -> None:
-        """Switch to the 2D viewport."""
-
-        self._route_action("view_2d")
-
-    def _show_3d_view(self) -> None:
-        """Switch to the 3D viewport."""
-
-        self._route_action("view_3d")
-
-    def _focus_mode(self) -> None:
-        """Enter focus mode."""
-
-        self._route_action("focus_mode")
-
-    def _presentation_mode(self) -> None:
-        """Enter presentation mode."""
-
-        self._route_action("presentation_mode")
-
-    def _reset_layout(self) -> None:
-        """Reset workspace layout."""
-
-        self._route_action("reset_workspace_layout")
-
-    def _boolean(self, operation: str) -> None:
-        """Execute a Boolean operation on two selected OCC solids."""
-
-        app = self._app()
-        workspace = self._workspace()
-        engine = getattr(app, "engine", None)
-        if app is None or workspace is None or engine is None:
-            return
-
-        shapes = getattr(getattr(engine, "occ", None), "shapes", [])
-        selected = [
-            item
-            for item in list(workspace.selection.selected)
-            if item in shapes
-        ]
-        if len(selected) != 2:
-            self._status("Select exactly two OCC solids for Boolean operation.")
-            return
-
-        workspace.command_manager.execute(
-            OCCBooleanCommand(engine, workspace, operation, selected[0], selected[1])
-        )
-        self._status(f"Boolean {operation} completed.")
-
-    def _ai_engine(self):
-        """Return the active AI engine when available."""
-
-        app = self._app()
-        return getattr(getattr(app, "engine", None), "ai_engine", None)
-
-    def _execute_ai(self, command, message: str) -> None:
-        """Execute an AI command through the workspace command manager."""
-
-        workspace = self._workspace()
-        if workspace is None or command is None:
-            return
-        workspace.command_manager.execute(command)
-        self._status(message)
-
-    def _capture_context(self) -> None:
-        """Capture AI project context."""
-
-        self._execute_ai(
-            CaptureAIContextCommand(
-                self._ai_engine(),
-                self._workspace(),
-                "AI Ribbon Context",
-            ),
-            "AI context captured.",
-        )
-
-    def _new_ai_session(self) -> None:
-        """Create an AI session."""
-
-        self._execute_ai(
-            CreateAISessionCommand(
-                self._ai_engine(),
-                self._workspace(),
-                "AI Ribbon Session",
-            ),
-            "AI session created.",
-        )
-
-    def _validate_prompt(self) -> None:
-        """Validate the default AI prompt."""
-
-        self._execute_ai(
-            ValidateAIPromptCommand(
-                self._ai_engine(),
-                self._workspace(),
-                self._default_prompt(),
-                capability="chat",
-            ),
-            "AI prompt validation completed.",
-        )
-
-    def _queue_prompt(self) -> None:
-        """Queue the default AI prompt."""
-
-        self._execute_ai(
-            SubmitAIPromptCommand(
-                self._ai_engine(),
-                self._workspace(),
-                self._default_prompt(),
-                capability="chat",
-                background=True,
-            ),
-            "AI prompt queued.",
-        )
-
-    def _cancel_ai_task(self) -> None:
-        """Cancel the latest AI task."""
-
-        task = self._latest_ai_task()
-        if task is None:
-            self._status("No AI task is available to cancel.")
-            return
-        self._execute_ai(
-            CancelAITaskCommand(self._ai_engine(), self._workspace(), task.id),
-            "AI task cancellation requested.",
-        )
-
-    def _retry_ai_task(self) -> None:
-        """Retry the latest AI task."""
-
-        task = self._latest_ai_task()
-        if task is None:
-            self._status("No AI task is available to retry.")
-            return
-        self._execute_ai(
-            RetryAIPromptCommand(self._ai_engine(), self._workspace(), task.id),
-            "AI task retry submitted.",
-        )
-
-    def _validate_providers(self) -> None:
-        """Validate AI providers."""
-
-        self._execute_ai(
-            ValidateAIProvidersCommand(self._ai_engine(), self._workspace()),
-            "AI provider validation completed.",
-        )
-
-    def _ai_diagnostics(self) -> None:
-        """Capture AI diagnostics."""
-
-        self._execute_ai(
-            CaptureAIDiagnosticsCommand(self._ai_engine(), self._workspace()),
-            "AI diagnostics captured.",
-        )
-
-    def _latest_ai_task(self):
-        """Return the latest AI runtime task."""
-
-        runtime = getattr(self._ai_engine(), "runtime", None)
-        tasks = list(getattr(runtime, "tasks", {}).values())
-        return tasks[-1] if tasks else None
-
-    def _default_prompt(self) -> str:
-        """Return the default engineering AI prompt."""
-
-        return "Review the current project context and report infrastructure readiness."
-
-    def _execute_machine(self, command, message: str) -> None:
-        """Execute a Machine/CAM command through the command manager."""
-
-        workspace = self._workspace()
-        if workspace is None or command is None:
-            return
-        workspace.command_manager.execute(command)
-        self._status(message)
-
-    def _machine_profile(self) -> None:
-        """Create or activate a machine profile."""
-
-        self._execute_machine(
-            CreateMachineProfileCommand(self._workspace()),
-            "Machine profile ready.",
-        )
-
-    def _create_job(self) -> None:
-        """Create a manufacturing job."""
-
-        self._execute_machine(
-            CreateManufacturingJobCommand(self._workspace()),
-            "Manufacturing job created.",
-        )
-
-    def _generate_toolpath(self) -> None:
-        """Generate a manufacturing toolpath."""
-
-        self._execute_machine(
-            GenerateToolpathCommand(self._workspace()),
-            "Toolpath generated.",
-        )
-
-    def _simulate(self) -> None:
-        """Run manufacturing simulation."""
-
-        self._execute_machine(
-            SimulateManufacturingJobCommand(self._workspace()),
-            "Manufacturing simulation completed.",
-        )
-
-    def _post_process(self) -> None:
-        """Post process the manufacturing job."""
-
-        self._execute_machine(
-            PostProcessManufacturingJobCommand(self._workspace()),
-            "G-code generated.",
-        )
-
-    def _machine_export(self) -> None:
-        """Export the manufacturing program."""
-
-        self._execute_machine(
-            ExportManufacturingJobCommand(self._workspace()),
-            "Manufacturing program exported.",
-        )
-
-    def _queue_job(self) -> None:
-        """Queue the manufacturing job."""
-
-        self._execute_machine(
-            QueueManufacturingJobCommand(self._workspace()),
-            "Manufacturing job queued.",
-        )
-
-    def _execute_job(self) -> None:
-        """Execute the manufacturing job."""
-
-        self._execute_machine(
-            ExecuteManufacturingJobCommand(self._workspace()),
-            "Manufacturing job execution started.",
-        )
-
-    def _pause(self) -> None:
-        """Pause the manufacturing job."""
-
-        self._execute_machine(
-            PauseManufacturingJobCommand(self._workspace()),
-            "Manufacturing job paused.",
-        )
-
-    def _resume(self) -> None:
-        """Resume the manufacturing job."""
-
-        self._execute_machine(
-            ResumeManufacturingJobCommand(self._workspace()),
-            "Manufacturing job resumed.",
-        )
-
-    def _cancel_job(self) -> None:
-        """Cancel the manufacturing job."""
-
-        self._execute_machine(
-            CancelManufacturingJobCommand(self._workspace()),
-            "Manufacturing job cancelled.",
-        )
-
-    def _machine_diagnostics(self) -> None:
-        """Capture Machine/CAM diagnostics."""
-
-        self._execute_machine(
-            CaptureMachineDiagnosticsCommand(self._workspace()),
-            "Machine/CAM diagnostics captured.",
-        )
+        self.toolSelected.emit(tool_name)
 
     def _apply_style(self) -> None:
         """Apply the dark professional ribbon theme."""

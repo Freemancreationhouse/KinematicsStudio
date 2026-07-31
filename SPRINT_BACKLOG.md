@@ -36,6 +36,7 @@ Application State
 UI Integration
 
 - [ ] Ribbon
+- [x] Ribbon Action Routing
 - [ ] Toolbar
 - [ ] Explorer
 - [ ] Layer Panel
