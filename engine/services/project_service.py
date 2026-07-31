@@ -19,12 +19,20 @@ class ProjectService:
         self._recent_files: list[str] = []
         self._autosave_enabled = self._read_autosave_enabled(workspace)
         self._dirty = False
+        self._lifecycle_callbacks: list[Any] = []
 
-    def new_project(self) -> Any:
+    def new_project(self, template_name: Any = None) -> Any:
         """Create a new project through the existing project API when present."""
 
         project_api = self._project_api
-        result = self._call_first(project_api, ("new_project", "create_project"))
+        if template_name is None:
+            result = self._call_first(project_api, ("new_project", "create_project"))
+        else:
+            result = self._call_first(
+                project_api,
+                ("new_project", "create_project"),
+                template_name,
+            )
         if result is not None:
             self._workspace = self._resolve_workspace(result)
         elif self._call_first(self._workspace, ("clear",)) is not None:
@@ -32,6 +40,7 @@ class ProjectService:
 
         self._project_path = self._read_project_path(project_api)
         self.clear_dirty()
+        self._notify_lifecycle("new_project", result)
         return result
 
     def open_project(self, path: str | PathLike[str]) -> Any:
@@ -49,6 +58,7 @@ class ProjectService:
             self.set_project_path(normalized)
             self.add_recent_file(normalized)
             self.clear_dirty()
+            self._notify_lifecycle("open_project", result)
         return result
 
     def save(self) -> Any:
@@ -60,6 +70,7 @@ class ProjectService:
             self.set_project_path(result)
             self.add_recent_file(result)
             self.clear_dirty()
+            self._notify_lifecycle("save_project", self.workspace())
         return result
 
     def save_as(self, path: str | PathLike[str]) -> Any:
@@ -76,6 +87,7 @@ class ProjectService:
             self.set_project_path(result)
             self.add_recent_file(result)
             self.clear_dirty()
+            self._notify_lifecycle("save_project", self.workspace())
         return result
 
     def close_project(self) -> Any:
@@ -90,7 +102,29 @@ class ProjectService:
 
         self._project_path = None
         self.clear_dirty()
+        self._notify_lifecycle("close_project", result)
         return result
+
+    def recover_project(self) -> Any:
+        """Recover an autosave project through the existing project API."""
+
+        project_api = self._project_api
+        result = self._call_first(project_api, ("recover_project", "recover"))
+        if result is not None:
+            self._workspace = self._resolve_workspace(result)
+            self._project_path = self._read_project_path(project_api)
+            self.clear_dirty()
+            self._notify_lifecycle("recover_project", result)
+        return result
+
+    def has_recovery(self) -> bool:
+        """Return True when the project API exposes a recovery file."""
+
+        value = self._read_attr_or_call(
+            self._project_api,
+            ("has_recovery", "recovery_available"),
+        )
+        return bool(value)
 
     def reload(self) -> Any:
         """Reload the current project from its known project path."""
@@ -231,6 +265,18 @@ class ProjectService:
             self._call_optional(self._project_api, "set_autosave_enabled", enabled)
         self._autosave_enabled = enabled
 
+    def add_lifecycle_callback(self, callback: Any) -> None:
+        """Register a callback for project lifecycle synchronization."""
+
+        if callback not in self._lifecycle_callbacks:
+            self._lifecycle_callbacks.append(callback)
+
+    def remove_lifecycle_callback(self, callback: Any) -> None:
+        """Remove a project lifecycle callback when registered."""
+
+        if callback in self._lifecycle_callbacks:
+            self._lifecycle_callbacks.remove(callback)
+
     def undo(self) -> Any:
         """Undo the latest command through the existing command manager."""
 
@@ -328,6 +374,13 @@ class ProjectService:
             return False
         method(*args)
         return True
+
+    def _notify_lifecycle(self, event_name: str, result: Any) -> None:
+        """Notify registered lifecycle observers without importing UI code."""
+
+        for callback in tuple(self._lifecycle_callbacks):
+            if callable(callback):
+                callback(event_name, result)
 
     def _read_attr_or_call(self, obj: Any, names: tuple[str, ...]) -> Any:
         """Read the first available attribute or zero-argument method."""

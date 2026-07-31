@@ -85,9 +85,9 @@ Sprint 1
 
 # Current Task
 
-Task 1.6
+Task 1.7
 
-Workspace Lifecycle
+UI Synchronization
 
 Status:
 
@@ -120,3 +120,5 @@ Task 1.3 Complete: Fixed Workspace references replaced with runtime Workspace pr
 Task 1.4 Complete: PropertyPanel command execution moved to PropertyCommandService.
 
 Task 1.5 Complete: Ribbon action routing centralized through WorkspaceConnectionController.
+
+Task 1.6 Complete: Project lifecycle centralized through ProjectService.

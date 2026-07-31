@@ -8,6 +8,7 @@ from engine.commands import (
     StoreExchangeValidationReportCommand,
     UpdateExchangeSettingsCommand,
 )
+from engine.services.project_service import ProjectService
 from engine.storage import ProjectTemplateManager
 from ui_v2.exchange_dialogs import ExchangeExportDialog, ExchangeImportDialog, ExchangeValidationReportPanel
 from ui_v2.import_options_dialog import ImportOptionsDialog
@@ -65,16 +66,16 @@ class ProjectRibbon(QWidget):
 
     def _save(self):
 
-        app = self._app()
+        service = self._project_service()
 
-        if app is None:
+        if service is None:
             return
 
-        if app.project_path is None:
+        if service.project_path() is None:
             self._save_as()
             return
 
-        app.save_project()
+        service.save()
         self._refresh()
 
     # --------------------------------
@@ -105,9 +106,9 @@ class ProjectRibbon(QWidget):
 
     def _save_as(self):
 
-        app = self._app()
+        service = self._project_service()
 
-        if app is None:
+        if service is None:
             return
 
         path, _ = QFileDialog.getSaveFileName(
@@ -118,16 +119,16 @@ class ProjectRibbon(QWidget):
         )
 
         if path:
-            app.save_project(path)
+            service.save_as(path)
             self._refresh()
 
     # --------------------------------
 
     def _open(self):
 
-        app = self._app()
+        service = self._project_service()
 
-        if app is None:
+        if service is None:
             return
 
         path, _ = QFileDialog.getOpenFileName(
@@ -138,7 +139,7 @@ class ProjectRibbon(QWidget):
         )
 
         if path:
-            app.open_project(path)
+            service.open_project(path)
             self._refresh(project_loaded=True)
 
     # --------------------------------
@@ -163,27 +164,27 @@ class ProjectRibbon(QWidget):
 
     def _new_project(self, template_name):
 
-        app = self._app()
+        service = self._project_service()
 
-        if app is None:
+        if service is None:
             return
 
-        app.new_project(template_name)
+        service.new_project(template_name)
         self._refresh(project_loaded=True)
 
     # --------------------------------
 
     def _toggle_autosave(self):
 
-        app = self._app()
+        service = self._project_service()
 
-        if app is None:
+        if service is None:
             return
 
-        if app.autosave.enabled:
-            app.autosave.stop()
+        if service.autosave_enabled():
+            service.set_autosave_enabled(False)
         else:
-            app.autosave.start()
+            service.set_autosave_enabled(True)
 
         self._refresh()
 
@@ -438,12 +439,12 @@ class ProjectRibbon(QWidget):
 
     def _recover(self):
 
-        app = self._app()
+        service = self._project_service()
 
-        if app is None or not app.has_recovery():
+        if service is None or not service.has_recovery():
             return
 
-        app.recover_project()
+        service.recover_project()
         self._refresh(project_loaded=True)
 
     # --------------------------------
@@ -451,6 +452,22 @@ class ProjectRibbon(QWidget):
     def _app(self):
 
         return getattr(self.tool_manager, "app", None)
+
+    # --------------------------------
+
+    def _project_service(self):
+
+        service = getattr(self.tool_manager, "project_service", None)
+        if service is not None:
+            return service
+
+        app = self._app()
+        if app is None:
+            return None
+
+        service = ProjectService(app)
+        self.tool_manager.project_service = service
+        return service
 
     # --------------------------------
 

@@ -63,6 +63,7 @@ class WorkspaceConnectionController(QObject):
         command_palette: Any,
         panel_manager: Any,
         tool_manager: Any,
+        project_service: Any | None = None,
         property_command_service: Any | None = None,
         command_manager: Any | None = None,
         workspace: Any | None = None,
@@ -82,6 +83,7 @@ class WorkspaceConnectionController(QObject):
         self.status_bar = status_bar
         self.command_palette = command_palette
         self.panel_manager = panel_manager
+        self.project_service = project_service
         self.property_command_service = property_command_service
         self.app = app
         self.tool_manager = tool_manager
@@ -92,6 +94,7 @@ class WorkspaceConnectionController(QObject):
         self._previous_callbacks: dict[tuple[int, str], tuple[Any, str, Any]] = {}
         self._connected = False
         self._property_edit_connected = False
+        self._project_lifecycle_connected = False
 
     def connect_all(self) -> None:
         """Connect all injected objects through this controller."""
@@ -126,8 +129,15 @@ class WorkspaceConnectionController(QObject):
             if getattr(obj, attr_name, None) is not previous_value:
                 setattr(obj, attr_name, previous_value)
         self._previous_callbacks.clear()
+        if self._project_lifecycle_connected:
+            self._call_if_available(
+                self.project_service,
+                "remove_lifecycle_callback",
+                self._handle_project_service_lifecycle,
+            )
         self._connected = False
         self._property_edit_connected = False
+        self._project_lifecycle_connected = False
 
     def refresh_all(self) -> None:
         """Refresh property, status, and on-demand panels."""
@@ -289,19 +299,15 @@ class WorkspaceConnectionController(QObject):
         )
 
     def _connect_project_lifecycle(self) -> None:
-        """Refresh routed UI state after project lifecycle operations."""
+        """Refresh routed UI state after project-service lifecycle operations."""
 
-        for method_name in (
-            "new_project",
-            "open_project",
-            "close_project",
-            "recover_project",
-        ):
-            self._chain_method(
-                self.app,
-                method_name,
-                self._handle_project_loaded,
+        if not self._project_lifecycle_connected:
+            self._call_if_available(
+                self.project_service,
+                "add_lifecycle_callback",
+                self._handle_project_service_lifecycle,
             )
+            self._project_lifecycle_connected = True
 
     def _update_property_panel(self) -> None:
         """Push current selection state into the property panel."""
@@ -356,6 +362,9 @@ class WorkspaceConnectionController(QObject):
         if action_id == "project:save_as":
             self._save_project_as()
             return
+        if action_id == "project:close":
+            self._close_project()
+            return
         if action_id == "project:recover":
             self._recover_project()
             return
@@ -407,7 +416,7 @@ class WorkspaceConnectionController(QObject):
         self._call_if_available(self.tool_manager, "activate", tool_name)
 
     def _new_project(self, template_name: str) -> None:
-        """Create a project through the application facade."""
+        """Create a project through the project service."""
 
         template_map = {
             "blank": ProjectTemplateManager.BLANK,
@@ -415,7 +424,7 @@ class WorkspaceConnectionController(QObject):
             "mechanical": ProjectTemplateManager.MECHANICAL,
         }
         self._call_if_available(
-            self.app,
+            self.project_service,
             "new_project",
             template_map.get(template_name, template_name),
         )
@@ -423,8 +432,8 @@ class WorkspaceConnectionController(QObject):
     def _open_project(self) -> None:
         """Open a project selected by the user."""
 
-        app = self.app
-        if app is None:
+        service = self.project_service
+        if service is None:
             return
         path, _ = QFileDialog.getOpenFileName(
             self._dialog_parent(),
@@ -433,24 +442,24 @@ class WorkspaceConnectionController(QObject):
             "Kinematics Studio Project (*.ksproj)",
         )
         if path:
-            app.open_project(path)
+            service.open_project(path)
 
     def _save_project(self) -> None:
         """Save the active project through the application facade."""
 
-        app = self.app
-        if app is None:
+        service = self.project_service
+        if service is None:
             return
-        if getattr(app, "project_path", None) is None:
+        if service.project_path() is None:
             self._save_project_as()
             return
-        app.save_project()
+        service.save()
 
     def _save_project_as(self) -> None:
         """Save the active project to a user-selected path."""
 
-        app = self.app
-        if app is None:
+        service = self.project_service
+        if service is None:
             return
         path, _ = QFileDialog.getSaveFileName(
             self._dialog_parent(),
@@ -459,26 +468,31 @@ class WorkspaceConnectionController(QObject):
             "Kinematics Studio Project (*.ksproj)",
         )
         if path:
-            app.save_project(path)
+            service.save_as(path)
 
     def _recover_project(self) -> None:
         """Recover the latest autosave when one exists."""
 
-        app = self.app
-        if app is not None and getattr(app, "has_recovery", lambda: False)():
-            app.recover_project()
+        service = self.project_service
+        if service is not None and service.has_recovery():
+            service.recover_project()
+
+    def _close_project(self) -> None:
+        """Close the active project through the project service."""
+
+        self._call_if_available(self.project_service, "close_project")
 
     def _toggle_autosave(self) -> None:
         """Toggle autosave through the application facade."""
 
-        autosave = getattr(self.app, "autosave", None)
-        if autosave is None:
+        service = self.project_service
+        if service is None:
             return
-        if getattr(autosave, "enabled", False):
-            autosave.stop()
+        if service.autosave_enabled():
+            service.set_autosave_enabled(False)
             self._show_status("Autosave disabled.")
         else:
-            autosave.start()
+            service.set_autosave_enabled(True)
             self._show_status("Autosave enabled.")
 
     def _export_project(self, format_name: str) -> None:
@@ -985,6 +999,11 @@ class WorkspaceConnectionController(QObject):
             self._handle_property_changed,
         )
         self.refresh_all()
+
+    def _handle_project_service_lifecycle(self, *args: Any) -> None:
+        """Refresh routed shell state after project-service lifecycle events."""
+
+        self._handle_project_loaded(*args)
 
     def _handle_panel_opened(self, *args: Any) -> None:
         """Refresh status after a panel is opened."""

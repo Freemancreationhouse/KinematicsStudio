@@ -253,9 +253,48 @@ Remaining Tasks:
 
 ---
 
+## Task 1.6
+
+Project Lifecycle Management
+
+Status:
+
+COMPLETE
+
+Summary:
+
+- Project lifecycle operations are centralized through ProjectService.
+- WorkspaceConnectionController routes New, Open, Save, Save As, Close, Recover and autosave requests through ProjectService.
+- ProjectService now supports template project creation, recovery, autosave coordination and lifecycle callbacks for runtime synchronization.
+- Legacy ProjectRibbon lifecycle actions now use ProjectService instead of calling CADApplication directly.
+
+Files Modified:
+
+- engine/services/project_service.py
+- ui_v2/main_window.py
+- ui_v2/workspace_connection_controller.py
+- ui_v2/ribbon_project.py
+- docs/40_FEATURE_SPECIFICATIONS/001_APPLICATION_INTEGRATION.md
+- PROJECT_STATUS.md
+- SPRINT_BACKLOG.md
+- CHANGELOG.md
+
+Architecture Decisions:
+
+- CADApplication remains the owner of actual workspace creation, replacement and persistence mechanics.
+- ProjectService is the single application-service facade for project lifecycle requests from UI controllers.
+- UI components and controllers no longer call CADApplication lifecycle methods directly.
+- Project lifecycle synchronization is exposed through UI-free service callbacks.
+
+Remaining Tasks:
+
+- Task 1.7 - UI Synchronization
+- Task 1.8 - Rendering Synchronization
+
+---
+
 ## Pending Tasks
 
-- Task 1.6 — Workspace Lifecycle
 - Task 1.7 — UI Synchronization
 - Task 1.8 — Rendering Synchronization
 - Task 1.9 — Project Lifecycle Verification

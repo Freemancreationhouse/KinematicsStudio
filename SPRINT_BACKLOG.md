@@ -22,6 +22,7 @@ Application State
 - [x] Single CADApplication
 - [x] Workspace Provider
 - [x] Shared Active Workspace
+- [x] Project Lifecycle Management
 - [ ] Single CADEngine
 - [ ] Single WorkspaceManager
 - [ ] Single Workspace
