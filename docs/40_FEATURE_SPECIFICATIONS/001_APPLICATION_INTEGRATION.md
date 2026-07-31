@@ -293,9 +293,46 @@ Remaining Tasks:
 
 ---
 
+## Task 1.7
+
+UI Synchronization
+
+Status:
+
+COMPLETE
+
+Summary:
+
+- WorkspaceConnectionController now owns a centralized synchronize_ui(event_name) pipeline.
+- UI refreshes are grouped into logical events including ProjectOpened, ProjectClosed, WorkspaceChanged, SelectionChanged, ActiveToolChanged, DocumentModified, PropertyChanged and PanelChanged.
+- Project lifecycle, selection, tool, property and command-history handlers now route refreshes through synchronization events.
+- Canvas and Viewport3D no longer refresh PropertyPanel directly.
+
+Files Modified:
+
+- ui_v2/workspace_connection_controller.py
+- ui_v2/canvas.py
+- ui_v2/viewport3d.py
+- docs/40_FEATURE_SPECIFICATIONS/001_APPLICATION_INTEGRATION.md
+- PROJECT_STATUS.md
+- SPRINT_BACKLOG.md
+- CHANGELOG.md
+
+Architecture Decisions:
+
+- WorkspaceConnectionController remains the single UI synchronization controller.
+- UI refresh surfaces are selected by event type instead of scattered direct refresh calls.
+- Viewport-local painting and coordinate feedback remain inside viewport widgets, while cross-widget synchronization is centralized.
+
+Remaining Tasks:
+
+- Task 1.8 - Rendering Synchronization
+- Task 1.9 - Project Lifecycle Verification
+
+---
+
 ## Pending Tasks
 
-- Task 1.7 — UI Synchronization
 - Task 1.8 — Rendering Synchronization
 - Task 1.9 — Project Lifecycle Verification
 - Task 1.10 — Sprint Validation

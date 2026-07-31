@@ -19,7 +19,6 @@ class Canvas(QWidget):
         self.app = app
 
         self.camera = self.app.camera
-        self.property_panel = None
         self.status_bar = None
         self.panning = False
         self.pan_last = None
@@ -235,21 +234,6 @@ class Canvas(QWidget):
                     entity not in selectable
                 ):
                     selection.deselect(entity)
-
-        selected = selection.selected if selection else []
-
-        if self.property_panel:
-            self.property_panel.show_selection(selected)
-
-        if self.status_bar:
-            current = self.app.tool_manager.current
-
-            if current and getattr(current, "status_text", None):
-                self.status_bar.show_status_text(current.status_text)
-            elif current and current.name == "MoveTool":
-                self.status_bar.show_selection_count(selected)
-            else:
-                self.status_bar.show_selection(selected)
 
     # ------------------------------------------------
 

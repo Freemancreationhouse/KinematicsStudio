@@ -24,7 +24,6 @@ class Viewport3D(QWidget):
         self.controller = CameraController3D(app.camera3d)
         self.picking = PickingManager3D()
         self.status_bar = None
-        self.property_panel = None
         self._drag_mode = None
         self._gizmo_axis = None
         self._last_position = None
@@ -291,7 +290,6 @@ class Viewport3D(QWidget):
             selection.select(hit.entity, additive)
 
         self._pick_gizmo_axis(ray)
-        self._sync_property_panel()
 
     # --------------------------------
 
@@ -301,13 +299,6 @@ class Viewport3D(QWidget):
         self.picking.hover(self.app.workspace, ray)
         self._update_snap(ray)
         self._pick_gizmo_axis(ray)
-
-    # --------------------------------
-
-    def _sync_property_panel(self):
-
-        if self.property_panel is not None:
-            self.property_panel.show_selection(self.app.workspace.selection.selected)
 
     # --------------------------------
 
@@ -429,7 +420,6 @@ class Viewport3D(QWidget):
             )
 
         self.app.workspace.command_manager.execute(command)
-        self._sync_property_panel()
 
     # --------------------------------
 

@@ -24,6 +24,8 @@ All notable changes to this project are documented here.
 - Ribbon actions centralized through WorkspaceConnectionController.
 - Project lifecycle centralized through application service.
 - All project actions now routed through a single controller.
+- Centralized UI synchronization pipeline.
+- UI refreshes routed through synchronization service/events.
 
 ## Improved
 

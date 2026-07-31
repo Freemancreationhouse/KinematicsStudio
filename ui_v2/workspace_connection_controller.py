@@ -140,11 +140,42 @@ class WorkspaceConnectionController(QObject):
         self._project_lifecycle_connected = False
 
     def refresh_all(self) -> None:
-        """Refresh property, status, and on-demand panels."""
+        """Refresh all synchronized UI surfaces."""
 
-        self._update_property_panel()
-        self._update_status_bar()
-        self._refresh_panels()
+        self.synchronize_ui("FullRefresh")
+
+    def synchronize_ui(self, event_name: str, payload: Any | None = None) -> None:
+        """Synchronize UI surfaces for one application event."""
+
+        surfaces = self._synchronization_surfaces(event_name)
+        if "property_panel" in surfaces:
+            self._update_property_panel()
+        if "status_bar" in surfaces:
+            self._update_status_bar(payload)
+        if "panels" in surfaces:
+            self._refresh_panels()
+        if "viewport" in surfaces:
+            self._refresh_viewport()
+
+    def _synchronization_surfaces(self, event_name: str) -> set[str]:
+        """Return the UI surfaces affected by a synchronization event."""
+
+        all_surfaces = {"property_panel", "status_bar", "panels", "viewport"}
+        event_map = {
+            "FullRefresh": all_surfaces,
+            "ProjectOpened": all_surfaces,
+            "ProjectClosed": all_surfaces,
+            "WorkspaceChanged": all_surfaces,
+            "SelectionChanged": {"property_panel", "status_bar"},
+            "ActiveToolChanged": {"property_panel", "status_bar"},
+            "DocumentModified": {"status_bar", "panels", "viewport"},
+            "CommandHistoryChanged": {"status_bar", "panels", "viewport"},
+            "PropertyChanged": {"property_panel", "status_bar", "panels", "viewport"},
+            "LayerChanged": {"property_panel", "status_bar", "panels", "viewport"},
+            "ViewChanged": {"status_bar"},
+            "PanelChanged": {"status_bar"},
+        }
+        return set(event_map.get(event_name, all_surfaces))
 
     def route_action(self, action_id: str) -> None:
         """Route a public workspace action without exposing widget internals."""
@@ -317,7 +348,7 @@ class WorkspaceConnectionController(QObject):
             return
         self._call_if_available(self.property_panel, "refresh")
 
-    def _update_status_bar(self) -> None:
+    def _update_status_bar(self, payload: Any | None = None) -> None:
         """Push current command, selection, and tool state into the status bar."""
 
         self._call_if_available(
@@ -334,13 +365,25 @@ class WorkspaceConnectionController(QObject):
         active_tool = getattr(self.tool_manager, "active_tool", None)
         if active_tool is None:
             active_tool = getattr(self.tool_manager, "current_tool", None)
-        if active_tool is not None:
-            self._call_if_available(self.status_bar, "show_tool", active_tool)
+        tool = payload if payload is not None else active_tool
+        if tool is not None:
+            self._call_if_available(self.status_bar, "show_tool", tool)
 
     def _refresh_panels(self) -> None:
         """Refresh all opened on-demand panels through the panel manager."""
 
         self._call_if_available(self.panel_manager, "refresh_all")
+
+    def _refresh_viewport(self) -> None:
+        """Refresh the active viewport when a synchronized event needs repaint."""
+
+        active_view = None
+        active_view_method = getattr(self.viewport_area, "active_view", None)
+        if callable(active_view_method):
+            active_view = active_view_method()
+        if active_view is None:
+            active_view = getattr(self.viewport_area, "active_view", None)
+        self._call_if_available(active_view, "update")
 
     def _handle_left_toolbox_action(self, action_id: str) -> None:
         """Route an action emitted by the left toolbox."""
@@ -414,6 +457,7 @@ class WorkspaceConnectionController(QObject):
         """Activate a tool selected by a presentation widget."""
 
         self._call_if_available(self.tool_manager, "activate", tool_name)
+        self.synchronize_ui("ActiveToolChanged")
 
     def _new_project(self, template_name: str) -> None:
         """Create a project through the project service."""
@@ -940,7 +984,7 @@ class WorkspaceConnectionController(QObject):
             self._call_if_available(self.left_toolbox, "set_active_action", "view_2d")
         elif view_name == "3d":
             self._call_if_available(self.left_toolbox, "set_active_action", "view_3d")
-        self._update_status_bar()
+        self.synchronize_ui("ViewChanged")
 
     def _handle_command_entered(self) -> None:
         """Emit command text submitted from the command bar."""
@@ -956,28 +1000,24 @@ class WorkspaceConnectionController(QObject):
     def _handle_command_history_changed(self, *args: Any) -> None:
         """Refresh shell state when command history changes."""
 
-        self._update_status_bar()
-        self._refresh_panels()
+        self.synchronize_ui("CommandHistoryChanged")
 
     def _handle_tool_changed(self, tool: Any = None, *args: Any) -> None:
         """Refresh shell state when the active tool changes."""
 
         if tool is None:
             tool = getattr(self.tool_manager, "active_tool", None)
-        self._call_if_available(self.status_bar, "show_tool", tool)
-        self._update_property_panel()
+        self.synchronize_ui("ActiveToolChanged", tool)
 
     def _handle_selection_changed(self, *args: Any) -> None:
         """Refresh shell state when selection changes."""
 
-        self._update_property_panel()
-        self._update_status_bar()
+        self.synchronize_ui("SelectionChanged")
 
     def _handle_property_changed(self, *args: Any) -> None:
         """Refresh routed shell state after a property edit."""
 
-        self._refresh_panels()
-        self._update_status_bar()
+        self.synchronize_ui("PropertyChanged")
 
     def _handle_property_edit_requested(self, request: Any) -> None:
         """Execute a property-panel edit through the application service."""
@@ -986,10 +1026,12 @@ class WorkspaceConnectionController(QObject):
         if service is None:
             return
         self._call_if_available(service, "execute", request)
+        self.synchronize_ui("DocumentModified")
 
     def _handle_project_loaded(self, *args: Any) -> None:
         """Refresh routed shell state after project loading."""
 
+        event_name = self._project_synchronization_event(args)
         self._connect_command_manager()
         self._connect_workspace()
         self._call_if_available(
@@ -998,22 +1040,34 @@ class WorkspaceConnectionController(QObject):
             self.workspace_provider,
             self._handle_property_changed,
         )
-        self.refresh_all()
+        self.synchronize_ui(event_name)
 
     def _handle_project_service_lifecycle(self, *args: Any) -> None:
         """Refresh routed shell state after project-service lifecycle events."""
 
         self._handle_project_loaded(*args)
 
+    def _project_synchronization_event(self, args: tuple[Any, ...]) -> str:
+        """Return the UI synchronization event for a project lifecycle callback."""
+
+        lifecycle_event = str(args[0]) if args else ""
+        if lifecycle_event in ("new_project", "open_project", "recover_project"):
+            return "ProjectOpened"
+        if lifecycle_event == "close_project":
+            return "ProjectClosed"
+        if lifecycle_event == "save_project":
+            return "DocumentModified"
+        return "WorkspaceChanged"
+
     def _handle_panel_opened(self, *args: Any) -> None:
         """Refresh status after a panel is opened."""
 
-        self._update_status_bar()
+        self.synchronize_ui("PanelChanged")
 
     def _handle_panel_closed(self, *args: Any) -> None:
         """Refresh status after a panel is closed."""
 
-        self._update_status_bar()
+        self.synchronize_ui("PanelChanged")
 
     def _show_command_palette(self) -> None:
         """Open the injected command palette using its public widget API."""

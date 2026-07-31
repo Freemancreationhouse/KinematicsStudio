@@ -36,6 +36,7 @@ Application State
 
 UI Integration
 
+- [x] UI Synchronization
 - [ ] Ribbon
 - [x] Ribbon Action Routing
 - [ ] Toolbar
