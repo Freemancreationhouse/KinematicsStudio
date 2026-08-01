@@ -19,6 +19,7 @@ ACTIVE
 Workspace Experience
 
 - [IN PROGRESS] Professional Workspace UI
+- [IN PROGRESS] Professional Ribbon
 - [ ] Manual UI Launch Validation
 - [ ] Responsive Layout Validation
 

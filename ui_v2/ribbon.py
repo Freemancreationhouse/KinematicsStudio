@@ -3,13 +3,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Callable
 
-from PySide6.QtCore import QSize, Qt, Signal
+from PySide6.QtCore import QSize, QStringListModel, Qt, QTimer, Signal
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import (
+    QCompleter,
     QFrame,
     QGridLayout,
     QHBoxLayout,
     QLabel,
+    QLineEdit,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -21,45 +23,64 @@ from PySide6.QtWidgets import (
 
 @dataclass(frozen=True)
 class RibbonCommand:
-    """Definition for a command displayed in a ribbon group."""
+    """Definition for a command displayed in the professional ribbon."""
 
     text: str
     icon: str
     tooltip: str
     callback: Callable[[], None]
     large: bool = False
+    group: str = ""
+    search_terms: tuple[str, ...] = ()
 
 
 class RibbonButton(QPushButton):
-    """Compact CAD-style ribbon button with generated icon and text."""
+    """Compact engineering ribbon button with consistent icon geometry."""
 
     def __init__(self, command: RibbonCommand, parent: QWidget | None = None) -> None:
-        """Create a themed ribbon command button."""
+        """Create a command button from an immutable command definition."""
 
         super().__init__(command.text, parent)
 
+        self._command = command
+        self._base_text = command.text
         self.setObjectName("RibbonButtonLarge" if command.large else "RibbonButton")
         self.setToolTip(command.tooltip)
         self.setCursor(Qt.PointingHandCursor)
         self.setIcon(self._icon(command.icon, command.large))
-        self.setIconSize(QSize(28, 28) if command.large else QSize(18, 18))
-        self.setMinimumHeight(64 if command.large else 28)
-        self.setMinimumWidth(72 if command.large else 92)
+        self.setIconSize(QSize(24, 24) if command.large else QSize(16, 16))
+        self.setMinimumHeight(48 if command.large else 24)
+        self.setMaximumHeight(52 if command.large else 26)
+        self.setMinimumWidth(64 if command.large else 72)
+        self.setMaximumWidth(78 if command.large else 110)
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
         self.clicked.connect(lambda checked=False: command.callback())
 
-    def _icon(self, glyph: str, large: bool) -> QIcon:
-        """Create a crisp generated icon for a ribbon command."""
+    def set_compact(self, compact: bool) -> None:
+        """Collapse secondary labels while keeping command affordance visible."""
 
-        size = 32 if large else 22
+        if self._command.large:
+            self.setText(self._base_text)
+            self.setMinimumWidth(62 if compact else 64)
+            return
+
+        self.setText("" if compact else self._base_text)
+        self.setMinimumWidth(30 if compact else 72)
+        self.setMaximumWidth(34 if compact else 110)
+
+    def _icon(self, glyph: str, large: bool) -> QIcon:
+        """Create a monochrome technical icon from a compact glyph."""
+
+        size = 24 if large else 20
         pixmap = QPixmap(size, size)
         pixmap.fill(Qt.transparent)
 
         painter = QPainter(pixmap)
         painter.setRenderHint(QPainter.Antialiasing)
-        painter.setPen(QPen(QColor("#d7dde7"), 1.6))
+        painter.setPen(QPen(QColor("#D7DDE7"), 1.4))
         font = painter.font()
-        font.setPixelSize(18 if large else 13)
+        font.setFamily("Segoe UI")
+        font.setPixelSize(13 if large else 11)
         font.setBold(True)
         painter.setFont(font)
         painter.drawText(pixmap.rect(), Qt.AlignCenter, glyph)
@@ -69,7 +90,7 @@ class RibbonButton(QPushButton):
 
 
 class RibbonGroup(QFrame):
-    """Reusable titled ribbon group with large and small command placement."""
+    """Titled ribbon group with compact controls and subtle separators."""
 
     def __init__(
         self,
@@ -77,15 +98,16 @@ class RibbonGroup(QFrame):
         commands: tuple[RibbonCommand, ...],
         parent: QWidget | None = None,
     ) -> None:
-        """Create a professional ribbon group."""
+        """Create a dense, professional command group."""
 
         super().__init__(parent)
 
+        self._buttons: list[RibbonButton] = []
         self.setObjectName("RibbonGroup")
         self.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Expanding)
 
         root = QVBoxLayout(self)
-        root.setContentsMargins(6, 5, 6, 3)
+        root.setContentsMargins(8, 4, 8, 3)
         root.setSpacing(3)
 
         command_layout = QGridLayout()
@@ -100,66 +122,89 @@ class RibbonGroup(QFrame):
 
         for command in commands:
             button = RibbonButton(command, self)
+            self._buttons.append(button)
             if command.large:
-                command_layout.addWidget(button, 0, large_column, 3, 1)
+                command_layout.addWidget(button, 0, large_column, 2, 1)
                 large_column += 1
                 small_column = max(small_column, large_column)
-            else:
-                command_layout.addWidget(button, small_row, small_column)
-                small_row += 1
-                if small_row >= 3:
-                    small_row = 0
-                    small_column += 1
+                continue
+
+            command_layout.addWidget(button, small_row, small_column)
+            small_row += 1
+            if small_row >= 2:
+                small_row = 0
+                small_column += 1
 
         title_label = QLabel(title, self)
         title_label.setObjectName("RibbonGroupTitle")
         title_label.setAlignment(Qt.AlignCenter)
         root.addWidget(title_label)
 
+    def set_compact(self, compact: bool) -> None:
+        """Apply compact mode to all contained command buttons."""
+
+        for button in self._buttons:
+            button.set_compact(compact)
+
 
 class RibbonPage(QWidget):
-    """Scrollable ribbon page containing titled command groups."""
+    """Scrollable ribbon page containing professional command groups."""
 
     def __init__(
         self,
         groups: tuple[tuple[str, tuple[RibbonCommand, ...]], ...],
         parent: QWidget | None = None,
     ) -> None:
-        """Create a ribbon page from grouped commands."""
+        """Create a page from group definitions."""
 
         super().__init__(parent)
 
+        self._groups: list[RibbonGroup] = []
         layout = QHBoxLayout(self)
         layout.setContentsMargins(8, 4, 8, 4)
-        layout.setSpacing(6)
+        layout.setSpacing(8)
 
         for title, commands in groups:
-            layout.addWidget(RibbonGroup(title, commands, self))
+            group = RibbonGroup(title, commands, self)
+            self._groups.append(group)
+            layout.addWidget(group)
 
         layout.addStretch(1)
 
+    def set_compact(self, compact: bool) -> None:
+        """Apply responsive compact mode to the page."""
+
+        for group in self._groups:
+            group.set_compact(compact)
+
 
 class Ribbon(QWidget):
-    """Compact professional CAD ribbon for Kinematics Studio."""
+    """World-class engineering ribbon for Kinematics Studio."""
 
     HIDDEN_TABS: set[str] = set()
+    CONTEXT_TAB_TITLES = {"Mesh Tools", "Curve Tools"}
+
     actionTriggered = Signal(str)
     toolSelected = Signal(str)
 
     def __init__(self, app) -> None:
-        """Create the presentation-only ribbon."""
+        """Create a presentation-first ribbon using existing routing signals."""
 
         super().__init__()
 
+        self._app = app
+        self._commands: dict[str, RibbonCommand] = {}
+        self._pages: list[RibbonPage] = []
+        self._context_signature: tuple[str, ...] = ()
+
         self.setObjectName("Ribbon")
-        self.setMaximumHeight(138)
-        self.setMinimumHeight(124)
+        self.setMaximumHeight(128)
+        self.setMinimumHeight(116)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
-
         layout.addWidget(self._title_bar())
 
         self.tabs = QTabWidget(self)
@@ -169,62 +214,88 @@ class Ribbon(QWidget):
         layout.addWidget(self.tabs)
 
         self._build_tabs()
+        self._configure_search()
         self._apply_style()
 
-    def _build_tabs(self) -> None:
-        """Build all production ribbon tabs."""
+        self._context_timer = QTimer(self)
+        self._context_timer.setInterval(180)
+        self._context_timer.timeout.connect(self._sync_context_tabs)
+        self._context_timer.start()
 
-        self._add_tab("Home", self._project_groups())
-        self._add_tab("Draw", self._draw_groups())
-        self._add_tab("Modify", self._modify_groups())
-        self._add_tab("View", self._view_groups())
-        self._add_tab("Create", self._three_d_groups())
-        self._add_tab("Analyze", self._analyze_groups())
-        self._add_tab("Render", self._render_groups())
-        self._add_tab("Machine", self._fabrication_groups())
-        self._add_tab("AI", self._ai_groups())
+    def resizeEvent(self, event) -> None:
+        """Adapt ribbon density to available width."""
+
+        super().resizeEvent(event)
+        compact = self.width() < 1320
+        for page in self._pages:
+            page.set_compact(compact)
 
     def _title_bar(self) -> QWidget:
-        """Create the professional in-application title and quick access bar."""
+        """Create the title, quick access toolbar and ribbon search."""
 
         title_bar = QFrame(self)
         title_bar.setObjectName("RibbonTitleBar")
         title_bar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         layout = QHBoxLayout(title_bar)
-        layout.setContentsMargins(10, 6, 10, 5)
-        layout.setSpacing(6)
+        layout.setContentsMargins(8, 6, 8, 4)
+        layout.setSpacing(8)
 
         product = QLabel("KINEMATICS STUDIO", title_bar)
         product.setObjectName("RibbonProductTitle")
         layout.addWidget(product)
 
-        context = QLabel("Professional Engineering Workspace", title_bar)
+        context = QLabel("Engineering Workspace", title_bar)
         context.setObjectName("RibbonProductContext")
         layout.addWidget(context)
-        layout.addStretch(1)
+
+        separator = QFrame(title_bar)
+        separator.setObjectName("RibbonTitleSeparator")
+        separator.setFrameShape(QFrame.VLine)
+        layout.addWidget(separator)
 
         for command in self._quick_access_commands():
-            button = QPushButton(command.text, title_bar)
-            button.setObjectName("QuickAccessButton")
-            button.setToolTip(command.tooltip)
-            button.setCursor(Qt.PointingHandCursor)
-            button.clicked.connect(lambda checked=False, callback=command.callback: callback())
+            button = RibbonButton(command, title_bar)
+            button.setObjectName("QuickAccessButtonLarge" if command.large else "QuickAccessButton")
             layout.addWidget(button)
+
+        layout.addStretch(1)
+
+        self.search = QLineEdit(title_bar)
+        self.search.setObjectName("RibbonSearch")
+        self.search.setPlaceholderText("Search commands")
+        self.search.setClearButtonEnabled(True)
+        self.search.setMinimumWidth(220)
+        self.search.setMaximumWidth(320)
+        self.search.returnPressed.connect(self._activate_search_text)
+        layout.addWidget(self.search)
 
         return title_bar
 
     def _quick_access_commands(self) -> tuple[RibbonCommand, ...]:
-        """Return quick access commands routed through presentation signals."""
+        """Return always-visible Quick Access Toolbar commands."""
 
         return (
-            self._command("New", "N", "Create a new project.", lambda: self._emit_action("project:new:blank")),
-            self._command("Open", "O", "Open project.", lambda: self._emit_action("project:open")),
-            self._command("Save", "S", "Save project.", lambda: self._emit_action("project:save")),
-            self._command("Undo", "↶", "Undo last command.", lambda: self._emit_action("command:undo")),
-            self._command("Redo", "↷", "Redo next command.", lambda: self._emit_action("command:redo")),
-            self._command("Settings", "⚙", "Open project settings.", lambda: self._emit_action("panel:project_manager")),
+            self._command("New", "N", "Create a new project.", lambda: self._emit_action("project:new:blank"), True, "Quick Access"),
+            self._command("Open", "O", "Open a project.", lambda: self._emit_action("project:open"), True, "Quick Access"),
+            self._command("Save", "S", "Save the active project.", lambda: self._emit_action("project:save"), True, "Quick Access"),
+            self._command("Undo", "U", "Undo the previous command.", lambda: self._emit_action("command:undo"), True, "Quick Access"),
+            self._command("Redo", "R", "Redo the next command.", lambda: self._emit_action("command:redo"), True, "Quick Access"),
         )
+
+    def _build_tabs(self) -> None:
+        """Build primary workspace tabs in the approved Sprint 2 order."""
+
+        self._add_tab("Home", self._home_groups())
+        self._add_tab("Draw", self._draw_groups())
+        self._add_tab("Modify", self._modify_groups())
+        self._add_tab("View", self._view_groups())
+        self._add_tab("Create", self._create_groups())
+        self._add_tab("Analyze", self._analyze_groups())
+        self._add_tab("Render", self._render_groups())
+        self._add_tab("Machine", self._machine_groups())
+        self._add_tab("AI", self._ai_groups())
+        self._add_tab("Settings", self._settings_groups())
 
     def _add_tab(
         self,
@@ -236,329 +307,336 @@ class Ribbon(QWidget):
         if title in self.HIDDEN_TABS:
             return
 
+        page = RibbonPage(groups, self.tabs)
+        self._pages.append(page)
         scroll = QScrollArea(self.tabs)
         scroll.setObjectName("RibbonScrollArea")
         scroll.setWidgetResizable(True)
         scroll.setFrameShape(QFrame.NoFrame)
         scroll.setVerticalScrollBarPolicy(Qt.ScrollBarAlwaysOff)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
-        scroll.setWidget(RibbonPage(groups, scroll))
+        scroll.setWidget(page)
         self.tabs.addTab(scroll, title)
 
-    def _project_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
-        """Return project ribbon groups."""
+    def _configure_search(self) -> None:
+        """Configure command search over existing ribbon commands."""
+
+        labels = sorted(self._commands)
+        self._search_model = QStringListModel(labels, self)
+        self.search_completer = QCompleter(self._search_model, self)
+        self.search_completer.setCaseSensitivity(Qt.CaseInsensitive)
+        self.search_completer.setFilterMode(Qt.MatchContains)
+        self.search_completer.activated.connect(self._activate_search_result)
+        self.search.setCompleter(self.search_completer)
+
+    def _home_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
+        """Return Home tab groups."""
 
         return (
             (
                 "Project",
                 (
-                    self._command("New", "N", "Create a blank project.", lambda: self._emit_action("project:new:blank"), True),
-                    self._command("Open", "O", "Open an existing project.", lambda: self._emit_action("project:open")),
-                    self._command("Save", "S", "Save the current project.", lambda: self._emit_action("project:save")),
-                    self._command("Save As", "⇧S", "Save the project to a new file.", lambda: self._emit_action("project:save_as")),
+                    self._action("New", "N", "project:new:blank", "Create a blank project.", True),
+                    self._action("Open", "O", "project:open", "Open an existing project.", True),
+                    self._action("Save", "S", "project:save", "Save the current project.", True),
+                    self._action("Save As", "SA", "project:save_as", "Save to a new file."),
                 ),
             ),
             (
-                "Templates",
+                "Clipboard",
                 (
-                    self._command("Architectural", "A", "Create from architectural template.", lambda: self._emit_action("project:new:architectural")),
-                    self._command("Mechanical", "M", "Create from mechanical template.", lambda: self._emit_action("project:new:mechanical")),
-                    self._command("Recover", "R", "Recover the latest autosave.", lambda: self._emit_action("project:recover")),
-                    self._command("Auto Save", "⟳", "Toggle autosave.", lambda: self._emit_action("project:toggle_autosave")),
+                    self._action("Undo", "U", "command:undo", "Undo the previous command.", True),
+                    self._action("Redo", "R", "command:redo", "Redo the next command.", True),
                 ),
             ),
             (
-                "Import / Export",
+                "Selection",
                 (
-                    self._command("Import 3D", "I", "Import an external 3D reference.", lambda: self._emit_action("import:3d"), True),
-                    self._command("Import CAD", "⇩", "Import professional CAD exchange data.", lambda: self._emit_action("import:cad_exchange")),
-                    self._command("Export CAD", "⇧", "Export professional CAD exchange data.", lambda: self._emit_action("export:cad_exchange")),
-                    self._command("Validate", "✓", "Show exchange validation report.", lambda: self._emit_action("exchange:show_validation_report")),
-                    self._command("DXF", "D", "Export DXF drawing.", lambda: self._emit_action("export:dxf")),
-                    self._command("SVG", "V", "Export SVG drawing.", lambda: self._emit_action("export:svg")),
-                    self._command("PDF", "P", "Export PDF drawing.", lambda: self._emit_action("export:pdf")),
-                    self._command("PNG", "G", "Export PNG image.", lambda: self._emit_action("export:png")),
+                    self._action("Select", "SE", "select", "Return to Select."),
+                    self._panel("Sets", "SS", "selection_sets"),
+                    self._panel("Explorer", "EX", "explorer"),
+                    self._panel("Layers", "LA", "layer_manager"),
                 ),
             ),
         )
 
     def _draw_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
-        """Return drawing ribbon groups."""
+        """Return Draw tab groups."""
 
         return (
             (
-                "Basic Geometry",
+                "Draw",
                 (
-                    self._tool("Line", "L", "LineTool", True),
+                    self._tool("Line", "LN", "LineTool"),
                     self._tool("Polyline", "PL", "PolylineTool"),
-                    self._tool("Rectangle", "▭", "RectangleTool", True),
-                    self._tool("Circle", "○", "CircleTool", True),
+                    self._tool("Rectangle", "RC", "RectangleTool"),
+                    self._tool("Circle", "CI", "CircleTool"),
+                    self._tool("Arc", "AR", "ArcTool"),
+                    self._tool("Ellipse", "EL", "EllipseTool"),
+                    self._tool("Polygon", "PG", "PolygonTool"),
+                    self._tool("Spline", "SP", "SplineTool"),
                 ),
             ),
             (
-                "Curves",
+                "Annotate",
                 (
-                    self._tool("Arc", "⌒", "ArcTool"),
-                    self._tool("Ellipse", "⬭", "EllipseTool"),
-                    self._tool("Spline", "∿", "SplineTool"),
-                    self._tool("Polygon", "⬡", "PolygonTool"),
-                    self._tool("Closed Poly", "◆", "ClosedPolylineTool"),
-                ),
-            ),
-            (
-                "Annotation",
-                (
-                    self._tool("Text", "T", "TextTool"),
+                    self._tool("Text", "TX", "TextTool"),
                     self._tool("MText", "MT", "MTextTool"),
-                    self._tool("Leader", "↗", "LeaderTool"),
-                    self._tool("Hatch", "▧", "HatchTool"),
+                    self._tool("Leader", "LD", "LeaderTool"),
+                    self._tool("Hatch", "HT", "HatchTool"),
                 ),
             ),
             (
                 "Dimensions",
                 (
-                    self._tool("Linear", "↔", "LinearDimensionTool"),
-                    self._tool("Aligned", "⟋", "AlignedDimensionTool"),
-                    self._tool("Radius", "R", "RadiusDimensionTool"),
-                    self._tool("Diameter", "Ø", "DiameterDimensionTool"),
-                    self._tool("Angular", "∠", "AngularDimensionTool"),
+                    self._tool("Linear", "LI", "LinearDimensionTool"),
+                    self._tool("Aligned", "AL", "AlignedDimensionTool"),
+                    self._tool("Radius", "RA", "RadiusDimensionTool"),
+                    self._tool("Diameter", "DI", "DiameterDimensionTool"),
+                    self._tool("Angular", "AN", "AngularDimensionTool"),
                 ),
             ),
         )
 
     def _modify_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
-        """Return modify ribbon groups."""
+        """Return Modify tab groups."""
 
         return (
             (
                 "Transform",
                 (
-                    self._tool("Move", "↕", "MoveTool", True),
-                    self._tool("Rotate", "⟳", "RotateTool"),
-                    self._tool("Scale", "◇", "ScaleTool"),
-                    self._tool("Mirror", "⇋", "MirrorTool"),
+                    self._tool("Move", "MV", "MoveTool"),
+                    self._tool("Rotate", "RT", "RotateTool"),
+                    self._tool("Scale", "SC", "ScaleTool"),
+                    self._tool("Mirror", "MR", "MirrorTool"),
+                    self._tool("Copy", "CP", "CopyTool"),
+                    self._tool("Array", "AY", "ArrayTool"),
                 ),
             ),
             (
                 "Edit",
                 (
-                    self._tool("Trim", "✂", "TrimTool", True),
-                    self._tool("Extend", "⟶", "ExtendTool"),
-                    self._tool("Offset", "∥", "OffsetTool"),
-                    self._tool("Fillet", "⌒", "FilletTool"),
-                    self._tool("Chamfer", "⟍", "ChamferTool"),
-                ),
-            ),
-            (
-                "Duplicate",
-                (
-                    self._tool("Copy", "⧉", "CopyTool"),
-                    self._tool("Array", "▦", "ArrayTool"),
-                ),
-            ),
-            (
-                "History",
-                (
-                    self._command("Undo", "↶", "Undo the previous command.", lambda: self._emit_action("command:undo")),
-                    self._command("Redo", "↷", "Redo the next command.", lambda: self._emit_action("command:redo")),
-                ),
-            ),
-        )
-
-    def _three_d_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
-        """Return 3D modeling ribbon groups."""
-
-        return (
-            (
-                "Primitives",
-                (
-                    self._tool("Box", "□", "BoxPrimitiveTool", True),
-                    self._tool("Cube", "▣", "CubePrimitiveTool"),
-                    self._tool("Plane", "▱", "PlanePrimitiveTool"),
-                    self._tool("Cylinder", "◫", "CylinderPrimitiveTool"),
-                    self._tool("Cone", "△", "ConePrimitiveTool"),
-                    self._tool("Sphere", "●", "SpherePrimitiveTool"),
-                    self._tool("Torus", "◎", "TorusPrimitiveTool"),
-                    self._tool("Pyramid", "▲", "PyramidPrimitiveTool"),
-                    self._tool("Prism", "⬢", "PrismPrimitiveTool"),
-                    self._tool("Capsule", "⬤", "CapsulePrimitiveTool"),
-                ),
-            ),
-            (
-                "Solids",
-                (
-                    self._tool("Extrude", "⤴", "ExtrudeTool", True),
-                    self._tool("Revolve", "⭮", "RevolveTool", True),
-                    self._tool("Sweep", "⤳", "SweepTool"),
-                    self._tool("Loft", "≋", "LoftTool"),
-                ),
-            ),
-            (
-                "Boolean",
-                (
-                    self._command("Union", "∪", "Boolean union.", lambda: self._emit_action("boolean:union")),
-                    self._command("Subtract", "−", "Boolean subtract.", lambda: self._emit_action("boolean:subtract")),
-                    self._command("Intersect", "∩", "Boolean intersect.", lambda: self._emit_action("boolean:intersect")),
-                ),
-            ),
-        )
-
-    def _bim_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
-        """Return BIM coordination ribbon groups."""
-
-        return (
-            (
-                "Coordination",
-                (
-                    self._panel("References", "R", "reference_browser", True),
-                    self._panel("Ref Layers", "L", "reference_layers"),
-                    self._panel("Coordination", "C", "coordination"),
-                ),
-            ),
-            (
-                "Clash",
-                (
-                    self._panel("Clash Manager", "!", "clash_manager", True),
-                    self._panel("Dashboard", "▦", "clash_dashboard"),
-                    self._panel("BCF Topics", "B", "bcf_topic_browser"),
-                ),
-            ),
-        )
-
-    def _analyze_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
-        """Return analysis ribbon groups."""
-
-        return (
-            (
-                "Inspection",
-                (
-                    self._command("Fit View", "F", "Fit visible drawing.", lambda: self._emit_action("view:fit"), True),
-                    self._command("Zoom Extents", "Z", "Zoom to drawing extents.", lambda: self._emit_action("view:zoom_extents")),
-                    self._panel("Constraints", "C", "constraint_manager"),
-                    self._panel("Selection Sets", "S", "selection_sets"),
-                ),
-            ),
-            *self._bim_groups(),
-        )
-
-    def _render_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
-        """Return render and presentation workspace groups."""
-
-        return (
-            (
-                "Camera",
-                (
-                    self._command("Home", "H", "Return cameras to home.", lambda: self._emit_action("view:home"), True),
-                    self._command("Zoom Extents", "Z", "Fit the model.", lambda: self._emit_action("view:zoom_extents")),
-                    self._command("Zoom Selected", "ZS", "Frame selected objects.", lambda: self._emit_action("view:zoom_selected")),
-                ),
-            ),
-            (
-                "Workspace",
-                (
-                    self._command("Focus", "◎", "Enter focus mode.", lambda: self._emit_action("focus_mode")),
-                    self._command("Presentation", "□", "Enter presentation mode.", lambda: self._emit_action("presentation_mode")),
-                    self._command("Reset", "↺", "Reset workspace layout.", lambda: self._emit_action("reset_workspace_layout")),
-                ),
-            ),
-        )
-
-    def _fabrication_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
-        """Return fabrication ribbon groups."""
-
-        return (
-            (
-                "Machine",
-                (
-                    self._machine("Profile", "M", lambda: self._emit_action("machine:profile"), True),
-                    self._machine("Create Job", "J", lambda: self._emit_action("machine:create_job")),
-                    self._machine("Toolpath", "T", lambda: self._emit_action("machine:generate_toolpath")),
-                    self._machine("Simulate", "▶", lambda: self._emit_action("machine:simulate")),
-                ),
-            ),
-            (
-                "Output",
-                (
-                    self._machine("Post", "P", lambda: self._emit_action("machine:post_process")),
-                    self._machine("Export", "E", lambda: self._emit_action("machine:export")),
-                    self._machine("Queue", "Q", lambda: self._emit_action("machine:queue_job")),
-                    self._machine("Execute", "▷", lambda: self._emit_action("machine:execute_job")),
-                    self._machine("Pause", "Ⅱ", lambda: self._emit_action("machine:pause")),
-                    self._machine("Resume", "▶", lambda: self._emit_action("machine:resume")),
-                    self._machine("Cancel", "×", lambda: self._emit_action("machine:cancel_job")),
-                    self._machine("Diagnostics", "?", lambda: self._emit_action("machine:diagnostics")),
-                ),
-            ),
-        )
-
-    def _ai_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
-        """Return AI infrastructure ribbon groups."""
-
-        return (
-            (
-                "Context",
-                (
-                    self._ai("Capture", "C", lambda: self._emit_action("ai:capture_context"), True),
-                    self._ai("New Session", "N", lambda: self._emit_action("ai:new_session")),
-                    self._ai("Diagnostics", "?", lambda: self._emit_action("ai:diagnostics")),
-                ),
-            ),
-            (
-                "Prompt",
-                (
-                    self._ai("Validate", "✓", lambda: self._emit_action("ai:validate_prompt")),
-                    self._ai("Queue", "Q", lambda: self._emit_action("ai:queue_prompt")),
-                    self._ai("Cancel", "×", lambda: self._emit_action("ai:cancel_task")),
-                    self._ai("Retry", "↻", lambda: self._emit_action("ai:retry_task")),
-                    self._ai("Providers", "P", lambda: self._emit_action("ai:validate_providers")),
+                    self._tool("Trim", "TR", "TrimTool"),
+                    self._tool("Extend", "EX", "ExtendTool"),
+                    self._tool("Offset", "OF", "OffsetTool"),
+                    self._tool("Fillet", "FI", "FilletTool"),
+                    self._tool("Chamfer", "CH", "ChamferTool"),
                 ),
             ),
         )
 
     def _view_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
-        """Return view ribbon groups."""
+        """Return View tab groups."""
 
         return (
             (
                 "Viewport",
                 (
-                    self._command("2D View", "2D", "Switch to 2D view.", lambda: self._emit_action("view_2d"), True),
-                    self._command("3D View", "3D", "Switch to 3D view.", lambda: self._emit_action("view_3d"), True),
-                    self._command("Home", "H", "Return cameras to the home view.", lambda: self._emit_action("view:home")),
-                    self._command("Fit View", "F", "Fit visible drawing.", lambda: self._emit_action("view:fit")),
-                    self._command("Zoom Extents", "Z", "Zoom to extents.", lambda: self._emit_action("view:zoom_extents")),
-                    self._command("Zoom Selected", "ZS", "Zoom to selected geometry.", lambda: self._emit_action("view:zoom_selected")),
+                    self._action("2D View", "2D", "view_2d", "Switch to 2D view."),
+                    self._action("3D View", "3D", "view_3d", "Switch to 3D view."),
+                    self._action("Home", "HM", "view:home", "Return cameras home."),
+                    self._action("Fit", "FT", "view:fit", "Fit the current view."),
+                    self._action("Extents", "ZE", "view:zoom_extents", "Zoom to extents."),
+                    self._action("Selected", "ZS", "view:zoom_selected", "Zoom to selected objects."),
                 ),
             ),
             (
-                "Layout",
+                "Workspace",
                 (
-                    self._command("Focus", "◉", "Enter focus mode.", lambda: self._emit_action("focus_mode")),
-                    self._command("Presentation", "□", "Enter presentation mode.", lambda: self._emit_action("presentation_mode")),
-                    self._command("Reset Layout", "↺", "Reset workspace layout.", lambda: self._emit_action("reset_workspace_layout")),
+                    self._action("Focus", "FO", "focus_mode", "Enter focus mode."),
+                    self._action("Present", "PR", "presentation_mode", "Enter presentation mode."),
+                    self._action("Reset", "RS", "reset_workspace_layout", "Reset workspace layout."),
                 ),
             ),
         )
 
-    def _manage_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
-        """Return manager ribbon groups."""
+    def _create_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
+        """Return Create tab groups."""
+
+        return (
+            (
+                "Primitives",
+                (
+                    self._tool("Box", "BX", "BoxPrimitiveTool"),
+                    self._tool("Cube", "CB", "CubePrimitiveTool"),
+                    self._tool("Plane", "PN", "PlanePrimitiveTool"),
+                    self._tool("Cylinder", "CY", "CylinderPrimitiveTool"),
+                    self._tool("Cone", "CN", "ConePrimitiveTool"),
+                    self._tool("Sphere", "SH", "SpherePrimitiveTool"),
+                    self._tool("Torus", "TO", "TorusPrimitiveTool"),
+                    self._tool("Pyramid", "PY", "PyramidPrimitiveTool"),
+                    self._tool("Prism", "PS", "PrismPrimitiveTool"),
+                    self._tool("Capsule", "CA", "CapsulePrimitiveTool"),
+                ),
+            ),
+            (
+                "Solids",
+                (
+                    self._tool("Extrude", "EX", "ExtrudeTool"),
+                    self._tool("Revolve", "RV", "RevolveTool"),
+                    self._tool("Sweep", "SW", "SweepTool"),
+                    self._tool("Loft", "LF", "LoftTool"),
+                ),
+            ),
+            (
+                "Boolean",
+                (
+                    self._action("Union", "UN", "boolean:union", "Boolean union."),
+                    self._action("Subtract", "SB", "boolean:subtract", "Boolean subtract."),
+                    self._action("Intersect", "IN", "boolean:intersect", "Boolean intersect."),
+                ),
+            ),
+        )
+
+    def _analyze_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
+        """Return Analyze tab groups."""
+
+        return (
+            (
+                "Inspection",
+                (
+                    self._panel("Constraints", "CS", "constraint_manager"),
+                    self._panel("Selection Sets", "SS", "selection_sets"),
+                    self._panel("References", "RF", "reference_browser"),
+                    self._panel("Reference Layers", "RL", "reference_layers"),
+                ),
+            ),
+            (
+                "Coordination",
+                (
+                    self._panel("Coordination", "CO", "coordination"),
+                    self._panel("Clash Manager", "CL", "clash_manager"),
+                    self._panel("Clash Dashboard", "CD", "clash_dashboard"),
+                    self._panel("BCF Topics", "BC", "bcf_topic_browser"),
+                ),
+            ),
+        )
+
+    def _render_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
+        """Return Render tab groups."""
+
+        return (
+            (
+                "Camera",
+                (
+                    self._action("Home", "HM", "view:home", "Return cameras home."),
+                    self._action("Extents", "ZE", "view:zoom_extents", "Frame the model."),
+                    self._action("Selected", "ZS", "view:zoom_selected", "Frame selected objects."),
+                ),
+            ),
+            (
+                "Presentation",
+                (
+                    self._action("Focus", "FO", "focus_mode", "Enter focus mode."),
+                    self._action("Present", "PR", "presentation_mode", "Enter presentation mode."),
+                    self._action("Reset", "RS", "reset_workspace_layout", "Reset layout."),
+                ),
+            ),
+        )
+
+    def _machine_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
+        """Return Machine tab groups."""
+
+        return (
+            (
+                "Job",
+                (
+                    self._machine("Profile", "MP", "profile"),
+                    self._machine("Create Job", "CJ", "create_job"),
+                    self._machine("Toolpath", "TP", "generate_toolpath"),
+                    self._machine("Simulate", "SM", "simulate"),
+                ),
+            ),
+            (
+                "Output",
+                (
+                    self._machine("Post", "PP", "post_process"),
+                    self._machine("Export", "EX", "export"),
+                    self._machine("Queue", "QU", "queue_job"),
+                    self._machine("Execute", "GO", "execute_job"),
+                    self._machine("Pause", "PA", "pause"),
+                    self._machine("Resume", "RE", "resume"),
+                    self._machine("Cancel", "CA", "cancel_job"),
+                    self._machine("Diagnostics", "DG", "diagnostics"),
+                ),
+            ),
+        )
+
+    def _ai_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
+        """Return AI tab groups."""
+
+        return (
+            (
+                "Context",
+                (
+                    self._ai("Capture", "CC", "capture_context"),
+                    self._ai("New Session", "NS", "new_session"),
+                    self._ai("Diagnostics", "DG", "diagnostics"),
+                ),
+            ),
+            (
+                "Prompt",
+                (
+                    self._ai("Validate", "VA", "validate_prompt"),
+                    self._ai("Queue", "QU", "queue_prompt"),
+                    self._ai("Cancel", "CA", "cancel_task"),
+                    self._ai("Retry", "RT", "retry_task"),
+                    self._ai("Providers", "PV", "validate_providers"),
+                ),
+            ),
+        )
+
+    def _settings_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
+        """Return Settings tab groups."""
 
         return (
             (
                 "Project",
                 (
-                    self._panel("Explorer", "E", "explorer", True),
-                    self._panel("Project", "P", "project_manager"),
+                    self._panel("Project", "PJ", "project_manager"),
+                    self._panel("Explorer", "EX", "explorer"),
+                    self._panel("Layers", "LA", "layer_manager"),
+                    self._panel("Dimensions", "DM", "dimension_manager"),
                 ),
             ),
             (
-                "CAD Managers",
+                "Resources",
                 (
-                    self._panel("Layers", "L", "layer_manager", True),
-                    self._panel("Dimensions", "D", "dimension_manager"),
-                    self._panel("Patterns", "H", "pattern_manager"),
-                    self._panel("Blocks", "B", "block_manager"),
-                    self._panel("Groups", "G", "group_manager"),
+                    self._panel("Patterns", "PT", "pattern_manager"),
+                    self._panel("Blocks", "BL", "block_manager"),
+                    self._panel("Groups", "GR", "group_manager"),
+                ),
+            ),
+        )
+
+    def _mesh_context_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
+        """Return context groups for selected mesh or solid entities."""
+
+        return (
+            (
+                "Mesh Selection",
+                (
+                    self._action("Frame", "FR", "view:zoom_selected", "Frame selected mesh."),
+                    self._tool("Move", "MV", "MoveTool"),
+                    self._tool("Rotate", "RT", "RotateTool"),
+                    self._tool("Scale", "SC", "ScaleTool"),
+                    self._action("Properties", "PR", "panel:project_manager", "Open properties context."),
+                ),
+            ),
+        )
+
+    def _curve_context_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
+        """Return context groups for selected curve entities."""
+
+        return (
+            (
+                "Curve Selection",
+                (
+                    self._action("Frame", "FR", "view:zoom_selected", "Frame selected curve."),
+                    self._tool("Move", "MV", "MoveTool"),
+                    self._tool("Offset", "OF", "OffsetTool"),
+                    self._tool("Trim", "TR", "TrimTool"),
+                    self._tool("Extend", "EX", "ExtendTool"),
                 ),
             ),
         )
@@ -570,10 +648,34 @@ class Ribbon(QWidget):
         tooltip: str,
         callback: Callable[[], None],
         large: bool = False,
+        group: str = "",
+        search_terms: tuple[str, ...] = (),
     ) -> RibbonCommand:
-        """Create a generic ribbon command definition."""
+        """Create and index a command definition."""
 
-        return RibbonCommand(text, icon, tooltip, callback, large)
+        command = RibbonCommand(text, icon, tooltip, callback, large, group, search_terms)
+        self._register_command(command)
+        return command
+
+    def _action(
+        self,
+        text: str,
+        icon: str,
+        action_id: str,
+        tooltip: str,
+        large: bool = False,
+    ) -> RibbonCommand:
+        """Create an action-routed command definition."""
+
+        return self._command(
+            text,
+            icon,
+            tooltip,
+            lambda current=action_id: self._emit_action(current),
+            large,
+            action_id.split(":", 1)[0].title(),
+            (action_id,),
+        )
 
     def _tool(
         self,
@@ -590,6 +692,8 @@ class Ribbon(QWidget):
             f"Activate {text}.",
             lambda name=tool_name: self._emit_tool(name),
             large,
+            "Tools",
+            (tool_name,),
         )
 
     def _panel(
@@ -601,35 +705,109 @@ class Ribbon(QWidget):
     ) -> RibbonCommand:
         """Create an on-demand panel command definition."""
 
-        return self._command(
-            text,
-            icon,
-            f"Open {text}.",
-            lambda target=panel_id: self._emit_action(f"panel:{target}"),
-            large,
-        )
+        return self._action(text, icon, f"panel:{panel_id}", f"Open {text}.", large)
 
-    def _ai(
-        self,
-        text: str,
-        icon: str,
-        callback: Callable[[], None],
-        large: bool = False,
-    ) -> RibbonCommand:
+    def _ai(self, text: str, icon: str, action_id: str) -> RibbonCommand:
         """Create an AI command definition."""
 
-        return self._command(text, icon, f"AI: {text}.", callback, large)
+        return self._action(text, icon, f"ai:{action_id}", f"AI: {text}.")
 
-    def _machine(
-        self,
-        text: str,
-        icon: str,
-        callback: Callable[[], None],
-        large: bool = False,
-    ) -> RibbonCommand:
-        """Create a fabrication command definition."""
+    def _machine(self, text: str, icon: str, action_id: str) -> RibbonCommand:
+        """Create a Machine/CAM command definition."""
 
-        return self._command(text, icon, f"Machine/CAM: {text}.", callback, large)
+        return self._action(text, icon, f"machine:{action_id}", f"Machine/CAM: {text}.")
+
+    def _register_command(self, command: RibbonCommand) -> None:
+        """Register command aliases for ribbon search."""
+
+        labels = {
+            command.text,
+            f"{command.text} - {command.group}" if command.group else command.text,
+            *command.search_terms,
+        }
+        for label in labels:
+            if label:
+                self._commands[label] = command
+        if hasattr(self, "_search_model"):
+            self._search_model.setStringList(sorted(self._commands))
+
+    def _activate_search_text(self) -> None:
+        """Activate the current ribbon search text."""
+
+        self._activate_search_result(self.search.text())
+
+    def _activate_search_result(self, text: str) -> None:
+        """Run the command selected from ribbon search."""
+
+        query = text.strip()
+        if not query:
+            return
+
+        command = self._commands.get(query)
+        if command is None:
+            normalized = query.casefold()
+            for label, candidate in self._commands.items():
+                if normalized in label.casefold():
+                    command = candidate
+                    break
+
+        if command is None:
+            return
+
+        self.search.clear()
+        command.callback()
+
+    def _sync_context_tabs(self) -> None:
+        """Show or hide context tabs based on the active selection."""
+
+        selected = self._current_selection()
+        signature = tuple(sorted(self._context_kinds(selected)))
+        if signature == self._context_signature:
+            return
+
+        self._context_signature = signature
+        self._remove_context_tabs()
+
+        if "mesh" in signature:
+            self._add_tab("Mesh Tools", self._mesh_context_groups())
+        if "curve" in signature:
+            self._add_tab("Curve Tools", self._curve_context_groups())
+
+    def _remove_context_tabs(self) -> None:
+        """Remove all visible context tabs."""
+
+        for index in reversed(range(self.tabs.count())):
+            title = self.tabs.tabText(index)
+            if title in self.CONTEXT_TAB_TITLES:
+                widget = self.tabs.widget(index)
+                page = widget.widget() if isinstance(widget, QScrollArea) else None
+                if page in self._pages:
+                    self._pages.remove(page)
+                self.tabs.removeTab(index)
+                if widget is not None:
+                    widget.deleteLater()
+
+    def _context_kinds(self, selected: list[object]) -> set[str]:
+        """Return context kinds represented by selected entities."""
+
+        kinds: set[str] = set()
+        for entity in selected:
+            type_name = str(getattr(entity, "type_name", entity.__class__.__name__))
+            if getattr(entity, "is_3d", False) or "Mesh" in type_name or "Solid" in type_name:
+                kinds.add("mesh")
+            if any(token in type_name for token in ("Line", "Curve", "Polyline", "Spline", "Arc", "Circle", "Ellipse")):
+                kinds.add("curve")
+        return kinds
+
+    def _current_selection(self) -> list[object]:
+        """Return the active selection for context-tab presentation."""
+
+        workspace = getattr(self._app, "workspace", None)
+        selection = getattr(workspace, "selection", None)
+        selected = getattr(selection, "selected", [])
+        if callable(selected):
+            selected = selected()
+        return list(selected or [])
 
     def _emit_action(self, action_id: str) -> None:
         """Emit a presentation action identifier for controller routing."""
@@ -642,82 +820,109 @@ class Ribbon(QWidget):
         self.toolSelected.emit(tool_name)
 
     def _apply_style(self) -> None:
-        """Apply the dark professional ribbon theme."""
+        """Apply the locked Sprint 2 engineering design language."""
 
         self.setStyleSheet(
             """
             QWidget#Ribbon {
-                background-color: #11161d;
-                border-bottom: 1px solid #262d36;
+                background-color: #2A2C31;
+                border-bottom: 1px solid #1E1F22;
             }
 
             QFrame#RibbonTitleBar {
-                background-color: #0f1319;
-                border-bottom: 1px solid #252b34;
+                background-color: #1E1F22;
+                border-bottom: 1px solid #25272C;
             }
 
             QLabel#RibbonProductTitle {
-                color: #f3f6fb;
+                color: #F2F5F8;
+                font-family: "Inter", "Segoe UI";
                 font-size: 12px;
                 font-weight: 800;
                 letter-spacing: 1px;
             }
 
             QLabel#RibbonProductContext {
-                color: #7f8a99;
+                color: #AEB6C2;
+                font-family: "Inter", "Segoe UI";
                 font-size: 11px;
                 font-weight: 600;
-                padding-left: 8px;
             }
 
-            QPushButton#QuickAccessButton {
-                background-color: #181e27;
-                border: 1px solid #303846;
-                border-radius: 4px;
-                color: #dce3ed;
+            QFrame#RibbonTitleSeparator {
+                color: #3D4148;
+                margin-left: 4px;
+                margin-right: 4px;
+            }
+
+            QLineEdit#RibbonSearch {
+                background-color: #25272C;
+                border: 1px solid #3D4148;
+                border-radius: 6px;
+                color: #E3E8EF;
+                font-family: "Inter", "Segoe UI";
                 font-size: 11px;
-                font-weight: 650;
                 min-height: 24px;
-                padding: 2px 10px;
+                padding: 2px 8px;
             }
 
-            QPushButton#QuickAccessButton:hover {
-                background-color: #222b37;
-                border-color: #4a8cff;
-                color: #ffffff;
+            QLineEdit#RibbonSearch:focus {
+                border-color: #4FA3FF;
             }
 
-            QPushButton#QuickAccessButton:pressed {
-                background-color: #2b63c7;
-                border-color: #7db4ff;
+            QPushButton#QuickAccessButton,
+            QPushButton#QuickAccessButtonLarge {
+                background-color: #25272C;
+                border: 1px solid #3D4148;
+                border-radius: 6px;
+                color: #D7DDE7;
+                font-family: "Inter", "Segoe UI";
+                font-size: 10px;
+                font-weight: 700;
+                min-height: 26px;
+                padding: 2px 6px;
+            }
+
+            QPushButton#QuickAccessButton:hover,
+            QPushButton#QuickAccessButtonLarge:hover {
+                background-color: #3D4148;
+                border-color: #4FA3FF;
+                color: #FFFFFF;
+            }
+
+            QPushButton#QuickAccessButton:pressed,
+            QPushButton#QuickAccessButtonLarge:pressed {
+                background-color: #3BA4F7;
+                border-color: #4FA3FF;
+                color: #FFFFFF;
             }
 
             QTabWidget#RibbonTabs::pane {
-                background-color: #151a22;
+                background-color: #2A2C31;
                 border: none;
-                border-top: 1px solid #252b34;
+                border-top: 1px solid #25272C;
             }
 
             QTabBar::tab {
-                background-color: #121720;
-                color: #a8b2c0;
-                padding: 5px 16px;
-                margin: 0;
-                border: none;
+                background-color: #25272C;
+                color: #B7C0CC;
+                font-family: "Inter", "Segoe UI";
+                font-size: 11px;
+                font-weight: 650;
                 min-height: 22px;
-                font-size: 12px;
-                font-weight: 600;
+                padding: 4px 12px;
+                border: none;
             }
 
             QTabBar::tab:selected {
-                background-color: #202834;
-                color: #ffffff;
-                border-bottom: 2px solid #4a8cff;
+                background-color: #30333A;
+                color: #FFFFFF;
+                border-bottom: 2px solid #4FA3FF;
             }
 
             QTabBar::tab:hover {
-                background-color: #273140;
-                color: #ffffff;
+                background-color: #3D4148;
+                color: #FFFFFF;
             }
 
             QScrollArea#RibbonScrollArea {
@@ -726,15 +931,16 @@ class Ribbon(QWidget):
             }
 
             QFrame#RibbonGroup {
-                background-color: #1a2029;
-                border: 1px solid #2d3542;
-                border-radius: 4px;
+                background-color: #30333A;
+                border: 1px solid #3D4148;
+                border-radius: 8px;
             }
 
             QLabel#RibbonGroupTitle {
-                color: #8f9aaa;
+                color: #9AA4B2;
+                font-family: "Inter", "Segoe UI";
                 font-size: 10px;
-                font-weight: 600;
+                font-weight: 700;
                 padding-top: 1px;
             }
 
@@ -742,11 +948,12 @@ class Ribbon(QWidget):
             QPushButton#RibbonButtonLarge {
                 background-color: transparent;
                 border: 1px solid transparent;
-                border-radius: 4px;
-                color: #dce3ed;
+                border-radius: 6px;
+                color: #D7DDE7;
+                font-family: "Inter", "Segoe UI";
                 font-size: 10px;
-                font-weight: 600;
-                padding: 3px 5px;
+                font-weight: 650;
+                padding: 2px 4px;
                 text-align: left;
             }
 
@@ -756,38 +963,31 @@ class Ribbon(QWidget):
 
             QPushButton#RibbonButton:hover,
             QPushButton#RibbonButtonLarge:hover {
-                background-color: #26303c;
-                border-color: #3f8cff;
-                color: #ffffff;
+                background-color: #3D4148;
+                border-color: #4FA3FF;
+                color: #FFFFFF;
             }
 
             QPushButton#RibbonButton:pressed,
             QPushButton#RibbonButtonLarge:pressed {
-                background-color: #2563eb;
-                border-color: #78b7ff;
-                color: #ffffff;
-            }
-
-            QPushButton#RibbonButton:disabled,
-            QPushButton#RibbonButtonLarge:disabled {
-                color: #666d78;
-                background-color: #181b21;
-                border-color: #242933;
+                background-color: #3BA4F7;
+                border-color: #4FA3FF;
+                color: #FFFFFF;
             }
 
             QScrollBar:horizontal {
-                background: #1a1f27;
-                height: 7px;
+                background: #25272C;
+                height: 6px;
             }
 
             QScrollBar::handle:horizontal {
-                background: #3a4350;
+                background: #3D4148;
                 border-radius: 3px;
                 min-width: 32px;
             }
 
             QScrollBar::handle:horizontal:hover {
-                background: #4b5665;
+                background: #4FA3FF;
             }
 
             QScrollBar::add-line:horizontal,

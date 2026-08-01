@@ -14,6 +14,11 @@ All notable changes to this project are documented here.
 - Modern engineering layout
 - Responsive docking
 - Professional ribbon
+- Professional Ribbon
+- Context Tabs
+- Ribbon Search
+- Quick Access Toolbar
+- Responsive Ribbon
 
 ## Changed
 

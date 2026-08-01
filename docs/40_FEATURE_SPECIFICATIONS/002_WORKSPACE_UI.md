@@ -118,3 +118,38 @@ Remaining Tasks
 Manual PySide6 launch validation and final Sprint 2 acceptance testing.
 
 ----------------------------------------
+
+## Task 2.1.2
+
+Status: IN PROGRESS
+
+Summary
+
+The ribbon system was redesigned as a compact, high-density engineering ribbon
+following the locked Sprint 2 design language. The ribbon now includes
+professional command groups, Home/Draw/Modify/View/Create/Analyze/Render/
+Machine/AI/Settings tabs, a persistent Quick Access Toolbar, command search,
+responsive compact behavior and context tabs for selected mesh and curve
+entities.
+
+Files Modified
+
+ui_v2/ribbon.py
+docs/40_FEATURE_SPECIFICATIONS/002_WORKSPACE_UI.md
+PROJECT_STATUS.md
+SPRINT_BACKLOG.md
+CHANGELOG.md
+
+Architecture Decisions
+
+The ribbon remains a UI layer component and reuses existing actionTriggered
+and toolSelected signals. Search activates existing routed commands and tools
+without introducing a new command system. Sprint 1 runtime systems were not
+modified.
+
+Remaining Tasks
+
+Manual PySide6 launch validation, visual spacing review and responsive ribbon
+validation on target displays.
+
+----------------------------------------
