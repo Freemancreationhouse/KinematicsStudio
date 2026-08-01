@@ -1172,7 +1172,10 @@ class WorkspaceConnectionController(QObject):
         selection = getattr(self.workspace, "selection", None)
         if selection is None:
             return None
-        return getattr(selection, "selected", selection)
+        selected = getattr(selection, "selected", selection)
+        if callable(selected):
+            return selected()
+        return selected
 
     @property
     def workspace(self) -> Any:

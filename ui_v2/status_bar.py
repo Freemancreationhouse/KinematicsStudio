@@ -53,6 +53,9 @@ class StudioStatusBar(QStatusBar):
 
     def show_selection(self, selected):
 
+        if callable(selected):
+            selected = selected()
+
         if not selected:
             self.selected.setText("Selected: None")
         elif len(selected) == 1:

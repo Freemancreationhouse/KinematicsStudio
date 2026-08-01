@@ -144,6 +144,8 @@ class PropertyPanel(QWidget):
         """Display editable properties for the current selection."""
 
         self._loading = True
+        if callable(selected):
+            selected = selected()
         self.selected = list(selected or [])
 
         if not self.selected:

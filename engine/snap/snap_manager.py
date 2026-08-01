@@ -104,16 +104,32 @@ class SnapManager:
             candidates.extend(self._ellipse_candidates(entity, point))
 
         elif isinstance(entity, PolygonEntity):
-            candidates.extend(self._curve_candidates(entity, entity.points, point, True))
+            candidates.extend(
+                self._curve_candidates(entity, self._entity_points(entity), point, True)
+            )
 
         elif hasattr(entity, "center") and hasattr(entity, "radius"):
             candidates.extend(self._circle_candidates(entity, point))
 
         elif hasattr(entity, "points"):
-            candidates.extend(self._curve_candidates(entity, entity.points, point, getattr(entity, "closed", False)))
+            candidates.extend(
+                self._curve_candidates(
+                    entity,
+                    self._entity_points(entity),
+                    point,
+                    getattr(entity, "closed", False),
+                )
+            )
 
         elif hasattr(entity, "control_points"):
-            candidates.extend(self._curve_candidates(entity, entity.control_points, point, False))
+            candidates.extend(
+                self._curve_candidates(
+                    entity,
+                    self._entity_points(entity, "control_points"),
+                    point,
+                    False,
+                )
+            )
 
         return candidates
 
@@ -230,6 +246,7 @@ class SnapManager:
     def _curve_candidates(self, entity, points, point, closed=False):
 
         candidates = []
+        points = self._points2d(points)
 
         if self.endpoint:
             for vertex in points:
@@ -299,11 +316,21 @@ class SnapManager:
                 samples = entity.sampled_points()
                 segments.extend(polyline_segments(samples, True))
             elif isinstance(entity, PolygonEntity):
-                segments.extend(polyline_segments(entity.points, True))
+                segments.extend(polyline_segments(self._entity_points(entity), True))
             elif hasattr(entity, "points"):
-                segments.extend(polyline_segments(entity.points, getattr(entity, "closed", False)))
+                segments.extend(
+                    polyline_segments(
+                        self._entity_points(entity),
+                        getattr(entity, "closed", False),
+                    )
+                )
             elif hasattr(entity, "control_points"):
-                segments.extend(polyline_segments(entity.sampled_points()))
+                points = (
+                    entity.sampled_points()
+                    if hasattr(entity, "sampled_points")
+                    else self._entity_points(entity, "control_points")
+                )
+                segments.extend(polyline_segments(self._points2d(points)))
 
         if point is not None and tolerance is not None:
             segments = [
@@ -363,6 +390,30 @@ class SnapManager:
     def _midpoint(self, a, b):
 
         return Vector2((a.x + b.x) * 0.5, (a.y + b.y) * 0.5)
+
+    # ------------------------------------------------------------
+
+    def _entity_points(self, entity, attribute="points"):
+
+        points = getattr(entity, attribute, [])
+
+        if callable(points):
+            points = points()
+
+        return self._points2d(points)
+
+    # ------------------------------------------------------------
+
+    def _points2d(self, points):
+
+        if callable(points):
+            points = points()
+
+        return [
+            Vector2(point.x, point.y)
+            for point in list(points or [])
+            if hasattr(point, "x") and hasattr(point, "y")
+        ]
 
     # ------------------------------------------------------------
 
