@@ -200,7 +200,12 @@ class Renderer:
         if snap_result.entity is not None:
             previous = getattr(snap_result.entity, "selected", False)
             snap_result.entity.selected = True
-            snap_result.entity.draw(painter)
+            if getattr(snap_result.entity, "is_3d", False):
+                self._draw_projected_3d_entity(painter, snap_result.entity)
+            else:
+                draw = getattr(snap_result.entity, "draw", None)
+                if callable(draw):
+                    draw(painter)
             snap_result.entity.selected = previous
 
         pen = QPen(QColor("#ffeb3b"), 1)

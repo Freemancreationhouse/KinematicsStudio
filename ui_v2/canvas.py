@@ -330,6 +330,18 @@ class Canvas(QWidget):
 
     # ------------------------------------------------
 
+    def home_view(self):
+        """Center the 2D camera on world origin with a production default zoom."""
+
+        self.camera.zoom = 1.0
+        self.camera.position = Vector2(
+            -self.width() * 0.5,
+            -self.height() * 0.5,
+        )
+        self.update()
+
+    # ------------------------------------------------
+
     def zoom_extents(self):
 
         self.fit_view()

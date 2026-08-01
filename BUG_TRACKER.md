@@ -117,6 +117,161 @@ Closed In Version:
 
 ---
 
+## BUG-005
+
+Title:
+
+Viewport cameras initialized away from active model
+
+Priority:
+
+High
+
+Status:
+
+Fixed
+
+Assigned Sprint:
+
+Sprint 1
+
+Module:
+
+Viewport Camera Synchronization / 3D Projection
+
+Description:
+
+The 3D viewport could open far away from the active model, switching between
+2D and 3D did not preserve the active model center and CircleEntity projected
+into 3D as a rectangular wire outline.
+
+Steps to Reproduce:
+
+Create or open a project, switch between 2D and 3D views, use primitive and
+2D circle geometry, then invoke view fitting commands.
+
+Expected Behaviour:
+
+New blank projects should start centered at world origin. First 3D activation
+should fit visible model extents. Switching views should preserve the active
+camera target where possible. CircleEntity should project as a circular
+wireframe in 3D.
+
+Actual Behaviour:
+
+View commands only targeted the 2D Canvas. The 3D camera was not fit on first
+activation, and 2D circle projection in Renderer3D used only four quadrant
+points, producing a rectangular outline.
+
+Root Cause:
+
+WorkspaceConnectionController did not route Home, Zoom Extents or Zoom
+Selected across the active viewport, and Renderer3D used bounding fallback
+points for CircleEntity projection rather than sampled circular wire points.
+
+Files Modified:
+
+ui_v2/workspace_connection_controller.py
+ui_v2/canvas.py
+ui_v2/ribbon.py
+ui_v2/main_window.py
+engine/render/renderer3d.py
+BUG_TRACKER.md
+CHANGELOG.md
+PROJECT_STATUS.md
+
+Fix:
+
+Added centralized Home, Zoom Extents and Zoom Selected routing for active 2D
+and 3D viewports; reset blank project cameras to world-origin home; preserved
+camera target when switching between 2D and 3D; and changed Renderer3D circle
+projection to sampled circular wire points without modifying CircleEntity
+geometry.
+
+Verification:
+
+Compiled WorkspaceConnectionController, Canvas, Ribbon, MainWindow and
+Renderer3D successfully with the bundled Python runtime. Static trace confirms
+view actions route to camera home/extents/selection handlers and CircleEntity
+projection now emits circular sample points.
+
+Closed In Version:
+
+0.1 Alpha
+
+---
+
+## BUG-004
+
+Title:
+
+2D renderer snap feedback crashed on MeshEntity
+
+Priority:
+
+High
+
+Status:
+
+Fixed
+
+Assigned Sprint:
+
+Sprint 1
+
+Module:
+
+2D Renderer / Snap Feedback
+
+Description:
+
+After switching from 3D back to 2D, snap feedback could crash when the snapped
+entity was a MeshEntity.
+
+Steps to Reproduce:
+
+Create a 3D primitive, switch to 2D and move the cursor so snap feedback
+references the MeshEntity.
+
+Expected Behaviour:
+
+2D snap feedback should preserve existing 2D highlighting and safely handle
+3D entities through their projected representation.
+
+Actual Behaviour:
+
+Renderer.draw_snap_feedback called snap_result.entity.draw(painter) for every
+snapped entity. MeshEntity is an Entity3D and does not implement draw(QPainter).
+
+Root Cause:
+
+The 2D renderer assumed every snap target was a 2D drawable entity. Shared
+scene snapping can now return 3D MeshEntity targets.
+
+Files Modified:
+
+engine/render/renderer.py
+BUG_TRACKER.md
+CHANGELOG.md
+
+Fix:
+
+Renderer.draw_snap_feedback now preserves direct draw(QPainter) feedback for
+2D entities and uses the existing projected 3D wireframe path for MeshEntity
+and other 3D snap targets.
+
+Verification:
+
+Compiled engine/render/renderer.py successfully with the bundled Python
+runtime. Static trace confirms MeshEntity snap feedback no longer calls a
+missing draw(QPainter) method.
+
+Closed In Version:
+
+0.1 Alpha
+
+---
+
 ## BUG-003
 
 Title:

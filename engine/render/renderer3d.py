@@ -1,3 +1,5 @@
+import math
+
 from PySide6.QtCore import QPointF
 from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPolygonF
 
@@ -283,11 +285,11 @@ class Renderer3D:
             center = entity.center
             radius = float(getattr(entity, "radius", 0.0))
             return [
-                type(center)(center.x - radius, center.y),
-                type(center)(center.x, center.y - radius),
-                type(center)(center.x + radius, center.y),
-                type(center)(center.x, center.y + radius),
-                type(center)(center.x - radius, center.y),
+                type(center)(
+                    center.x + math.cos(index * math.tau / 48.0) * radius,
+                    center.y + math.sin(index * math.tau / 48.0) * radius,
+                )
+                for index in range(49)
             ]
 
         if hasattr(entity, "position"):

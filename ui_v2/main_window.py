@@ -267,6 +267,9 @@ class MainWindow(QMainWindow):
         workspace_actions = (
             ("2D View", self.show_2d_view),
             ("3D View", self.show_3d_view),
+            ("Home View", lambda: self.workspace_connection_controller.route_action("view:home")),
+            ("Zoom Extents", lambda: self.workspace_connection_controller.route_action("view:zoom_extents")),
+            ("Zoom Selected", lambda: self.workspace_connection_controller.route_action("view:zoom_selected")),
             ("Command Palette", self.show_command_palette),
             ("Focus Mode", self.enter_focus_mode),
             ("Presentation Mode", self.enter_presentation_mode),

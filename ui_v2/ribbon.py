@@ -458,8 +458,10 @@ class Ribbon(QWidget):
                 (
                     self._command("2D View", "2D", "Switch to 2D view.", lambda: self._emit_action("view_2d"), True),
                     self._command("3D View", "3D", "Switch to 3D view.", lambda: self._emit_action("view_3d"), True),
+                    self._command("Home", "H", "Return cameras to the home view.", lambda: self._emit_action("view:home")),
                     self._command("Fit View", "F", "Fit visible drawing.", lambda: self._emit_action("view:fit")),
                     self._command("Zoom Extents", "Z", "Zoom to extents.", lambda: self._emit_action("view:zoom_extents")),
+                    self._command("Zoom Selected", "ZS", "Zoom to selected geometry.", lambda: self._emit_action("view:zoom_selected")),
                 ),
             ),
             (

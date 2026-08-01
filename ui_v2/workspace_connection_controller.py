@@ -35,6 +35,7 @@ from engine.commands import (
 )
 from engine.commands.occ_boolean_command import OCCBooleanCommand
 from engine.commands.occ_import_command import ImportOCCShapeCommand
+from engine.geometry import BoundingBox, BoundingBox3D, Vector2, Vector3
 from engine.storage import ProjectTemplateManager
 from ui_v2.exchange_dialogs import (
     ExchangeExportDialog,
@@ -121,6 +122,7 @@ class WorkspaceConnectionController(QObject):
         self._connected = False
         self._property_edit_connected = False
         self._project_lifecycle_connected = False
+        self._has_activated_3d_view = False
 
     def connect_all(self) -> None:
         """Connect all injected objects through this controller."""
@@ -215,13 +217,18 @@ class WorkspaceConnectionController(QObject):
             self._toggle_panel(action_id.removeprefix("panel:"))
             return
         if action_id == "view_2d":
+            self._sync_2d_center_from_3d()
             self._call_if_available(self.viewport_area, "show_2d")
             self._call_if_available(self.left_toolbox, "set_active_action", action_id)
             self._focus_active_view()
             self.synchronize_ui("ViewChanged")
             return
         if action_id == "view_3d":
+            self._sync_3d_target_from_2d()
             self._call_if_available(self.viewport_area, "show_3d")
+            if not self._has_activated_3d_view:
+                self._zoom_extents_3d()
+                self._has_activated_3d_view = True
             self._call_if_available(self.left_toolbox, "set_active_action", action_id)
             self._focus_active_view()
             self.synchronize_ui("ViewChanged")
@@ -486,8 +493,14 @@ class WorkspaceConnectionController(QObject):
         if action_id == "view:fit":
             self._fit_view()
             return
+        if action_id == "view:home":
+            self._home_view()
+            return
         if action_id == "view:zoom_extents":
             self._zoom_extents()
+            return
+        if action_id == "view:zoom_selected":
+            self._zoom_selected()
             return
         if action_id.startswith("boolean:"):
             self._boolean(action_id.removeprefix("boolean:"))
@@ -814,18 +827,75 @@ class WorkspaceConnectionController(QObject):
             manager.redo()
 
     def _fit_view(self) -> None:
-        """Fit the active 2D canvas view."""
+        """Fit the active viewport view."""
+
+        self._zoom_extents()
+
+    def _zoom_extents(self) -> None:
+        """Zoom the active viewport to model extents."""
+
+        if self._is_3d_active():
+            self._zoom_extents_3d()
+        else:
+            self._zoom_extents_2d()
+        self.synchronize_ui("CameraChanged")
+
+    def _home_view(self) -> None:
+        """Reset 2D and 3D cameras to the production home view."""
 
         canvas = self._canvas()
         if canvas is not None:
-            canvas.fit_view()
+            self._call_if_available(canvas, "home_view")
 
-    def _zoom_extents(self) -> None:
-        """Zoom the active 2D canvas to extents."""
+        camera3d = getattr(self.app, "camera3d", None)
+        if camera3d is not None:
+            self._call_if_available(camera3d, "home_view")
+
+        self._refresh_viewport("CameraChanged")
+        self._update_status_bar()
+
+    def _zoom_extents_2d(self) -> None:
+        """Zoom the 2D canvas to workspace extents."""
 
         canvas = self._canvas()
         if canvas is not None:
             canvas.zoom_extents()
+
+    def _zoom_extents_3d(self) -> None:
+        """Zoom the 3D camera to shared workspace extents."""
+
+        camera3d = getattr(self.app, "camera3d", None)
+        if camera3d is None:
+            return
+
+        camera3d.fit_bounds(self._workspace_bounds3d())
+        self._call_if_available(self._viewport3d(), "update")
+
+    def _zoom_selected(self) -> None:
+        """Zoom the active viewport to the current selection."""
+
+        selected = list(self._current_selection() or [])
+        if not selected:
+            self._zoom_extents()
+            return
+
+        if self._is_3d_active():
+            camera3d = getattr(self.app, "camera3d", None)
+            if camera3d is not None:
+                camera3d.fit_bounds(self._bounds3d(selected))
+                self._call_if_available(self._viewport3d(), "update")
+        else:
+            canvas = self._canvas()
+            camera = getattr(canvas, "camera", None)
+            if canvas is not None and camera is not None:
+                camera.fit_to_bounds(
+                    self._bounds2d(selected),
+                    canvas.width(),
+                    canvas.height(),
+                )
+                self._call_if_available(canvas, "update")
+
+        self.synchronize_ui("CameraChanged")
 
     def _boolean(self, operation: str) -> None:
         """Execute a Boolean operation on two selected OCC solids."""
@@ -1103,6 +1173,11 @@ class WorkspaceConnectionController(QObject):
         """Refresh routed shell state after project loading."""
 
         event_name = self._project_synchronization_event(args)
+        lifecycle_event = str(args[0]) if args else ""
+        self._has_activated_3d_view = (
+            lifecycle_event in ("open_project", "recover_project") and
+            self._workspace_has_3d_camera_state()
+        )
         self._connect_command_manager()
         self._connect_workspace()
         self._call_if_available(
@@ -1111,6 +1186,8 @@ class WorkspaceConnectionController(QObject):
             self.workspace_provider,
             self._handle_property_changed,
         )
+        if lifecycle_event in ("new_project", "close_project"):
+            self._home_view()
         self.synchronize_ui(event_name)
 
     def _handle_project_service_lifecycle(self, *args: Any) -> None:
@@ -1206,6 +1283,101 @@ class WorkspaceConnectionController(QObject):
         if active_view is not None:
             self._call_if_available(active_view, "setFocus")
             self._call_if_available(active_view, "update")
+
+    def _is_3d_active(self) -> bool:
+        """Return True when the active viewport is the injected 3D viewport."""
+
+        active_view_method = getattr(self.viewport_area, "active_view", None)
+        active_view = active_view_method() if callable(active_view_method) else None
+        return active_view is self._viewport3d()
+
+    def _viewport3d(self) -> Any:
+        """Return the injected 3D viewport widget when available."""
+
+        accessor = getattr(self.viewport_area, "viewport3d", None)
+        return accessor() if callable(accessor) else accessor
+
+    def _sync_3d_target_from_2d(self) -> None:
+        """Preserve the 2D view center as the 3D camera target when switching."""
+
+        canvas = self._canvas()
+        camera = getattr(canvas, "camera", None)
+        camera3d = getattr(self.app, "camera3d", None)
+        if canvas is None or camera is None or camera3d is None:
+            return
+
+        center = camera.screen_to_world(
+            Vector2(canvas.width() * 0.5, canvas.height() * 0.5)
+        )
+        camera3d.state.target = Vector3(
+            center.x,
+            center.y,
+            getattr(camera3d.state.target, "z", 0.0),
+        )
+
+    def _sync_2d_center_from_3d(self) -> None:
+        """Preserve the 3D camera target as the 2D view center when switching."""
+
+        canvas = self._canvas()
+        camera = getattr(canvas, "camera", None)
+        camera3d = getattr(self.app, "camera3d", None)
+        if canvas is None or camera is None or camera3d is None:
+            return
+
+        target = camera3d.state.target
+        camera.position = Vector2(
+            target.x - canvas.width() / (2 * max(camera.zoom, 0.01)),
+            target.y - canvas.height() / (2 * max(camera.zoom, 0.01)),
+        )
+
+    def _workspace_bounds3d(self) -> Any:
+        """Return 3D bounds for visible shared-scene entities."""
+
+        workspace = self.workspace
+        entities = (
+            workspace.visible_3d_entities()
+            if workspace is not None and hasattr(workspace, "visible_3d_entities")
+            else []
+        )
+        return self._bounds3d(entities)
+
+    def _workspace_has_3d_camera_state(self) -> bool:
+        """Return True when the active workspace has persisted 3D camera data."""
+
+        workspace = self.workspace
+        settings = getattr(workspace, "project_settings", {}) if workspace is not None else {}
+        view_state = settings.get("view3d", {}) if isinstance(settings, dict) else {}
+        return bool(isinstance(view_state, dict) and view_state.get("camera"))
+
+    def _bounds3d(self, entities: Any) -> Any:
+        """Build 3D bounds from entity bounding boxes."""
+
+        bounds = BoundingBox3D()
+        for entity in entities:
+            box = getattr(entity, "bounding_box3d", None)
+            if callable(box):
+                box = box()
+            if box is None or not getattr(box, "valid", False):
+                continue
+            for corner in box.corners():
+                bounds.add(corner)
+        return bounds
+
+    def _bounds2d(self, entities: Any) -> Any:
+        """Build 2D bounds from entity projected bounding boxes."""
+
+        bounds = BoundingBox()
+        for entity in entities:
+            box = getattr(entity, "bounding_box", None)
+            if callable(box):
+                box = box()
+            if box is None:
+                continue
+            bounds.add(box.min)
+            bounds.add(box.max)
+        if bounds.min.x == float("inf"):
+            return None
+        return bounds
 
     def _current_selection(self) -> Any:
         """Return the current workspace selection payload."""
