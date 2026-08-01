@@ -33,6 +33,7 @@ from engine.commands import (
     ValidateAIPromptCommand,
     CreatePrimitiveCommand,
 )
+from engine.commands.delete_command import DeleteCommand
 from engine.commands.occ_boolean_command import OCCBooleanCommand
 from engine.commands.occ_import_command import ImportOCCShapeCommand
 from engine.geometry import BoundingBox, BoundingBox3D, Vector2, Vector3
@@ -248,6 +249,9 @@ class WorkspaceConnectionController(QObject):
         if action_id == "reset_workspace_layout":
             self._reset_workspace_layout()
             return
+        if action_id == "command:delete":
+            self._delete_selection()
+            return
 
         self._handle_action(action_id)
 
@@ -277,6 +281,14 @@ class WorkspaceConnectionController(QObject):
         self._connect_signal(
             getattr(self.viewport_area, "active_view_changed", None),
             self._handle_active_view_changed,
+        )
+        self._connect_signal(
+            getattr(self._canvas(), "deleteRequested", None),
+            self._delete_selection,
+        )
+        self._connect_signal(
+            getattr(self._viewport3d(), "deleteRequested", None),
+            self._delete_selection,
         )
 
     def _connect_command_bar(self) -> None:
@@ -825,6 +837,48 @@ class WorkspaceConnectionController(QObject):
         manager = self.command_manager
         if manager is not None:
             manager.redo()
+
+    def _delete_selection(self) -> None:
+        """Delete the current selection through the active command manager."""
+
+        workspace = self.workspace
+        manager = self.command_manager
+        if workspace is None or manager is None:
+            return
+
+        selected = [
+            entity
+            for entity in list(self._current_selection() or [])
+            if entity is not None
+        ]
+        if not selected:
+            return
+
+        engine = getattr(self.app, "engine", None)
+        shapes = []
+        occ = getattr(engine, "occ", None) if engine is not None else None
+        if occ is not None:
+            shapes = getattr(occ, "shapes", [])
+            if callable(shapes):
+                shapes = shapes()
+            if shapes is None:
+                shapes = []
+
+        for entity in selected:
+            command_target = (
+                engine
+                if occ is not None and entity in shapes
+                else workspace
+            )
+            manager.execute(DeleteCommand(command_target, entity))
+
+        selection = getattr(workspace, "selection", None)
+        if selection is not None:
+            self._call_if_available(selection, "clear")
+        self._call_if_available(self.project_service, "mark_dirty")
+        self.synchronize_ui("EntityRemoved")
+        self.synchronize_ui("SelectionChanged")
+        self.synchronize_ui("CommandHistoryChanged")
 
     def _fit_view(self) -> None:
         """Fit the active viewport view."""

@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import QWidget
 
@@ -7,7 +7,6 @@ from engine.commands import (
     ScaleEntity3DCommand,
     TranslateEntity3DCommand,
 )
-from engine.commands.delete_command import DeleteCommand
 from engine.geometry import Vector3
 from engine.picking3d import PickingManager3D
 from engine.render import CameraController3D
@@ -15,6 +14,8 @@ from engine.render import CameraController3D
 
 class Viewport3D(QWidget):
     """Interactive 3D viewport for reusable 3D camera and renderer validation."""
+
+    deleteRequested = Signal()
 
     def __init__(self, app):
 
@@ -146,7 +147,8 @@ class Viewport3D(QWidget):
     def keyPressEvent(self, event):
 
         if event.key() == Qt.Key_Delete:
-            self._delete_selected_occ_shapes()
+            self.deleteRequested.emit()
+            event.accept()
             return
 
         if event.key() == Qt.Key_F:
@@ -190,30 +192,6 @@ class Viewport3D(QWidget):
             return
 
         event.ignore()
-
-    # --------------------------------
-
-    def _delete_selected_occ_shapes(self):
-        """Delete selected OCC shapes through the existing command workflow."""
-
-        engine = getattr(self.app, "engine", None)
-        occ = getattr(engine, "occ", None)
-
-        if occ is None:
-            return
-
-        shapes = getattr(occ, "shapes", [])
-
-        if callable(shapes):
-            shapes = shapes()
-
-        selected = [
-            item for item in list(self.app.workspace.selection.selected)
-            if item in shapes
-        ]
-
-        for shape in selected:
-            self.app.workspace.command_manager.execute(DeleteCommand(engine, shape))
 
     # --------------------------------
 

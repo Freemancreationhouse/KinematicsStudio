@@ -298,6 +298,12 @@ class MainWindow(QMainWindow):
 
         self.command_palette_shortcut = QShortcut(QKeySequence("Ctrl+K"), self)
         self.command_palette_shortcut.activated.connect(self.show_command_palette)
+        self.delete_shortcut = QShortcut(QKeySequence("Delete"), self)
+        self.delete_shortcut.activated.connect(
+            lambda: self.workspace_connection_controller.route_action(
+                "command:delete"
+            )
+        )
 
     def show_2d_view(self) -> None:
         """Compatibility wrapper for switching to the 2D viewport."""

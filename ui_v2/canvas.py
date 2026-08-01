@@ -1,4 +1,4 @@
-from PySide6.QtCore import Qt, QPointF
+from PySide6.QtCore import Qt, QPointF, Signal
 from PySide6.QtGui import QColor, QPainter
 from PySide6.QtWidgets import QWidget
 
@@ -7,6 +7,8 @@ from engine.geometry import Vector2, BoundingBox
 
 class Canvas(QWidget):
     """Interactive drawing viewport for the V2 CAD workspace."""
+
+    deleteRequested = Signal()
 
     def __init__(self, app):
 
@@ -131,6 +133,11 @@ class Canvas(QWidget):
     # ------------------------------------------------
 
     def keyPressEvent(self, event):
+
+        if event.key() == Qt.Key_Delete:
+            self.deleteRequested.emit()
+            event.accept()
+            return
 
         if event.modifiers() & Qt.ControlModifier:
             if event.key() == Qt.Key_Z:
