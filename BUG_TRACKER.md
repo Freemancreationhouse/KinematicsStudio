@@ -117,6 +117,78 @@ Closed In Version:
 
 ---
 
+## BUG-006
+
+Title:
+
+Renderer3D analysis overlays passed Vector2 into Camera3D
+
+Priority:
+
+High
+
+Status:
+
+Fixed
+
+Assigned Sprint:
+
+Sprint 1
+
+Module:
+
+Renderer3D / Analysis Overlays
+
+Description:
+
+Renderer3D could crash while drawing analysis overlays when overlay data
+contained 2D Vector2 points from shared-scene 2D entities.
+
+Steps to Reproduce:
+
+Enable analysis overlay display for shared-scene entities that include 2D
+geometry, then render the 3D viewport.
+
+Expected Behaviour:
+
+2D overlay data should project into the 3D viewport as world-space points on
+the XY plane.
+
+Actual Behaviour:
+
+Renderer3D._draw_analysis_overlays passed Vector2 points through _draw_line
+to Camera3D.project, which expects Vector3-compatible points and accessed z.
+
+Root Cause:
+
+Analysis overlay rendering used raw entity point and segment data instead of
+the renderer's 2D-to-3D projection adapters. Direct Camera3D.project callers
+also did not normalize point dimensionality at the renderer boundary.
+
+Files Modified:
+
+engine/render/renderer3d.py
+BUG_TRACKER.md
+CHANGELOG.md
+
+Fix:
+
+Renderer3D now projects all points through a _project_point helper that
+normalizes 2D and 3D point-like objects to Vector3, and analysis overlays use
+the existing _entity_points3d and _entity_segments3d adapters before drawing.
+
+Verification:
+
+Compiled engine/render/renderer3d.py successfully with the bundled Python
+runtime. Static trace confirms Camera3D.project is only called from
+_project_point after Vector3 normalization.
+
+Closed In Version:
+
+0.1 Alpha
+
+---
+
 ## BUG-005
 
 Title:

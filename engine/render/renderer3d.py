@@ -105,7 +105,7 @@ class Renderer3D:
             pen.setCosmetic(True)
             painter.setPen(pen)
             self._draw_line(painter, start, end)
-            screen = self.camera.project(end)
+            screen = self._project_point(end)
 
             if screen is not None:
                 painter.drawText(QPointF(screen[0] + 6, screen[1] - 6), label)
@@ -114,7 +114,7 @@ class Renderer3D:
 
     def _draw_origin(self, painter):
 
-        screen = self.camera.project(Vector3())
+        screen = self._project_point(Vector3())
 
         if screen is None:
             return
@@ -350,7 +350,7 @@ class Renderer3D:
             polygon = QPolygonF()
 
             for point in triangle:
-                screen = self.camera.project(point)
+                screen = self._project_point(point)
 
                 if screen is None:
                     polygon = None
@@ -414,13 +414,20 @@ class Renderer3D:
 
     def _draw_point(self, painter, point, color):
 
-        screen = self.camera.project(point)
+        screen = self._project_point(point)
 
         if screen is None:
             return
 
         painter.setBrush(color)
         painter.drawEllipse(QPointF(screen[0], screen[1]), 4, 4)
+
+    # --------------------------------
+
+    def _project_point(self, point):
+        """Project a 2D or 3D world point through the 3D camera."""
+
+        return self.camera.project(self._to_vector3(point))
 
     # --------------------------------
 
@@ -474,12 +481,12 @@ class Renderer3D:
             pen.setCosmetic(True)
             painter.setPen(pen)
             self._draw_line(painter, start, end)
-            screen = self.camera.project(end)
+            screen = self._project_point(end)
 
             if screen is not None:
                 painter.drawText(QPointF(screen[0] + 4, screen[1] - 4), f"{gizmo.mode[:1].upper()}{axis}")
 
-        label_screen = self.camera.project(origin)
+        label_screen = self._project_point(origin)
 
         if label_screen is not None:
             constraint = gizmo.axis_constraint or gizmo.plane_constraint or "free"
@@ -493,7 +500,7 @@ class Renderer3D:
 
     def _draw_gizmo_pivot(self, painter, gizmo, origin):
 
-        screen = self.camera.project(origin)
+        screen = self._project_point(origin)
 
         if screen is None:
             return
@@ -514,7 +521,7 @@ class Renderer3D:
             return
 
         result = snap_manager.active_snap
-        screen = self.camera.project(result.point)
+        screen = self._project_point(result.point)
 
         if screen is None:
             return
@@ -568,7 +575,7 @@ class Renderer3D:
 
             if settings.show_labels and measurement.points:
                 label_point = measurement.points[len(measurement.points) // 2]
-                screen = self.camera.project(label_point)
+                screen = self._project_point(label_point)
 
                 if screen is not None:
                     painter.drawText(
@@ -608,7 +615,7 @@ class Renderer3D:
             polygon = QPolygonF()
 
             for point in section.points():
-                screen = self.camera.project(point)
+                screen = self._project_point(point)
 
                 if screen is None:
                     polygon = None
@@ -627,7 +634,7 @@ class Renderer3D:
             normal_start, normal_end = section.normal_segment()
             self._draw_line(painter, normal_start, normal_end)
             label = "ON" if getattr(section, "enabled", True) else "OFF"
-            screen = self.camera.project(section.origin)
+            screen = self._project_point(section.origin)
 
             if screen is not None:
                 painter.drawText(QPointF(screen[0] + 8, screen[1] - 8), f"{section.name} [{label}]")
@@ -661,7 +668,7 @@ class Renderer3D:
                 self._draw_point(painter, point, color)
 
             if annotation.points:
-                screen = self.camera.project(annotation.points[0])
+                screen = self._project_point(annotation.points[0])
 
                 if screen is not None:
                     label = annotation.text or annotation.annotation_type
@@ -715,7 +722,7 @@ class Renderer3D:
                 self._draw_line(painter, start, end)
 
             self._draw_point(painter, reference.transform.position, color)
-            screen = self.camera.project(reference.transform.position)
+            screen = self._project_point(reference.transform.position)
 
             if screen is not None:
                 painter.drawText(
@@ -855,7 +862,7 @@ class Renderer3D:
             if getattr(clash, "bounding_box3d", None).valid:
                 self._draw_bounds(painter, clash.bounding_box3d)
 
-            screen = self.camera.project(clash.location)
+            screen = self._project_point(clash.location)
 
             if screen is not None:
                 painter.drawText(
@@ -898,7 +905,7 @@ class Renderer3D:
             for start, end in topic.segments():
                 self._draw_line(painter, start, end)
 
-            screen = self.camera.project(topic.location)
+            screen = self._project_point(topic.location)
 
             if screen is not None:
                 painter.drawEllipse(QPointF(screen[0], screen[1]), 5, 5)
@@ -972,7 +979,7 @@ class Renderer3D:
             if box is not None and box.valid:
                 self._draw_bounds(painter, box)
 
-            screen = self.camera.project(result.location)
+            screen = self._project_point(result.location)
 
             if screen is not None:
                 painter.drawText(
@@ -1018,7 +1025,7 @@ class Renderer3D:
             for start, end in revision.segments():
                 self._draw_line(painter, start, end)
 
-            screen = self.camera.project(revision.location)
+            screen = self._project_point(revision.location)
 
             if screen is not None:
                 painter.drawEllipse(QPointF(screen[0], screen[1]), 4, 4)
@@ -1066,7 +1073,7 @@ class Renderer3D:
             for start, end in package.segments():
                 self._draw_line(painter, start, end)
 
-            screen = self.camera.project(package.location)
+            screen = self._project_point(package.location)
 
             if screen is not None:
                 painter.drawText(
@@ -1116,7 +1123,7 @@ class Renderer3D:
 
             location = getattr(item, "location", None)
             if location is not None:
-                screen = self.camera.project(location)
+                screen = self._project_point(location)
 
                 if screen is not None:
                     painter.drawText(
@@ -1166,7 +1173,7 @@ class Renderer3D:
 
             location = getattr(item, "location", None)
             if location is not None:
-                screen = self.camera.project(location)
+                screen = self._project_point(location)
 
                 if screen is not None:
                     painter.drawText(
@@ -1842,7 +1849,7 @@ class Renderer3D:
                 self._draw_line(painter, start, end)
 
             self._draw_point(painter, issue.position, color)
-            screen = self.camera.project(issue.position)
+            screen = self._project_point(issue.position)
 
             if screen is not None:
                 painter.drawText(
@@ -1902,7 +1909,7 @@ class Renderer3D:
 
         if vertex_display:
             for entity in entities:
-                for point in getattr(entity, "points", lambda: [])():
+                for point in self._entity_points3d(entity):
                     self._draw_point(painter, point, QColor("#f48fb1"))
 
         if edge_overlay or analysis.wireframe_overlay:
@@ -1911,7 +1918,7 @@ class Renderer3D:
             painter.setPen(pen)
 
             for entity in entities:
-                for start, end in getattr(entity, "segments", lambda: [])():
+                for start, end in self._entity_segments3d(entity):
                     self._draw_line(painter, start, end)
 
         if analysis.face_normals:
@@ -2007,8 +2014,8 @@ class Renderer3D:
 
     def _draw_line(self, painter, start, end):
 
-        start_screen = self.camera.project(start)
-        end_screen = self.camera.project(end)
+        start_screen = self._project_point(start)
+        end_screen = self._project_point(end)
 
         if start_screen is None or end_screen is None:
             return

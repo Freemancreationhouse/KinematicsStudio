@@ -47,6 +47,7 @@ All notable changes to this project are documented here.
 - Fixed 3D primitive ribbon actions not executing CreatePrimitiveCommand.
 - Fixed 2D snap feedback crash when snapping to MeshEntity.
 - Fixed viewport camera initialization, view fitting and CircleEntity 3D projection.
+- Fixed Renderer3D analysis overlays passing Vector2 points into Camera3D projection.
 
 ## Removed
 
