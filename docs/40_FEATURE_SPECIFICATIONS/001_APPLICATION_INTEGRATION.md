@@ -456,6 +456,38 @@ Remaining Tasks:
 
 ---
 
+## Bug Fix - 3D Primitive Ribbon Command Routing
+
+Status: COMPLETE
+
+Summary:
+
+- Cube, Box, Sphere, Cone and related primitive ribbon buttons now execute the existing CreatePrimitiveCommand path.
+- WorkspaceConnectionController remains the sole ribbon action routing location.
+- Primitive creation now flows through CommandManager, Workspace.add_3d_entity, the shared scene, selection synchronization and UI refresh.
+- Rendering, shared-scene ownership and viewport synchronization implementations were not changed.
+
+Files Modified:
+
+- ui_v2/workspace_connection_controller.py
+- BUG_TRACKER.md
+- CHANGELOG.md
+- docs/40_FEATURE_SPECIFICATIONS/001_APPLICATION_INTEGRATION.md
+- PROJECT_STATUS.md
+- SPRINT_BACKLOG.md
+
+Architecture Decisions:
+
+- 3D primitive ribbon actions are command-producing actions, not passive Viewport3D placement tools.
+- CreatePrimitiveCommand remains the single primitive entity creation path for ribbon-triggered primitive creation.
+- WorkspaceConnectionController owns the routing from primitive tool IDs to command execution.
+
+Remaining Tasks:
+
+- Task 1.10 - Sprint Validation
+
+---
+
 ## Pending Tasks
 
 - Task 1.10 — Sprint Validation

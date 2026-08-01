@@ -130,3 +130,5 @@ Task 1.8 Complete: Selection synchronization centralized through SelectionServic
 Task 1.9 Complete: Viewport synchronization centralized across shared 2D and 3D scene observers.
 
 Task 1.9A Complete: Workspace entities now provide one shared scene graph for 2D and 3D viewports.
+
+Bug Fix Complete: 3D primitive ribbon actions now execute CreatePrimitiveCommand through WorkspaceConnectionController.

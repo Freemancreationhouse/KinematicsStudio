@@ -81,6 +81,7 @@ Selection Integration
 Command Pipeline
 
 - [ ] Command Execution
+- [x] 3D Primitive Command Routing
 - [ ] History Recording
 - [ ] Undo
 - [ ] Redo

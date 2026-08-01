@@ -44,6 +44,7 @@ All notable changes to this project are documented here.
 
 - Fixed shared scene selection runtime error ('method' object is not iterable).
 - Resolved SnapManager callable/iterable mismatch.
+- Fixed 3D primitive ribbon actions not executing CreatePrimitiveCommand.
 
 ## Removed
 

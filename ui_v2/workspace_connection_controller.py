@@ -31,6 +31,7 @@ from engine.commands import (
     UpdateExchangeSettingsCommand,
     ValidateAIProvidersCommand,
     ValidateAIPromptCommand,
+    CreatePrimitiveCommand,
 )
 from engine.commands.occ_boolean_command import OCCBooleanCommand
 from engine.commands.occ_import_command import ImportOCCShapeCommand
@@ -50,6 +51,27 @@ class WorkspaceConnectionController(QObject):
     focusModeRequested = Signal()
     actionRequested = Signal(str)
     commandEntered = Signal(str)
+
+    PRIMITIVE_TOOL_SPECS = {
+        "CubePrimitiveTool": ("cube", {"size": 100.0}),
+        "BoxPrimitiveTool": ("box", {"width": 100.0, "depth": 80.0, "height": 60.0}),
+        "SpherePrimitiveTool": ("sphere", {"radius": 50.0, "segments": 24, "rings": 12}),
+        "ConePrimitiveTool": ("cone", {"radius": 50.0, "height": 100.0, "segments": 24}),
+        "CylinderPrimitiveTool": ("cylinder", {"radius": 50.0, "height": 100.0, "segments": 24}),
+        "PlanePrimitiveTool": ("plane", {"width": 100.0, "depth": 100.0}),
+        "TorusPrimitiveTool": (
+            "torus",
+            {
+                "major_radius": 60.0,
+                "minor_radius": 15.0,
+                "major_segments": 24,
+                "minor_segments": 12,
+            },
+        ),
+        "PyramidPrimitiveTool": ("pyramid", {"width": 100.0, "depth": 100.0, "height": 100.0}),
+        "PrismPrimitiveTool": ("prism", {"radius": 50.0, "height": 100.0, "sides": 6}),
+        "CapsulePrimitiveTool": ("capsule", {"radius": 30.0, "height": 120.0, "segments": 24, "rings": 12}),
+    }
 
     def __init__(
         self,
@@ -483,7 +505,30 @@ class WorkspaceConnectionController(QObject):
         """Activate a tool selected by a presentation widget."""
 
         self._call_if_available(self.tool_manager, "activate", tool_name)
+        if tool_name in self.PRIMITIVE_TOOL_SPECS:
+            self._create_primitive(tool_name)
+            return
         self.synchronize_ui("ActiveToolChanged")
+
+    def _create_primitive(self, tool_name: str) -> None:
+        """Create a 3D primitive through the existing command pipeline."""
+
+        workspace = self.workspace
+        command_manager = getattr(workspace, "command_manager", None)
+        if workspace is None or command_manager is None:
+            return
+
+        primitive_type, parameters = self.PRIMITIVE_TOOL_SPECS[tool_name]
+        command = CreatePrimitiveCommand(
+            workspace,
+            primitive_type,
+            dict(parameters),
+            name=f"{primitive_type.title()} Primitive",
+        )
+        command_manager.execute(command)
+        self._call_if_available(self.project_service, "mark_dirty")
+        self.synchronize_ui("EntityAdded", command.entity)
+        self.synchronize_ui("SelectionChanged", command.entity)
 
     def _new_project(self, template_name: str) -> None:
         """Create a project through the project service."""

@@ -117,6 +117,83 @@ Closed In Version:
 
 ---
 
+## BUG-003
+
+Title:
+
+3D primitive ribbon actions did not create entities
+
+Priority:
+
+High
+
+Status:
+
+Fixed
+
+Assigned Sprint:
+
+Sprint 1
+
+Module:
+
+WorkspaceConnectionController / 3D Primitive Commands
+
+Description:
+
+The Cube, Box, Sphere and Cone ribbon buttons activated their tools but did
+not create 3D geometry.
+
+Steps to Reproduce:
+
+Launch the application and click the Cube, Box, Sphere or Cone primitive
+button from the 3D ribbon.
+
+Expected Behaviour:
+
+The ribbon action should execute the existing primitive command pipeline and
+create a selected 3D entity in the shared Workspace scene.
+
+Actual Behaviour:
+
+The action stopped at ToolManager activation. Viewport3D does not route
+primitive placement through ToolManager mouse events, so no command executed
+and no entity was added to the Workspace.
+
+Root Cause:
+
+WorkspaceConnectionController treated 3D primitive ribbon actions as passive
+tool selections only. The existing CreatePrimitiveCommand path was present
+but never invoked by the ribbon action route.
+
+Files Modified:
+
+ui_v2/workspace_connection_controller.py
+BUG_TRACKER.md
+CHANGELOG.md
+docs/40_FEATURE_SPECIFICATIONS/001_APPLICATION_INTEGRATION.md
+PROJECT_STATUS.md
+SPRINT_BACKLOG.md
+
+Fix:
+
+WorkspaceConnectionController now recognizes registered 3D primitive tool IDs
+and executes CreatePrimitiveCommand through the active Workspace command
+manager, then synchronizes entity, selection, status and property UI state.
+
+Verification:
+
+Compiled WorkspaceConnectionController, CreatePrimitiveCommand and primitive
+tool modules successfully with the bundled Python runtime. Static trace
+confirms ribbon primitive IDs now route to CreatePrimitiveCommand and
+Workspace.add_3d_entity through the command manager.
+
+Closed In Version:
+
+0.1 Alpha
+
+---
+
 ## BUG-002
 
 Title:
