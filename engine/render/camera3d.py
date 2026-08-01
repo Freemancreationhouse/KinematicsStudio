@@ -18,6 +18,9 @@ class Camera3DState:
         near_clip=0.1,
         far_clip=100000.0,
         orthographic_scale=800.0,
+        render_mode="wireframe",
+        grid_visible=True,
+        axis_visible=True,
     ):
 
         self.target = target or Vector3()
@@ -29,6 +32,9 @@ class Camera3DState:
         self.near_clip = float(near_clip)
         self.far_clip = float(far_clip)
         self.orthographic_scale = float(orthographic_scale)
+        self.render_mode = str(render_mode)
+        self.grid_visible = bool(grid_visible)
+        self.axis_visible = bool(axis_visible)
 
     # --------------------------------
 
@@ -42,6 +48,7 @@ class Camera3DState:
                 "z": self.target.z,
             },
             "distance": self.distance,
+            "zoom": self.distance,
             "yaw": self.yaw,
             "pitch": self.pitch,
             "projection_mode": self.projection_mode,
@@ -49,6 +56,10 @@ class Camera3DState:
             "near_clip": self.near_clip,
             "far_clip": self.far_clip,
             "orthographic_scale": self.orthographic_scale,
+            "scale": self.orthographic_scale,
+            "render_mode": self.render_mode,
+            "grid_visible": self.grid_visible,
+            "axis_visible": self.axis_visible,
         }
 
     # --------------------------------
@@ -74,6 +85,9 @@ class Camera3DState:
             near_clip=data.get("near_clip", 0.1),
             far_clip=data.get("far_clip", 100000.0),
             orthographic_scale=data.get("orthographic_scale", 800.0),
+            render_mode=data.get("render_mode", "wireframe"),
+            grid_visible=data.get("grid_visible", True),
+            axis_visible=data.get("axis_visible", True),
         )
 
 
@@ -83,6 +97,7 @@ class Camera3D:
     def __init__(self):
 
         self.state = Camera3DState()
+        self._default_state = Camera3DState.from_dict(self.state.to_dict())
         self.viewport_width = 1
         self.viewport_height = 1
 
@@ -230,7 +245,7 @@ class Camera3D:
     def home_view(self):
         """Restore the default production 3D view."""
 
-        self.state = Camera3DState()
+        self.state = Camera3DState.from_dict(self._default_state.to_dict())
 
     # --------------------------------
 
@@ -238,6 +253,14 @@ class Camera3D:
         """Reset camera target and orbit."""
 
         self.home_view()
+
+    # --------------------------------
+
+    def set_default_state(self, state=None):
+        """Set the camera state used by Home View and Reset Camera."""
+
+        source = state or self.state
+        self._default_state = Camera3DState.from_dict(source.to_dict())
 
     # --------------------------------
 
@@ -260,7 +283,14 @@ class Camera3D:
     def to_dict(self):
         """Return JSON-safe camera data."""
 
-        return self.state.to_dict()
+        data = self.state.to_dict()
+        position = self.position
+        data["position"] = {
+            "x": position.x,
+            "y": position.y,
+            "z": position.z,
+        }
+        return data
 
     # --------------------------------
 
@@ -320,6 +350,17 @@ class CameraController3D:
         )
         self.camera.state.orthographic_scale = clamp(
             self.camera.state.orthographic_scale * factor,
+            1.0,
+            1000000.0,
+        )
+
+    # --------------------------------
+
+    def dolly(self, amount):
+        """Move the perspective camera closer to or farther from its target."""
+
+        self.camera.state.distance = clamp(
+            self.camera.state.distance + float(amount),
             1.0,
             1000000.0,
         )

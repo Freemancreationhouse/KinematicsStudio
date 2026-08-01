@@ -89,9 +89,9 @@ EPIC 2.2
 
 # Current Task
 
-Task 2.2.2
+Task 2.2.3
 
-Viewport Layout Manager
+Camera System
 
 Status:
 
@@ -158,3 +158,7 @@ Task 2.2.2 In Progress: Viewport Layout Manager added Single, Dual Horizontal, D
 Task 2.2.2 QA Fix Complete: Viewport Layout Manager now preserves reusable viewport widget lifetime, gives Quad View independent Perspective, Top, Front and Right cameras, completes Maximize, Restore, Split, Close, Reopen and Swap routing, and cleans stale viewport synchronization references.
 
 Task 2.2.2 Runtime Lifecycle Fix Complete: ViewportManager now shuts down viewport callbacks, event filters, registry entries, active references and focused references before Qt destroys viewport widgets, preventing signal emission after QObject destruction.
+
+Task 2.2.3 In Progress: Camera System added independent viewport camera state, perspective and orthographic navigation support, active viewport Home/Zoom Extents/Zoom Selected routing and camera persistence across viewport layout changes without modifying Sprint 1 or Epic 2.1 runtime architecture.
+
+Task 2.2.3 Selection Fix Complete: Front and Right orthographic viewport surfaces now route left-click selection through their own camera rays, PickingManager3D and the shared selection pipeline while preserving Perspective and Top selection behavior.

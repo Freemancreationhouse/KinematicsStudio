@@ -927,22 +927,21 @@ class WorkspaceConnectionController(QObject):
     def _zoom_extents(self) -> None:
         """Zoom the active viewport to model extents."""
 
-        if self._is_3d_active():
-            self._zoom_extents_3d()
+        if self._active_viewport_is_3d():
+            self._zoom_extents_3d(self._active_viewport_camera())
         else:
             self._zoom_extents_2d()
         self.synchronize_ui("CameraChanged")
 
     def _home_view(self) -> None:
-        """Reset 2D and 3D cameras to the production home view."""
+        """Reset the active viewport camera to its production home view."""
 
-        canvas = self._canvas()
-        if canvas is not None:
+        if self._active_viewport_is_3d():
+            camera = self._active_viewport_camera()
+            self._call_if_available(camera, "home_view")
+        else:
+            canvas = self._canvas()
             self._call_if_available(canvas, "home_view")
-
-        camera3d = getattr(self.app, "camera3d", None)
-        if camera3d is not None:
-            self._call_if_available(camera3d, "home_view")
 
         self._refresh_viewport("CameraChanged")
         self._update_status_bar()
@@ -954,15 +953,15 @@ class WorkspaceConnectionController(QObject):
         if canvas is not None:
             canvas.zoom_extents()
 
-    def _zoom_extents_3d(self) -> None:
+    def _zoom_extents_3d(self, camera3d: Any | None = None) -> None:
         """Zoom the 3D camera to shared workspace extents."""
 
-        camera3d = getattr(self.app, "camera3d", None)
+        camera3d = camera3d or self._active_viewport_camera()
         if camera3d is None:
             return
 
         camera3d.fit_bounds(self._workspace_bounds3d())
-        self._call_if_available(self._viewport3d(), "update")
+        self._call_if_available(self._active_viewport_widget(), "update")
 
     def _zoom_selected(self) -> None:
         """Zoom the active viewport to the current selection."""
@@ -972,11 +971,11 @@ class WorkspaceConnectionController(QObject):
             self._zoom_extents()
             return
 
-        if self._is_3d_active():
-            camera3d = getattr(self.app, "camera3d", None)
+        if self._active_viewport_is_3d():
+            camera3d = self._active_viewport_camera()
             if camera3d is not None:
                 camera3d.fit_bounds(self._bounds3d(selected))
-                self._call_if_available(self._viewport3d(), "update")
+                self._call_if_available(self._active_viewport_widget(), "update")
         else:
             canvas = self._canvas()
             camera = getattr(canvas, "camera", None)
@@ -1440,6 +1439,40 @@ class WorkspaceConnectionController(QObject):
         active_view_method = getattr(self.viewport_area, "active_view", None)
         active_view = active_view_method() if callable(active_view_method) else None
         return active_view is self._viewport3d()
+
+    def _active_viewport_is_3d(self) -> bool:
+        """Return True when the active viewport uses a 3D camera."""
+
+        record = self._active_viewport_record()
+        viewport_type = getattr(record, "viewport_type", None)
+        viewport_name = getattr(viewport_type, "value", "")
+        return viewport_name not in ("", "Top")
+
+    def _active_viewport_record(self) -> Any:
+        """Return the active viewport manager registration when available."""
+
+        accessor = getattr(self.viewport_area, "active_viewport_record", None)
+        if callable(accessor):
+            return accessor()
+        viewport_manager = self._viewport_manager()
+        return (
+            viewport_manager.active_viewport()
+            if viewport_manager is not None and hasattr(viewport_manager, "active_viewport")
+            else None
+        )
+
+    def _active_viewport_camera(self) -> Any:
+        """Return the active viewport camera when available."""
+
+        record = self._active_viewport_record()
+        return getattr(record, "camera", None) if record is not None else None
+
+    def _active_viewport_widget(self) -> Any:
+        """Return the active viewport widget when available."""
+
+        record = self._active_viewport_record()
+        widget = getattr(record, "widget", None) if record is not None else None
+        return widget or self._viewport3d()
 
     def _viewport3d(self) -> Any:
         """Return the injected 3D viewport widget when available."""

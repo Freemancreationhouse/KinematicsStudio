@@ -17,7 +17,8 @@ from PySide6.QtWidgets import (
 )
 
 from engine.geometry import Vector3
-from engine.render.camera3d import Camera3D, Camera3DState
+from engine.picking3d import PickingManager3D
+from engine.render.camera3d import Camera3D, Camera3DState, CameraController3D
 from ui_v2.viewport_manager import ViewportLayout, ViewportManager, ViewportType
 
 
@@ -48,6 +49,11 @@ class SharedSceneViewportSurface(QWidget):
         self._app = app
         self._mode = mode
         self._camera = camera
+        self._controller = CameraController3D(camera) if camera is not None else None
+        self._picking = PickingManager3D()
+        self._drag_mode: str | None = None
+        self._last_position = None
+        self._press_position = None
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -62,6 +68,166 @@ class SharedSceneViewportSurface(QWidget):
         elif self._mode == "3d" and hasattr(self._app, "render3d"):
             self._render3d_with_independent_camera(painter)
         painter.end()
+
+    def resizeEvent(self, event) -> None:
+        """Update the independent camera viewport size."""
+
+        if self._camera is not None:
+            self._camera.resize(self.width(), self.height())
+        super().resizeEvent(event)
+
+    def mousePressEvent(self, event) -> None:
+        """Begin professional viewport camera interaction."""
+
+        self.setFocus()
+        self._press_position = event.position()
+        self._last_position = event.position()
+        if event.button() == Qt.MouseButton.LeftButton:
+            event.accept()
+            return
+
+        if event.button() == Qt.MouseButton.MiddleButton:
+            projection = getattr(getattr(self._camera, "state", None), "projection_mode", "")
+            can_orbit = projection == "perspective"
+            self._drag_mode = (
+                "orbit"
+                if can_orbit and event.modifiers() & Qt.KeyboardModifier.ShiftModifier
+                else "pan"
+            )
+            event.accept()
+            return
+
+        event.ignore()
+
+    def mouseMoveEvent(self, event) -> None:
+        """Update the independent camera while dragging."""
+
+        if self._drag_mode is None or self._last_position is None:
+            self._hover(event.position())
+            self.update()
+            event.accept()
+            return
+        if self._controller is None:
+            event.ignore()
+            return
+
+        current = event.position()
+        dx = current.x() - self._last_position.x()
+        dy = current.y() - self._last_position.y()
+        if self._drag_mode == "orbit":
+            self._controller.orbit(dx, dy)
+        else:
+            self._controller.pan(dx, dy)
+        self._last_position = current
+        self.update()
+        event.accept()
+
+    def mouseReleaseEvent(self, event) -> None:
+        """Complete professional viewport camera interaction."""
+
+        if event.button() == Qt.MouseButton.LeftButton:
+            if self._is_click(event.position()):
+                self._pick(event.position(), self._additive(event))
+            self._press_position = None
+            self._last_position = None
+            self.update()
+            event.accept()
+            return
+
+        if self._drag_mode is not None:
+            self._drag_mode = None
+            self._press_position = None
+            self._last_position = None
+            self.update()
+            event.accept()
+            return
+
+        event.ignore()
+
+    def wheelEvent(self, event) -> None:
+        """Zoom the independent camera at professional CAD wheel rates."""
+
+        if self._controller is None:
+            event.ignore()
+            return
+
+        delta = event.angleDelta().y()
+        if event.modifiers() & Qt.KeyboardModifier.ShiftModifier:
+            delta *= 0.35
+        self._controller.zoom(delta)
+        self.update()
+        event.accept()
+
+    def _pick(self, position, additive: bool = False) -> None:
+        """Pick shared-scene entities using this viewport camera."""
+
+        if self._camera is None:
+            return
+        workspace = self._workspace()
+        if workspace is None:
+            return
+
+        ray = self._camera.screen_ray(position.x(), position.y())
+        hit = self._picking.pick(workspace, ray)
+        selection = self._selection_service(workspace)
+        if hit is None:
+            if not additive:
+                clear = getattr(selection, "clear", None)
+                if callable(clear):
+                    clear()
+            return
+
+        select = getattr(selection, "select", None)
+        if callable(select):
+            try:
+                select(hit.entity, additive)
+            except TypeError:
+                if not additive:
+                    clear = getattr(selection, "clear", None)
+                    if callable(clear):
+                        clear()
+                select(hit.entity)
+
+    def _hover(self, position) -> None:
+        """Update hover and snap previews for this viewport camera."""
+
+        if self._camera is None:
+            return
+        workspace = self._workspace()
+        if workspace is None:
+            return
+
+        ray = self._camera.screen_ray(position.x(), position.y())
+        self._picking.hover(workspace, ray)
+        snap_manager = getattr(workspace, "snap_manager3d", None)
+        if snap_manager is not None:
+            snap_manager.snap_ray(workspace, ray, self._camera)
+
+    def _workspace(self):
+        """Return the active shared workspace."""
+
+        workspace = getattr(self._app, "workspace", None)
+        return workspace() if callable(workspace) else workspace
+
+    def _selection_service(self, workspace):
+        """Return the active selection service or workspace selection manager."""
+
+        selection_service = getattr(self._app, "selection_service", None)
+        return selection_service or getattr(workspace, "selection", None)
+
+    def _additive(self, event) -> bool:
+        """Return True when selection should be additive."""
+
+        return bool(event.modifiers() & Qt.KeyboardModifier.ControlModifier)
+
+    def _is_click(self, position) -> bool:
+        """Return True when a left press/release is a pick click."""
+
+        if self._press_position is None:
+            return False
+        dx = position.x() - self._press_position.x()
+        dy = position.y() - self._press_position.y()
+        return (dx * dx + dy * dy) <= 9.0
 
     def _render3d_with_independent_camera(self, painter: QPainter) -> None:
         """Render through the existing 3D renderer using this pane camera."""
@@ -366,6 +532,7 @@ class ViewportLayoutManager:
             "viewport_layout/closed_panes",
             sorted(self._closed_pane_ids),
         )
+        self._persist_camera_states()
 
     def restore_layout_state(self) -> bool:
         """Restore persisted viewport layout state."""
@@ -568,6 +735,17 @@ class ViewportLayoutManager:
             return tuple(str(item) for item in value if str(item))
         return ()
 
+    def _persist_camera_states(self) -> None:
+        """Persist per-viewport camera states for layout continuity."""
+
+        camera_states = {}
+        for record in self._viewport_manager.viewports():
+            camera = getattr(record, "camera", None)
+            to_dict = getattr(camera, "to_dict", None)
+            if callable(to_dict):
+                camera_states[record.viewport_id] = to_dict()
+        self._settings.setValue("viewport_layout/cameras", camera_states)
+
 
 class WorkspaceViewportArea(QWidget):
     """Reusable container for professional single and multi-viewport layouts."""
@@ -602,6 +780,7 @@ class WorkspaceViewportArea(QWidget):
         )
 
         self._register_initial_viewports()
+        self._restore_camera_states()
         self._layout_manager.initialize()
 
         layout = QVBoxLayout(self)
@@ -667,6 +846,17 @@ class WorkspaceViewportArea(QWidget):
         """Return the active viewport id from the manager."""
 
         return self._viewport_manager.active_viewport_id()
+
+    def active_viewport_record(self):
+        """Return the active viewport registration."""
+
+        return self._viewport_manager.active_viewport()
+
+    def active_camera(self):
+        """Return the active viewport camera when available."""
+
+        record = self.active_viewport_record()
+        return getattr(record, "camera", None) if record is not None else None
 
     def set_layout(self, layout: ViewportLayout | str) -> None:
         """Apply a professional viewport layout."""
@@ -921,7 +1111,23 @@ class WorkspaceViewportArea(QWidget):
             projection_mode=projection_mode,
             orthographic_scale=800.0,
         )
+        camera.set_default_state(camera.state)
         return camera
+
+    def _restore_camera_states(self) -> None:
+        """Restore persisted per-viewport camera states when available."""
+
+        settings = QSettings("Freeman Creations House", "Kinematics Studio")
+        states = settings.value("viewport_layout/cameras")
+        if not isinstance(states, dict):
+            return
+
+        for record in self._viewport_manager.viewports():
+            state = states.get(record.viewport_id)
+            camera = getattr(record, "camera", None)
+            from_dict = getattr(camera, "from_dict", None)
+            if state and callable(from_dict):
+                from_dict(state)
 
     def _apply_style(self) -> None:
         """Apply professional viewport layout styling."""

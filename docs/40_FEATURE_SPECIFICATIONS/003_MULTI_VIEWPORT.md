@@ -851,3 +851,97 @@ manager disposal state and Qt QObject validity checks, and MainWindow shuts
 down the viewport area before Qt tears down child widgets.
 
 ----------------------------------------
+
+## Task 2.2.3
+
+Status: IN PROGRESS
+
+Summary
+
+Implemented the release-quality Camera System foundation for the existing
+multi-viewport architecture. Each viewport keeps independent camera state while
+observing the same Shared Scene through the existing ViewportManager and
+WorkspaceViewportArea. Perspective, Top, Front and Right cameras remain
+independent across layout switching, maximize, restore, swap and activation.
+
+Camera System
+
+Camera3D now stores projection, target, distance, orientation, orthographic
+scale, render mode, grid visibility and axis visibility in serializable camera
+state. Each Camera3D has a stable default home state used by Home View and
+Reset Camera without overwriting the viewport's default orientation when a
+persisted camera state is restored.
+
+Perspective Camera
+
+The primary Perspective viewport continues to use the existing Viewport3D
+widget and application Camera3D. It supports pan, orbit, wheel zoom, dolly
+distance changes, Zoom Extents, Zoom Selected, Home View and Reset Camera
+through the existing CameraController3D and WorkspaceConnectionController
+routing.
+
+Orthographic Cameras
+
+Auxiliary Front, Right, Left, Back, Bottom, User, Camera and Section viewport
+surfaces use independent Camera3D instances initialized to their own default
+orientations. Orthographic views support middle-mouse pan, mouse-wheel zoom,
+fine Shift-wheel zoom, Zoom Extents, Zoom Selected, Home View and Reset View
+while maintaining orthographic projection.
+
+Camera Persistence
+
+Viewport cameras are stable objects owned by viewport records, not by transient
+layout panes. Camera state survives layout switching, maximize, restore, swap
+and activation. Camera states are saved with viewport layout state for
+continuity without duplicating geometry or viewport ownership.
+
+Architecture Decisions
+
+Rendering, Shared Scene, Workspace, Viewport Layout Manager ownership,
+Selection System, Command System, ToolManager, ProjectService,
+WorkspaceProvider, Data Model and AI Architecture were not modified. Camera
+commands now resolve the active ViewportManager registration before applying
+Home View, Zoom Extents or Zoom Selected.
+
+Remaining Tasks
+
+Future tasks may add ViewCube, navigation bar, camera bookmarks, named views
+and advanced camera synchronization on top of this camera system.
+
+----------------------------------------
+
+## Task 2.2.3 Selection Fix
+
+Status: COMPLETE
+
+Summary
+
+Resolved manual QA failure where Perspective and Top viewport selection worked
+but Front and Right viewport selection failed. The failure was isolated to the
+auxiliary shared-scene viewport surface used by orthographic 3D panes. Those
+surfaces had independent cameras and rendering, but did not route left-click
+input through the 3D picking and shared selection pipeline.
+
+Selection Pipeline
+
+Front, Right, Left, Back, Bottom, User, Camera and Section auxiliary viewport
+surfaces now generate picking rays from their own active Camera3D instances.
+Those rays flow through the existing PickingManager3D, active Workspace,
+SelectionManager or SelectionService and existing WorkspaceConnectionController
+selection synchronization. Perspective selection remains handled by Viewport3D.
+Top selection remains handled by Canvas.
+
+Architecture Decisions
+
+Shared Scene, Workspace, Command System, Rendering, Camera persistence and
+Viewport Layout Manager ownership were not modified. The fix adds missing
+input routing to the existing auxiliary viewport surface only.
+
+Verification
+
+Python compilation passed for main_v2.py, WorkspaceViewportArea,
+WorkspaceConnectionController, Viewport3D and PickingManager3D. Static review
+confirmed Front and Right use their own orthographic camera screen rays for
+PickingManager3D selection rather than assuming Perspective or Top.
+
+----------------------------------------

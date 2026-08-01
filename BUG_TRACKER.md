@@ -42,6 +42,100 @@ Closed In Version:
 
 # ACTIVE BUGS
 
+## BUG-009
+
+Title:
+
+Orthographic Front and Right viewport selection failed
+
+Priority:
+
+High
+
+Status:
+
+Fixed
+
+Assigned Sprint:
+
+Sprint 2
+
+Module:
+
+Camera System / Multi Viewport Selection
+
+Description:
+
+Manual QA for Task 2.2.3 found that Perspective and Top viewport selection
+worked, while Front and Right orthographic viewport selection failed.
+
+Steps to Reproduce:
+
+Open a multi-viewport layout, activate Front or Right viewport, then attempt
+to select shared-scene entities by clicking in that viewport.
+
+Expected Behaviour:
+
+Perspective, Top, Front, Right, Left, Back and Bottom viewports should all
+select shared-scene entities through their own camera or screen-to-world
+conversion paths.
+
+Actual Behaviour:
+
+Front and Right auxiliary viewport surfaces supported rendering, pan and zoom
+but ignored left-click picking. No ray was generated and no SelectionManager
+update occurred.
+
+Root Cause:
+
+The auxiliary SharedSceneViewportSurface introduced for non-primary 3D panes
+did not implement the Viewport3D picking flow. Perspective used Viewport3D and
+Top used Canvas, so both had selection pipelines; Front and Right did not.
+
+Files Modified:
+
+ui_v2/workspace_viewport_area.py
+docs/40_FEATURE_SPECIFICATIONS/003_MULTI_VIEWPORT.md
+PROJECT_STATUS.md
+SPRINT_BACKLOG.md
+CHANGELOG.md
+BUG_TRACKER.md
+
+Fix:
+
+Added left-click pick handling to SharedSceneViewportSurface. The surface now
+generates rays from its own Camera3D, calls PickingManager3D against the active
+Workspace, updates SelectionService or SelectionManager, and preserves hover
+and snap updates through the same orthographic camera.
+
+Verification:
+
+Compiled WorkspaceViewportArea, WorkspaceConnectionController, Viewport3D,
+PickingManager3D and main_v2.py with the bundled Python runtime. Static trace
+confirms Front and Right use their own orthographic Camera3D.screen_ray()
+results for picking and do not assume Perspective or Top.
+
+Closed In Version:
+
+0.3 Alpha
+
+---
+
+## TASK 2.2.3 QA NOTE
+
+Status:
+
+No new bug opened.
+
+Summary:
+
+Camera System implementation compiled successfully and reused the existing
+Shared Scene, ViewportManager, WorkspaceViewportArea and
+WorkspaceConnectionController architecture. No new runtime blocker was
+discovered during static verification.
+
+---
+
 ## BUG-008
 
 Title:

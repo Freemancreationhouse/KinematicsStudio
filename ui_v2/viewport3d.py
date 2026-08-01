@@ -77,7 +77,17 @@ class Viewport3D(QWidget):
             event.accept()
             return
 
-        if event.button() in (Qt.MiddleButton, Qt.RightButton):
+        if event.button() == Qt.MiddleButton:
+            self._drag_mode = (
+                "orbit"
+                if event.modifiers() & Qt.ShiftModifier
+                else "pan"
+            )
+            self.setCursor(Qt.SizeAllCursor)
+            event.accept()
+            return
+
+        if event.button() == Qt.RightButton:
             self._drag_mode = "pan"
             self.setCursor(Qt.SizeAllCursor)
             event.accept()

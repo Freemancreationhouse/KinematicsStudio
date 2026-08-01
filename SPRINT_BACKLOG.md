@@ -41,9 +41,11 @@ Status:
 ACTIVE
 
 - [COMPLETE] Multi Viewport Framework
-- [IN PROGRESS] Viewport Layout Manager
+- [COMPLETE] Viewport Layout Manager
 - [COMPLETE] Viewport Layout Manager QA Remediation
 - [COMPLETE] Viewport Layout Manager Runtime Lifecycle Fix
+- [IN PROGRESS] Camera System
+- [COMPLETE] Camera System Orthographic Selection Fix
 
 ---
 

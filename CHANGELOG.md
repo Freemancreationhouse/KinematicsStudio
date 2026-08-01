@@ -20,6 +20,13 @@ All notable changes to this project are documented here.
 - Triple View
 - Viewport Maximization
 - Layout Persistence
+- Independent Camera System
+- Perspective Navigation
+- Orthographic Navigation
+- Zoom Extents
+- Zoom Selected
+- Home View
+- Camera Persistence
 
 ## Changed
 
@@ -36,6 +43,7 @@ All notable changes to this project are documented here.
 - Fixed Viewport Layout Manager Maximize, Restore, Split, Close, Reopen and Swap routing.
 - Fixed stale viewport synchronization references after viewport destruction or invalid Qt wrapper detection.
 - Fixed ViewportManager signal emission after QObject destruction during viewport layout shutdown.
+- Fixed orthographic Front and Right viewport selection by routing auxiliary viewport clicks through camera rays and PickingManager3D.
 
 ## Removed
 
