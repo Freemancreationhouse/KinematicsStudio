@@ -152,13 +152,15 @@ class Ribbon(QWidget):
         super().__init__()
 
         self.setObjectName("Ribbon")
-        self.setMaximumHeight(120)
-        self.setMinimumHeight(104)
+        self.setMaximumHeight(138)
+        self.setMinimumHeight(124)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
         layout = QVBoxLayout(self)
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
+
+        layout.addWidget(self._title_bar())
 
         self.tabs = QTabWidget(self)
         self.tabs.setObjectName("RibbonTabs")
@@ -172,16 +174,57 @@ class Ribbon(QWidget):
     def _build_tabs(self) -> None:
         """Build all production ribbon tabs."""
 
-        self._add_tab("Project", self._project_groups())
+        self._add_tab("Home", self._project_groups())
         self._add_tab("Draw", self._draw_groups())
         self._add_tab("Modify", self._modify_groups())
-        self._add_tab("3D", self._three_d_groups())
-        self._add_tab("BIM", self._bim_groups())
-        self._add_tab("Analyze", self._analyze_groups())
-        self._add_tab("Fabrication", self._fabrication_groups())
-        self._add_tab("AI", self._ai_groups())
         self._add_tab("View", self._view_groups())
-        self._add_tab("Manage", self._manage_groups())
+        self._add_tab("Create", self._three_d_groups())
+        self._add_tab("Analyze", self._analyze_groups())
+        self._add_tab("Render", self._render_groups())
+        self._add_tab("Machine", self._fabrication_groups())
+        self._add_tab("AI", self._ai_groups())
+
+    def _title_bar(self) -> QWidget:
+        """Create the professional in-application title and quick access bar."""
+
+        title_bar = QFrame(self)
+        title_bar.setObjectName("RibbonTitleBar")
+        title_bar.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+        layout = QHBoxLayout(title_bar)
+        layout.setContentsMargins(10, 6, 10, 5)
+        layout.setSpacing(6)
+
+        product = QLabel("KINEMATICS STUDIO", title_bar)
+        product.setObjectName("RibbonProductTitle")
+        layout.addWidget(product)
+
+        context = QLabel("Professional Engineering Workspace", title_bar)
+        context.setObjectName("RibbonProductContext")
+        layout.addWidget(context)
+        layout.addStretch(1)
+
+        for command in self._quick_access_commands():
+            button = QPushButton(command.text, title_bar)
+            button.setObjectName("QuickAccessButton")
+            button.setToolTip(command.tooltip)
+            button.setCursor(Qt.PointingHandCursor)
+            button.clicked.connect(lambda checked=False, callback=command.callback: callback())
+            layout.addWidget(button)
+
+        return title_bar
+
+    def _quick_access_commands(self) -> tuple[RibbonCommand, ...]:
+        """Return quick access commands routed through presentation signals."""
+
+        return (
+            self._command("New", "N", "Create a new project.", lambda: self._emit_action("project:new:blank")),
+            self._command("Open", "O", "Open project.", lambda: self._emit_action("project:open")),
+            self._command("Save", "S", "Save project.", lambda: self._emit_action("project:save")),
+            self._command("Undo", "↶", "Undo last command.", lambda: self._emit_action("command:undo")),
+            self._command("Redo", "↷", "Redo next command.", lambda: self._emit_action("command:redo")),
+            self._command("Settings", "⚙", "Open project settings.", lambda: self._emit_action("panel:project_manager")),
+        )
 
     def _add_tab(
         self,
@@ -395,6 +438,29 @@ class Ribbon(QWidget):
                     self._panel("Selection Sets", "S", "selection_sets"),
                 ),
             ),
+            *self._bim_groups(),
+        )
+
+    def _render_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
+        """Return render and presentation workspace groups."""
+
+        return (
+            (
+                "Camera",
+                (
+                    self._command("Home", "H", "Return cameras to home.", lambda: self._emit_action("view:home"), True),
+                    self._command("Zoom Extents", "Z", "Fit the model.", lambda: self._emit_action("view:zoom_extents")),
+                    self._command("Zoom Selected", "ZS", "Frame selected objects.", lambda: self._emit_action("view:zoom_selected")),
+                ),
+            ),
+            (
+                "Workspace",
+                (
+                    self._command("Focus", "◎", "Enter focus mode.", lambda: self._emit_action("focus_mode")),
+                    self._command("Presentation", "□", "Enter presentation mode.", lambda: self._emit_action("presentation_mode")),
+                    self._command("Reset", "↺", "Reset workspace layout.", lambda: self._emit_action("reset_workspace_layout")),
+                ),
+            ),
         )
 
     def _fabrication_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:
@@ -581,20 +647,61 @@ class Ribbon(QWidget):
         self.setStyleSheet(
             """
             QWidget#Ribbon {
-                background-color: #1a1f27;
-                border-bottom: 1px solid #2a2f38;
+                background-color: #11161d;
+                border-bottom: 1px solid #262d36;
+            }
+
+            QFrame#RibbonTitleBar {
+                background-color: #0f1319;
+                border-bottom: 1px solid #252b34;
+            }
+
+            QLabel#RibbonProductTitle {
+                color: #f3f6fb;
+                font-size: 12px;
+                font-weight: 800;
+                letter-spacing: 1px;
+            }
+
+            QLabel#RibbonProductContext {
+                color: #7f8a99;
+                font-size: 11px;
+                font-weight: 600;
+                padding-left: 8px;
+            }
+
+            QPushButton#QuickAccessButton {
+                background-color: #181e27;
+                border: 1px solid #303846;
+                border-radius: 4px;
+                color: #dce3ed;
+                font-size: 11px;
+                font-weight: 650;
+                min-height: 24px;
+                padding: 2px 10px;
+            }
+
+            QPushButton#QuickAccessButton:hover {
+                background-color: #222b37;
+                border-color: #4a8cff;
+                color: #ffffff;
+            }
+
+            QPushButton#QuickAccessButton:pressed {
+                background-color: #2b63c7;
+                border-color: #7db4ff;
             }
 
             QTabWidget#RibbonTabs::pane {
-                background-color: #1a1f27;
+                background-color: #151a22;
                 border: none;
-                border-top: 1px solid #2a2f38;
+                border-top: 1px solid #252b34;
             }
 
             QTabBar::tab {
-                background-color: #171b22;
-                color: #aeb7c4;
-                padding: 5px 14px;
+                background-color: #121720;
+                color: #a8b2c0;
+                padding: 5px 16px;
                 margin: 0;
                 border: none;
                 min-height: 22px;
@@ -603,13 +710,13 @@ class Ribbon(QWidget):
             }
 
             QTabBar::tab:selected {
-                background-color: #222936;
+                background-color: #202834;
                 color: #ffffff;
-                border-bottom: 2px solid #3f8cff;
+                border-bottom: 2px solid #4a8cff;
             }
 
             QTabBar::tab:hover {
-                background-color: #26303c;
+                background-color: #273140;
                 color: #ffffff;
             }
 
@@ -619,8 +726,8 @@ class Ribbon(QWidget):
             }
 
             QFrame#RibbonGroup {
-                background-color: #1d222a;
-                border: 1px solid #2a2f38;
+                background-color: #1a2029;
+                border: 1px solid #2d3542;
                 border-radius: 4px;
             }
 
@@ -636,7 +743,7 @@ class Ribbon(QWidget):
                 background-color: transparent;
                 border: 1px solid transparent;
                 border-radius: 4px;
-                color: #d7dde7;
+                color: #dce3ed;
                 font-size: 10px;
                 font-weight: 600;
                 padding: 3px 5px;

@@ -4,6 +4,26 @@
 
 ---
 
+# Sprint 2
+
+Professional Workspace UI
+
+Status:
+
+ACTIVE
+
+---
+
+## Epic 2.1
+
+Workspace Experience
+
+- [IN PROGRESS] Professional Workspace UI
+- [ ] Manual UI Launch Validation
+- [ ] Responsive Layout Validation
+
+---
+
 # Sprint 1
 
 Application Integration

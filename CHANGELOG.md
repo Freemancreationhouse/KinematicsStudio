@@ -6,6 +6,33 @@ All notable changes to this project are documented here.
 
 ---
 
+# Version 0.2 Alpha
+
+## Added
+
+- Professional Workspace UI
+- Modern engineering layout
+- Responsive docking
+- Professional ribbon
+
+## Changed
+
+-
+
+## Improved
+
+-
+
+## Fixed
+
+-
+
+## Removed
+
+-
+
+---
+
 # Version 0.1 Alpha
 
 ## Added

@@ -256,6 +256,9 @@ class MainWindow(QMainWindow):
             tool_manager=self.cad_application.tool_manager,
             parent=self,
         )
+        self.workspace_shell.actionTriggered.connect(
+            self.workspace_connection_controller.route_action
+        )
 
     def _create_view_menu(self) -> None:
         """Create application-level view and panel access menus."""
