@@ -89,9 +89,9 @@ EPIC 2.2
 
 # Current Task
 
-Task 2.2.3
+Task 2.2.4
 
-Camera System
+Professional ViewCube
 
 Status:
 
@@ -162,3 +162,5 @@ Task 2.2.2 Runtime Lifecycle Fix Complete: ViewportManager now shuts down viewpo
 Task 2.2.3 In Progress: Camera System added independent viewport camera state, perspective and orthographic navigation support, active viewport Home/Zoom Extents/Zoom Selected routing and camera persistence across viewport layout changes without modifying Sprint 1 or Epic 2.1 runtime architecture.
 
 Task 2.2.3 Selection Fix Complete: Front and Right orthographic viewport surfaces now route left-click selection through their own camera rays, PickingManager3D and the shared selection pipeline while preserving Perspective and Top selection behavior.
+
+Task 2.2.4 In Progress: Professional ViewCube overlays added per 3D viewport with independent camera orientation controls, compass feedback, Home navigation and animated camera transitions without modifying Sprint 1 or Epic 2.1 runtime architecture.

@@ -10,6 +10,7 @@ from engine.commands import (
 from engine.geometry import Vector3
 from engine.picking3d import PickingManager3D
 from engine.render import CameraController3D
+from ui_v2.viewcube import ViewCube
 
 
 class Viewport3D(QWidget):
@@ -30,6 +31,8 @@ class Viewport3D(QWidget):
         self._gizmo_axis = None
         self._last_position = None
         self._press_position = None
+        self.viewcube = ViewCube(self.app.camera3d, self)
+        self.viewcube.orientationChanged.connect(lambda _name: self.update())
 
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.StrongFocus)
@@ -50,6 +53,7 @@ class Viewport3D(QWidget):
     def resizeEvent(self, event):
 
         self.app.camera3d.resize(self.width(), self.height())
+        self.viewcube.reposition()
         super().resizeEvent(event)
 
     # --------------------------------

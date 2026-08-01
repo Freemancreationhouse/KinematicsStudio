@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 from engine.geometry import Vector3
 from engine.picking3d import PickingManager3D
 from engine.render.camera3d import Camera3D, Camera3DState, CameraController3D
+from ui_v2.viewcube import ViewCube
 from ui_v2.viewport_manager import ViewportLayout, ViewportManager, ViewportType
 
 
@@ -54,6 +55,13 @@ class SharedSceneViewportSurface(QWidget):
         self._drag_mode: str | None = None
         self._last_position = None
         self._press_position = None
+        self._viewcube = (
+            ViewCube(camera, self)
+            if camera is not None and mode == "3d"
+            else None
+        )
+        if self._viewcube is not None:
+            self._viewcube.orientationChanged.connect(lambda _name: self.update())
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -74,6 +82,8 @@ class SharedSceneViewportSurface(QWidget):
 
         if self._camera is not None:
             self._camera.resize(self.width(), self.height())
+        if self._viewcube is not None:
+            self._viewcube.reposition()
         super().resizeEvent(event)
 
     def mousePressEvent(self, event) -> None:

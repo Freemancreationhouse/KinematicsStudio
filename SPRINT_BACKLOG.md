@@ -44,8 +44,9 @@ ACTIVE
 - [COMPLETE] Viewport Layout Manager
 - [COMPLETE] Viewport Layout Manager QA Remediation
 - [COMPLETE] Viewport Layout Manager Runtime Lifecycle Fix
-- [IN PROGRESS] Camera System
+- [COMPLETE] Camera System
 - [COMPLETE] Camera System Orthographic Selection Fix
+- [IN PROGRESS] ViewCube
 
 ---
 

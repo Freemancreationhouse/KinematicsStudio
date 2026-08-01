@@ -27,6 +27,9 @@ All notable changes to this project are documented here.
 - Zoom Selected
 - Home View
 - Camera Persistence
+- Professional ViewCube
+- Compass
+- Animated Camera Orientation
 
 ## Changed
 

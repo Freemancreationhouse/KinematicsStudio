@@ -945,3 +945,55 @@ confirmed Front and Right use their own orthographic camera screen rays for
 PickingManager3D selection rather than assuming Perspective or Top.
 
 ----------------------------------------
+
+## Task 2.2.4
+
+Status: IN PROGRESS
+
+Summary
+
+Implemented a professional ViewCube overlay for every 3D viewport surface.
+The ViewCube is owned by the viewport widget that displays it, preserving
+independent viewport state and avoiding any shared camera ownership. It
+provides labeled face navigation, edge and corner isometric navigation, a Home
+control and compact compass feedback while keeping the viewport as the primary
+workspace surface.
+
+ViewCube
+
+Each 3D viewport creates its own ViewCube overlay pinned to the upper-right
+corner. The overlay supports hover highlighting for faces, edges and corners
+and presents professional dark engineering styling aligned with the application
+design language. The primary Perspective viewport and auxiliary Front, Right,
+Left, Back, Bottom, User, Camera and Section surfaces each own an independent
+ViewCube instance.
+
+Camera Navigation
+
+Face clicks route to Top, Bottom, Front, Back, Left and Right camera
+orientations. Edge clicks route to edge-isometric orientations and corner
+clicks route to corner-isometric orientations. The Home control returns the
+camera to its viewport-specific default state. Navigation is applied only to
+the camera owned by the active ViewCube's viewport.
+
+Animated Transitions
+
+ViewCube camera changes animate yaw, pitch, target, distance and orthographic
+scale over a short easing transition. The transition updates the existing
+Camera3D state without replacing the camera object or modifying camera
+mathematics.
+
+Architecture Decisions
+
+Shared Scene, Workspace, Rendering, Camera Mathematics, Viewport Layout
+Manager, Selection System, Command System, ToolManager, ProjectService and
+WorkspaceProvider were not modified. The ViewCube is a UI overlay and uses the
+existing Camera3D state exposed by each viewport.
+
+Remaining Tasks
+
+Future tasks may add a dedicated navigation bar, camera bookmarks, named views
+and advanced viewport synchronization on top of the completed ViewCube
+foundation.
+
+----------------------------------------
