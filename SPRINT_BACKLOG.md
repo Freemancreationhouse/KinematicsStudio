@@ -21,6 +21,7 @@ Workspace Experience
 - [IN PROGRESS] Professional Workspace UI
 - [IN PROGRESS] Professional Ribbon
 - [IN PROGRESS] Viewport Chrome
+- [COMPLETE] UI Design System
 - [ ] Manual UI Launch Validation
 - [ ] Responsive Layout Validation
 

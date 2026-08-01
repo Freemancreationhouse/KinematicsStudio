@@ -188,3 +188,53 @@ Manual PySide6 launch validation, target-display visual review and final
 viewport interaction acceptance testing.
 
 ----------------------------------------
+
+## Task 2.1.4
+
+Status: COMPLETE
+
+Summary
+
+Implemented an application-wide UI design system for the Sprint 2 workspace.
+The visual foundation now uses centralized Kinematics Studio tokens and a
+release-quality stylesheet for shared desktop controls, preserving the locked
+Sprint 1 engineering runtime while making the visible application read as one
+professional engineering product.
+
+Design Tokens Implemented
+
+Typography, font hierarchy, weights, 8 px spacing scale, icon sizes, dark
+engineering color hierarchy, viewport/ribbon/panel/dock/card surfaces,
+selection, hover, pressed, disabled, focus, success, warning, error, borders,
+corner radii and subtle elevation tokens.
+
+Reusable Components
+
+Application theme, buttons, tool buttons, toggles, line edits, command line,
+combo boxes, spin boxes, check boxes, radio buttons, sliders, tab controls,
+dock panels, menus, toolbars, lists, trees, tables, property grids, status bar,
+scrollbars, progress bars, dialogs, message boxes and tooltips.
+
+Files Modified
+
+ui_v2/design_system.py
+ui_v2/theme.py
+docs/40_FEATURE_SPECIFICATIONS/002_WORKSPACE_UI.md
+PROJECT_STATUS.md
+SPRINT_BACKLOG.md
+CHANGELOG.md
+
+Architecture Decisions
+
+The implementation extends the existing design system and theme modules rather
+than introducing another UI framework. No Workspace, Shared Scene, Rendering,
+Camera, Navigation, ToolManager, Command System, Selection System,
+ProjectService, WorkspaceProvider, Data Model or AI Architecture code was
+modified.
+
+Remaining Tasks
+
+Manual launch validation, full visual QA on target displays and final Sprint 2
+workspace acceptance review.
+
+----------------------------------------
