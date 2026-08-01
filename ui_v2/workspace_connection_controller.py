@@ -285,6 +285,20 @@ class WorkspaceConnectionController(QObject):
             getattr(self.viewport_area, "active_view_changed", None),
             self._handle_active_view_changed,
         )
+        viewport_manager = self._viewport_manager()
+        if viewport_manager is not None:
+            self._connect_signal(
+                getattr(viewport_manager, "viewportActivated", None),
+                self._handle_viewport_activated,
+            )
+            self._connect_signal(
+                getattr(viewport_manager, "viewportFocused", None),
+                self._handle_viewport_focused,
+            )
+            self._connect_signal(
+                getattr(viewport_manager, "layoutChanged", None),
+                self._handle_viewport_layout_changed,
+            )
         self._connect_signal(
             getattr(self._canvas(), "deleteRequested", None),
             self._delete_selection,
@@ -1200,6 +1214,27 @@ class WorkspaceConnectionController(QObject):
             self._call_if_available(self.left_toolbox, "set_active_action", "view_3d")
         self.synchronize_ui("ViewChanged")
 
+    def _handle_viewport_activated(self, viewport_id: str) -> None:
+        """Synchronize shell state after the active viewport changes."""
+
+        self._show_active_viewport_status(viewport_id)
+        self.synchronize_ui("ViewChanged")
+
+    def _handle_viewport_focused(self, viewport_id: str) -> None:
+        """Synchronize shell state after a viewport receives focus."""
+
+        self._show_active_viewport_status(viewport_id)
+
+    def _handle_viewport_layout_changed(self, layout_name: str) -> None:
+        """Synchronize shell state after viewport layout mode changes."""
+
+        self._call_if_available(
+            self.status_bar,
+            "show_status_text",
+            f"Viewport Layout: {layout_name}",
+        )
+        self.synchronize_ui("ViewChanged")
+
     def _handle_command_entered(self) -> None:
         """Emit command text submitted from the command bar."""
 
@@ -1370,6 +1405,32 @@ class WorkspaceConnectionController(QObject):
 
         accessor = getattr(self.viewport_area, "viewport3d", None)
         return accessor() if callable(accessor) else accessor
+
+    def _viewport_manager(self) -> Any:
+        """Return the injected viewport manager when available."""
+
+        accessor = getattr(self.viewport_area, "viewport_manager", None)
+        return accessor() if callable(accessor) else accessor
+
+    def _show_active_viewport_status(self, viewport_id: str) -> None:
+        """Update status text for the active viewport without changing data."""
+
+        viewport_manager = self._viewport_manager()
+        if viewport_manager is None:
+            return
+        registration = getattr(viewport_manager, "registry", None)
+        get_record = getattr(registration, "get", None)
+        record = get_record(viewport_id) if callable(get_record) else None
+        viewport_type = getattr(record, "viewport_type", None)
+        viewport_name = getattr(viewport_type, "value", viewport_id)
+        if hasattr(self.status_bar, "show_viewport"):
+            self.status_bar.show_viewport(viewport_name)
+            return
+        self._call_if_available(
+            self.status_bar,
+            "show_status_text",
+            f"Viewport: {viewport_name}",
+        )
 
     def _sync_3d_target_from_2d(self) -> None:
         """Preserve the 2D view center as the 3D camera target when switching."""

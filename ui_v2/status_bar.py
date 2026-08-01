@@ -119,6 +119,12 @@ class StudioStatusBar(QStatusBar):
 
     # -----------------------------------------
 
+    def show_viewport(self, viewport_name):
+
+        self.view.setText(f"Viewport: {viewport_name}")
+
+    # -----------------------------------------
+
     def show_coordinates(self, point, camera):
 
         self.coords.setText(f"X:{point.x:.2f}  Y:{point.y:.2f}")

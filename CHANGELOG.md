@@ -6,6 +6,33 @@ All notable changes to this project are documented here.
 
 ---
 
+# Version 0.3 Alpha
+
+## Added
+
+- Viewport Manager
+- Viewport Registry
+- Viewport Events
+- Viewport Framework
+
+## Changed
+
+-
+
+## Improved
+
+-
+
+## Fixed
+
+-
+
+## Removed
+
+-
+
+---
+
 # Version 0.2 Alpha
 
 ## Added
