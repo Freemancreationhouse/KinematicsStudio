@@ -768,3 +768,86 @@ synchronization on top of this layout layer without changing shared scene
 ownership.
 
 ----------------------------------------
+
+## Task 2.2.2 QA Fixes
+
+Status: COMPLETE
+
+Summary
+
+Resolved manual QA failures in the Viewport Layout Manager without starting
+Task 2.2.3 or modifying shared scene ownership, workspace ownership, rendering
+pipeline logic, camera mathematics, selection, command routing, ToolManager,
+ProjectService or WorkspaceProvider.
+
+Camera Independence
+
+Quad View now registers Perspective, Top, Front and Right as independent
+viewport records. Perspective uses the existing injected Viewport3D camera, Top
+uses the existing Canvas camera, and Front and Right use independently
+initialized Camera3D instances with their own default orthographic
+orientations. Auxiliary User, Camera and Section panes also receive independent
+Camera3D instances.
+
+Viewport Operations
+
+Maximize, Restore, Split, Close, Reopen and Swap operations are implemented
+through WorkspaceViewportArea and routed through WorkspaceConnectionController.
+Close removes a pane from the visible layout without deleting the underlying
+viewport widget. Reopen restores the next closed or hidden viewport. Swap
+exchanges the active pane with the next visible pane.
+
+Qt Lifetime Safety
+
+ViewportLayoutManager now reuses stable ViewportPane instances and deletes only
+transient splitter/container roots. Closed or hidden panes are detached before
+obsolete roots are deleted, preventing stale references to deleted Canvas,
+Viewport3D or SharedSceneViewportSurface widgets.
+
+Synchronization Cleanup
+
+ViewportManager removes event filters, registry entries, active viewport
+references and focused viewport references when a viewport is destroyed or
+unregistered. ViewportSynchronizationService resolves live viewport widgets
+through ViewportManager and prunes invalid Qt wrappers defensively before
+refreshing.
+
+Verification
+
+Static verification confirmed no layout-level close path deletes reusable
+viewport widgets. Python compilation passed for the viewport manager, viewport
+area, viewport synchronization service, connection controller, MainWindow and
+main_v2.py.
+
+----------------------------------------
+
+## Task 2.2.2 Runtime Lifecycle Fix
+
+Status: COMPLETE
+
+Summary
+
+Resolved the remaining runtime lifecycle failure where a viewport widget
+destroyed callback could emit ViewportManager signals after the manager QObject
+had entered destruction. ViewportManager now owns an explicit shutdown path,
+disconnects viewport destroyed callbacks, removes event filters and clears
+registry, focus and active viewport references before Qt destroys viewport
+widgets.
+
+Architecture Decisions
+
+No viewport feature work was added and Task 2.2.3 was not started. The fix is
+limited to QObject lifecycle safety for the Task 2.2.2 layout manager. Shared
+Scene, Workspace, Rendering Pipeline, Camera Mathematics, Selection System,
+Command System, ToolManager, ProjectService and WorkspaceProvider were not
+modified.
+
+Verification
+
+Python compilation passed for main_v2.py, ViewportManager,
+WorkspaceViewportArea, ViewportSynchronizationService,
+WorkspaceConnectionController and MainWindow. Signal emission is now guarded by
+manager disposal state and Qt QObject validity checks, and MainWindow shuts
+down the viewport area before Qt tears down child widgets.
+
+----------------------------------------

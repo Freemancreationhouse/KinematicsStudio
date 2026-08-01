@@ -42,6 +42,8 @@ ACTIVE
 
 - [COMPLETE] Multi Viewport Framework
 - [IN PROGRESS] Viewport Layout Manager
+- [COMPLETE] Viewport Layout Manager QA Remediation
+- [COMPLETE] Viewport Layout Manager Runtime Lifecycle Fix
 
 ---
 

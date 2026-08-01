@@ -295,6 +295,8 @@ class MainWindow(QMainWindow):
             ("Restore Previous Layout", "viewport:restore"),
             ("Split Active Viewport", "viewport:split"),
             ("Close Active Viewport", "viewport:close"),
+            ("Reopen Viewport", "viewport:reopen"),
+            ("Swap Active With Next", "viewport:swap"),
         )
         for title, action_id in viewport_actions:
             if title is None:
@@ -400,8 +402,9 @@ class MainWindow(QMainWindow):
         """Persist geometry and close transient panel windows before shutdown."""
 
         self._save_window_state()
-        self.panel_manager.lifecycle.close_all()
         self.workspace_connection_controller.disconnect_all()
+        self.viewport_area.shutdown()
+        self.panel_manager.lifecycle.close_all()
         super().closeEvent(event)
 
     def _restore_window_state(self) -> None:

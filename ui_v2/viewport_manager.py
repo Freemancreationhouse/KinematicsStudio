@@ -8,6 +8,11 @@ from typing import Any, Callable
 from PySide6.QtCore import QObject, QEvent, Signal
 from PySide6.QtWidgets import QWidget
 
+try:
+    import shiboken6
+except ImportError:  # pragma: no cover - PySide runtime dependency.
+    shiboken6 = None
+
 
 class ViewportType(str, Enum):
     """Supported professional viewport types."""
@@ -161,6 +166,9 @@ class ViewportManager(QObject):
         self._layout = ViewportLayout.SINGLE
         self._viewport_ids_by_widget: dict[QWidget, str] = {}
         self._names: dict[str, str] = {}
+        self._destroyed_slots: dict[str, Callable[..., None]] = {}
+        self._disposing = False
+        self.destroyed.connect(lambda obj=None: self._mark_disposing())
 
     def create_viewport(
         self,
@@ -222,10 +230,15 @@ class ViewportManager(QObject):
         self._viewport_ids_by_widget[widget] = resolved_id
         self._names.setdefault(resolved_id, normalized_type.value)
         widget.installEventFilter(self)
+        destroyed_slot = lambda obj=None, viewport_id=resolved_id: (
+            self._cleanup_destroyed_viewport(viewport_id)
+        )
+        widget.destroyed.connect(destroyed_slot)
+        self._destroyed_slots[resolved_id] = destroyed_slot
         if self._active_viewport_id is None:
             self.set_active_viewport(resolved_id)
         self._emit("ViewportCreated", resolved_id)
-        self.viewportCreated.emit(resolved_id)
+        self._emit_signal("viewportCreated", resolved_id)
         return registration
 
     def destroy_viewport(self, viewport_id: str) -> None:
@@ -234,28 +247,49 @@ class ViewportManager(QObject):
         registration = self.registry.get(viewport_id)
         if registration is None:
             return
-        registration.widget.removeEventFilter(self)
-        registration.widget.close()
-        self.registry.unregister(viewport_id)
-        self._viewport_ids_by_widget.pop(registration.widget, None)
-        self._names.pop(viewport_id, None)
-        if self._active_viewport_id == viewport_id:
-            ids = self.registry.ids()
-            self._active_viewport_id = ids[0] if ids else None
-        if self._focused_viewport_id == viewport_id:
-            self._focused_viewport_id = self._active_viewport_id
+        self._safe_remove_event_filter(registration.widget)
+        self._cleanup_viewport_references(viewport_id, registration.widget)
+        self._safe_close_widget(registration.widget)
         self._emit("ViewportDestroyed", viewport_id)
-        self.viewportDestroyed.emit(viewport_id)
+        self._emit_signal("viewportDestroyed", viewport_id)
 
     def close_viewport(self, viewport_id: str) -> None:
         """Close a viewport without modifying engineering data."""
 
+        if not self.registry.contains(viewport_id):
+            return
+        self._emit("ViewportClosed", viewport_id)
+        self._emit_signal("viewportClosed", viewport_id)
+
+    def unregister_viewport(self, viewport_id: str) -> None:
+        """Unregister one viewport without closing or deleting its widget."""
+
         registration = self.registry.get(viewport_id)
         if registration is None:
             return
-        registration.widget.close()
-        self._emit("ViewportClosed", viewport_id)
-        self.viewportClosed.emit(viewport_id)
+        self._safe_remove_event_filter(registration.widget)
+        self._cleanup_viewport_references(viewport_id, registration.widget)
+        self._emit("ViewportDestroyed", viewport_id)
+        self._emit_signal("viewportDestroyed", viewport_id)
+
+    def shutdown(self) -> None:
+        """Disconnect viewport callbacks before Qt object destruction."""
+
+        if self._disposing:
+            return
+        self._disposing = True
+        for registration in tuple(self.registry.all()):
+            self._disconnect_destroyed_slot(
+                registration.viewport_id,
+                registration.widget,
+            )
+            self._safe_remove_event_filter(registration.widget)
+        self.registry = ViewportRegistry()
+        self._viewport_ids_by_widget.clear()
+        self._names.clear()
+        self._destroyed_slots.clear()
+        self._active_viewport_id = None
+        self._focused_viewport_id = None
 
     def set_active_viewport(self, viewport_id: str) -> None:
         """Set the single active viewport."""
@@ -267,7 +301,7 @@ class ViewportManager(QObject):
         self._active_viewport_id = viewport_id
         self._focused_viewport_id = viewport_id
         self._emit("ViewportActivated", viewport_id)
-        self.viewportActivated.emit(viewport_id)
+        self._emit_signal("viewportActivated", viewport_id)
 
     def set_focused_viewport(self, viewport_id: str) -> None:
         """Set the focused viewport and make it active."""
@@ -276,7 +310,7 @@ class ViewportManager(QObject):
             return
         self._focused_viewport_id = viewport_id
         self._emit("ViewportFocused", viewport_id)
-        self.viewportFocused.emit(viewport_id)
+        self._emit_signal("viewportFocused", viewport_id)
         self.set_active_viewport(viewport_id)
 
     def active_viewport_id(self) -> str | None:
@@ -310,7 +344,7 @@ class ViewportManager(QObject):
             return
         self._names[viewport_id] = name
         self._emit("ViewportRenamed", viewport_id)
-        self.viewportRenamed.emit(viewport_id, name)
+        self._emit_signal("viewportRenamed", viewport_id, name)
 
     def viewport_name(self, viewport_id: str) -> str:
         """Return the display name for a viewport."""
@@ -325,7 +359,7 @@ class ViewportManager(QObject):
             return
         self._layout = normalized_layout
         self._emit("LayoutChanged", self._active_viewport_id or "")
-        self.layoutChanged.emit(normalized_layout.value)
+        self._emit_signal("layoutChanged", normalized_layout.value)
 
     def layout(self) -> ViewportLayout:
         """Return the current viewport layout mode."""
@@ -363,6 +397,8 @@ class ViewportManager(QObject):
     def eventFilter(self, watched: QObject, event: QEvent) -> bool:
         """Track focus and mouse activation for managed viewport widgets."""
 
+        if self._disposing or not self._is_qobject_valid(self):
+            return False
         if isinstance(watched, QWidget):
             viewport_id = self._viewport_ids_by_widget.get(watched)
             if viewport_id is not None and event.type() in {
@@ -372,19 +408,118 @@ class ViewportManager(QObject):
                 self.set_focused_viewport(viewport_id)
         return super().eventFilter(watched, event)
 
+    def _cleanup_destroyed_viewport(self, viewport_id: str) -> None:
+        """Remove all manager references after Qt destroys a viewport widget."""
+
+        if self._disposing or not self._is_qobject_valid(self):
+            return
+        registration = self.registry.get(viewport_id)
+        if (
+            registration is None
+            and viewport_id not in self._names
+            and viewport_id not in self._viewport_ids_by_widget.values()
+        ):
+            return
+        widget = registration.widget if registration is not None else None
+        self._cleanup_viewport_references(viewport_id, widget)
+        self._emit("ViewportDestroyed", viewport_id)
+        self._emit_signal("viewportDestroyed", viewport_id)
+
+    def _cleanup_viewport_references(
+        self,
+        viewport_id: str,
+        widget: QWidget | None,
+    ) -> None:
+        """Remove registry, focus and active references for one viewport."""
+
+        self.registry.unregister(viewport_id)
+        if widget is not None:
+            self._disconnect_destroyed_slot(viewport_id, widget)
+            self._viewport_ids_by_widget.pop(widget, None)
+        for tracked_widget, tracked_id in tuple(self._viewport_ids_by_widget.items()):
+            if tracked_id == viewport_id:
+                self._viewport_ids_by_widget.pop(tracked_widget, None)
+        self._names.pop(viewport_id, None)
+        if self._active_viewport_id == viewport_id:
+            ids = self.registry.ids()
+            self._active_viewport_id = ids[0] if ids else None
+        if self._focused_viewport_id == viewport_id:
+            self._focused_viewport_id = self._active_viewport_id
+
+    def _safe_remove_event_filter(self, widget: QWidget) -> None:
+        """Remove the event filter without failing on deleted Qt wrappers."""
+
+        try:
+            widget.removeEventFilter(self)
+        except RuntimeError:
+            pass
+
+    def _disconnect_destroyed_slot(
+        self,
+        viewport_id: str,
+        widget: QWidget,
+    ) -> None:
+        """Disconnect the stored destroyed callback for one viewport widget."""
+
+        slot = self._destroyed_slots.pop(viewport_id, None)
+        if slot is None:
+            return
+        try:
+            widget.destroyed.disconnect(slot)
+        except (RuntimeError, TypeError):
+            pass
+
+    def _safe_close_widget(self, widget: QWidget) -> None:
+        """Close and delete a viewport widget without stale manager references."""
+
+        try:
+            widget.close()
+            widget.deleteLater()
+        except RuntimeError:
+            pass
+
     def _emit(self, event_name: str, viewport_id: str) -> None:
         """Broadcast a typed viewport manager event."""
 
+        if self._disposing or not self._is_qobject_valid(self):
+            return
         registration = self.registry.get(viewport_id)
         viewport_type = registration.viewport_type if registration else None
-        self.viewportEvent.emit(
+        self._emit_signal(
+            "viewportEvent",
             ViewportEvent(
                 name=event_name,
                 viewport_id=viewport_id,
                 viewport_type=viewport_type,
                 layout=self._layout,
-            )
+            ),
         )
+
+    def _emit_signal(self, signal_name: str, *args: Any) -> None:
+        """Emit a Qt signal only while this QObject is still valid."""
+
+        if self._disposing or not self._is_qobject_valid(self):
+            return
+        try:
+            signal = getattr(self, signal_name)
+            signal.emit(*args)
+        except (AttributeError, RuntimeError):
+            pass
+
+    def _mark_disposing(self) -> None:
+        """Mark this manager as disposing without emitting any signals."""
+
+        self._disposing = True
+
+    def _is_qobject_valid(self, obj: QObject) -> bool:
+        """Return True when a QObject wrapper still has a live C++ object."""
+
+        if shiboken6 is None:
+            return True
+        try:
+            return bool(shiboken6.isValid(obj))
+        except RuntimeError:
+            return False
 
     def _next_id(self, viewport_type: ViewportType) -> str:
         """Create a stable unique id for a viewport registration."""

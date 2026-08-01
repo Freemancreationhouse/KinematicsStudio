@@ -1408,6 +1408,8 @@ class WorkspaceConnectionController(QObject):
             "restore": "restore_previous_layout",
             "split": "split_viewport",
             "close": "close_active_viewport",
+            "reopen": "reopen_next_viewport",
+            "swap": "swap_active_with_next",
         }
         method_name = method_map.get(action_id)
         if method_name is None:

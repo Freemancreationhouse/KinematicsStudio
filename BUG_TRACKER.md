@@ -42,6 +42,99 @@ Closed In Version:
 
 # ACTIVE BUGS
 
+## BUG-008
+
+Title:
+
+Viewport Layout Manager reused deleted Qt viewport widgets
+
+Priority:
+
+Critical
+
+Status:
+
+Fixed
+
+Assigned Sprint:
+
+Sprint 2
+
+Module:
+
+Viewport Layout Manager / Viewport Synchronization
+
+Description:
+
+Manual QA for Task 2.2.2 found that Quad View created four panes but 3D panes
+shared the same Perspective camera, viewport layout operations were incomplete,
+and changing layouts could raise RuntimeError because Viewport3D or
+SharedSceneViewportSurface Qt objects had already been deleted.
+
+Steps to Reproduce:
+
+Open Quad View, switch layouts repeatedly, maximize and restore a pane, close
+and reopen panes, then interact with a reused 3D viewport.
+
+Expected Behaviour:
+
+Perspective, Top, Front and Right viewports should have independent cameras.
+Maximize, Restore, Split, Close, Reopen and Swap should work without deleting
+reusable viewport widgets or leaving stale synchronization references.
+
+Actual Behaviour:
+
+Temporary viewport pane roots could be deleted by Qt while the layout manager
+and synchronization service still retained references to their child viewport
+widgets. Auxiliary 3D panes also shared the application Perspective camera.
+
+Root Cause:
+
+ViewportLayoutManager recreated pane wrappers during layout rebuilds and
+deleted obsolete root widgets without preserving reusable pane/widget lifetime.
+Auxiliary SharedSceneViewportSurface panes resolved the global application
+Camera3D instead of owning independent camera instances. Viewport synchronization
+refreshed hardcoded original viewports rather than the live ViewportManager
+registry.
+
+Files Modified:
+
+ui_v2/workspace_viewport_area.py
+ui_v2/viewport_manager.py
+ui_v2/viewport_synchronization_service.py
+ui_v2/workspace_connection_controller.py
+ui_v2/main_window.py
+docs/40_FEATURE_SPECIFICATIONS/003_MULTI_VIEWPORT.md
+PROJECT_STATUS.md
+SPRINT_BACKLOG.md
+CHANGELOG.md
+BUG_TRACKER.md
+
+Fix:
+
+Reused stable ViewportPane instances, detached hidden panes before deleting
+transient splitter roots, prevented layout-level close from closing/deleting
+viewport widgets, added independent cameras for auxiliary 3D panes, completed
+Reopen and Swap routing, and made ViewportManager and
+ViewportSynchronizationService defensively remove stale viewport references.
+Added explicit ViewportManager shutdown and signal guards so viewport destroyed
+callbacks cannot emit signals after the manager QObject has entered teardown.
+
+Verification:
+
+Compiled main_v2.py and all modified viewport UI modules with the bundled
+Python runtime. Static search confirmed layout close no longer closes reusable
+viewport widgets and synchronization now resolves live registered viewports.
+Python compilation also passed after the runtime lifecycle fix, and
+ViewportManager now disconnects destroyed callbacks and event filters before
+registry cleanup.
+
+Closed In Version:
+
+0.3 Alpha
+
+---
+
 ## BUG-007
 
 Title:

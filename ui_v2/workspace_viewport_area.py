@@ -16,6 +16,8 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
+from engine.geometry import Vector3
+from engine.render.camera3d import Camera3D, Camera3DState
 from ui_v2.viewport_manager import ViewportLayout, ViewportManager, ViewportType
 
 
@@ -32,13 +34,20 @@ class ViewportPaneDefinition:
 class SharedSceneViewportSurface(QWidget):
     """Lightweight auxiliary viewport surface that observes the shared scene."""
 
-    def __init__(self, app, mode: str, parent: QWidget | None = None) -> None:
+    def __init__(
+        self,
+        app,
+        mode: str,
+        camera: Camera3D | None = None,
+        parent: QWidget | None = None,
+    ) -> None:
         """Create a surface that uses the existing application render pipeline."""
 
         super().__init__(parent)
 
         self._app = app
         self._mode = mode
+        self._camera = camera
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -51,8 +60,24 @@ class SharedSceneViewportSurface(QWidget):
         if self._mode == "2d" and hasattr(self._app, "render"):
             self._app.render(painter, self.width(), self.height())
         elif self._mode == "3d" and hasattr(self._app, "render3d"):
-            self._app.render3d(painter, self.width(), self.height())
+            self._render3d_with_independent_camera(painter)
         painter.end()
+
+    def _render3d_with_independent_camera(self, painter: QPainter) -> None:
+        """Render through the existing 3D renderer using this pane camera."""
+
+        engine = getattr(self._app, "engine", None)
+        renderer = getattr(engine, "renderer3d", None)
+        if renderer is None or self._camera is None:
+            self._app.render3d(painter, self.width(), self.height())
+            return
+
+        previous_camera = getattr(renderer, "camera", None)
+        renderer.camera = self._camera
+        try:
+            self._app.render3d(painter, self.width(), self.height())
+        finally:
+            renderer.camera = previous_camera
 
 
 class ViewportPane(QFrame):
@@ -161,17 +186,30 @@ class ViewportLayoutManager:
         self._viewport_manager = viewport_manager
         self._settings = QSettings("Freeman Creations House", "Kinematics Studio")
         self._pane_definitions: dict[str, ViewportPaneDefinition] = {}
+        self._panes: dict[str, ViewportPane] = {}
         self._open_pane_ids: list[str] = []
         self._previous_open_pane_ids: list[str] = []
         self._active_pane_id = "viewport_2d"
         self._maximized_pane_id: str | None = None
         self._layout = ViewportLayout.SINGLE
         self._current_root: QWidget | None = None
+        self._closed_pane_ids: set[str] = set()
 
     def register_pane(self, definition: ViewportPaneDefinition) -> None:
         """Register a pane definition available to layouts."""
 
         self._pane_definitions[definition.viewport_id] = definition
+
+    def shutdown(self) -> None:
+        """Detach panes and clear layout references before Qt destruction."""
+
+        for pane in self._panes.values():
+            try:
+                pane.hide()
+                pane.setParent(self._owner)
+            except RuntimeError:
+                pass
+        self._current_root = None
 
     def initialize(self) -> None:
         """Restore persisted state or fall back to the single viewport layout."""
@@ -231,9 +269,11 @@ class ViewportLayoutManager:
         source_id = viewport_id or self._active_pane_id
         if source_id in self._pane_definitions:
             self._active_pane_id = source_id
+        self._maximized_pane_id = None
         for pane_id in self._ordered_available_panes():
             if pane_id not in self._open_pane_ids:
                 self._open_pane_ids.append(pane_id)
+                self._closed_pane_ids.discard(pane_id)
                 break
         self._layout = self._layout_for_count(len(self._open_pane_ids))
         self._viewport_manager.set_layout(self._layout)
@@ -245,7 +285,9 @@ class ViewportLayoutManager:
 
         if viewport_id not in self._open_pane_ids or len(self._open_pane_ids) == 1:
             return
+        self._maximized_pane_id = None
         self._open_pane_ids.remove(viewport_id)
+        self._closed_pane_ids.add(viewport_id)
         if self._active_pane_id == viewport_id:
             self._active_pane_id = self._open_pane_ids[0]
         self._layout = self._layout_for_count(len(self._open_pane_ids))
@@ -258,18 +300,30 @@ class ViewportLayoutManager:
 
         if viewport_id not in self._pane_definitions:
             return
+        self._maximized_pane_id = None
         if viewport_id not in self._open_pane_ids:
             self._open_pane_ids.append(viewport_id)
+        self._closed_pane_ids.discard(viewport_id)
         self._layout = self._layout_for_count(len(self._open_pane_ids))
         self._viewport_manager.set_layout(self._layout)
         self._rearrange()
         self.persist_layout_state()
+
+    def reopen_next_viewport(self) -> None:
+        """Reopen the next closed or hidden registered viewport pane."""
+
+        candidates = tuple(self._closed_pane_ids) + self._ordered_available_panes()
+        for pane_id in candidates:
+            if pane_id in self._pane_definitions and pane_id not in self._open_pane_ids:
+                self.reopen_viewport(pane_id)
+                return
 
     def swap_viewport_positions(self, first_id: str, second_id: str) -> None:
         """Swap two visible viewport pane positions."""
 
         if first_id not in self._open_pane_ids or second_id not in self._open_pane_ids:
             return
+        self._maximized_pane_id = None
         first_index = self._open_pane_ids.index(first_id)
         second_index = self._open_pane_ids.index(second_id)
         self._open_pane_ids[first_index], self._open_pane_ids[second_index] = (
@@ -278,6 +332,18 @@ class ViewportLayoutManager:
         )
         self._rearrange()
         self.persist_layout_state()
+
+    def swap_active_with_next(self) -> None:
+        """Swap the active viewport pane with the next visible pane."""
+
+        if len(self._open_pane_ids) < 2 or self._active_pane_id not in self._open_pane_ids:
+            return
+        active_index = self._open_pane_ids.index(self._active_pane_id)
+        next_index = (active_index + 1) % len(self._open_pane_ids)
+        self.swap_viewport_positions(
+            self._open_pane_ids[active_index],
+            self._open_pane_ids[next_index],
+        )
 
     def set_active_viewport(self, viewport_id: str) -> None:
         """Set and highlight the active viewport pane."""
@@ -296,6 +362,10 @@ class ViewportLayoutManager:
         self._settings.setValue("viewport_layout/open_panes", self._open_pane_ids)
         self._settings.setValue("viewport_layout/active", self._active_pane_id)
         self._settings.setValue("viewport_layout/maximized", self._maximized_pane_id or "")
+        self._settings.setValue(
+            "viewport_layout/closed_panes",
+            sorted(self._closed_pane_ids),
+        )
 
     def restore_layout_state(self) -> bool:
         """Restore persisted viewport layout state."""
@@ -304,6 +374,7 @@ class ViewportLayoutManager:
         open_panes = self._settings.value("viewport_layout/open_panes")
         active = self._settings.value("viewport_layout/active")
         maximized = self._settings.value("viewport_layout/maximized")
+        closed_panes = self._settings.value("viewport_layout/closed_panes")
         if not layout_name:
             return False
 
@@ -316,6 +387,11 @@ class ViewportLayoutManager:
         self._open_pane_ids = [
             pane_id for pane_id in pane_ids if pane_id in self._pane_definitions
         ] or list(self._default_panes(self._layout))
+        self._closed_pane_ids = {
+            pane_id
+            for pane_id in self._coerce_pane_ids(closed_panes)
+            if pane_id in self._pane_definitions
+        }
         if active in self._pane_definitions:
             self._active_pane_id = str(active)
         else:
@@ -342,13 +418,17 @@ class ViewportLayoutManager:
 
         previous_root = self._current_root
         root = self._build_layout(self._open_pane_ids)
-        self._stack.addWidget(root)
+        self._detach_closed_panes()
+        if self._stack.indexOf(root) < 0:
+            self._stack.addWidget(root)
         self._stack.setCurrentWidget(root)
         self._current_root = root
-        if previous_root is not None:
-            self._stack.removeWidget(previous_root)
-            previous_root.setParent(None)
-            previous_root.deleteLater()
+        if previous_root is not None and previous_root is not root:
+            if self._stack.indexOf(previous_root) >= 0:
+                self._stack.removeWidget(previous_root)
+            if previous_root not in self._panes.values():
+                previous_root.setParent(None)
+                previous_root.deleteLater()
         self.set_active_viewport(self._active_pane_id)
 
     def _build_layout(self, pane_ids: list[str]) -> QWidget:
@@ -396,12 +476,27 @@ class ViewportLayoutManager:
         """Create a titled pane from a registered definition."""
 
         definition = self._pane_definitions[viewport_id]
+        existing = self._panes.get(viewport_id)
+        if existing is not None:
+            existing.show()
+            return existing
+
         pane = ViewportPane(definition, self._owner)
         pane.activated.connect(self.set_active_viewport)
         pane.titleDoubleClicked.connect(self.maximize_viewport)
         pane.closeRequested.connect(self.close_viewport)
         pane.splitRequested.connect(self.split_viewport)
+        self._panes[viewport_id] = pane
         return pane
+
+    def _detach_closed_panes(self) -> None:
+        """Detach hidden panes before obsolete splitter roots are deleted."""
+
+        open_ids = set(self._open_pane_ids)
+        for pane_id, pane in self._panes.items():
+            if pane_id not in open_ids:
+                pane.hide()
+                pane.setParent(self._owner)
 
     def _splitter(self, orientation: Qt.Orientation) -> QSplitter:
         """Create a professional splitter for viewport layouts."""
@@ -493,6 +588,9 @@ class WorkspaceViewportArea(QWidget):
         self._viewport3d = viewport3d
         self._stack = QStackedWidget(self)
         self._active_view_name = "2d"
+        self._viewport_cameras: dict[ViewportType, Camera3D] = (
+            self._create_independent_cameras()
+        )
         self._viewport_manager = ViewportManager(
             workspace_provider=getattr(canvas, "app", None),
             parent=self,
@@ -511,6 +609,7 @@ class WorkspaceViewportArea(QWidget):
         layout.setSpacing(0)
         layout.addWidget(self._stack)
         self._apply_style()
+        self._shutdown_complete = False
 
     def show_2d(self) -> None:
         """Make the 2D canvas the active viewport."""
@@ -626,10 +725,35 @@ class WorkspaceViewportArea(QWidget):
 
         self._layout_manager.reopen_viewport(viewport_id)
 
+    def reopen_next_viewport(self) -> None:
+        """Reopen the next available viewport pane."""
+
+        self._layout_manager.reopen_next_viewport()
+
     def swap_viewport_positions(self, first_id: str, second_id: str) -> None:
         """Swap two viewport pane positions."""
 
         self._layout_manager.swap_viewport_positions(first_id, second_id)
+
+    def swap_active_with_next(self) -> None:
+        """Swap the active viewport with the next visible pane."""
+
+        self._layout_manager.swap_active_with_next()
+
+    def shutdown(self) -> None:
+        """Disconnect viewport lifecycle hooks before Qt destroys widgets."""
+
+        if self._shutdown_complete:
+            return
+        self._shutdown_complete = True
+        self._layout_manager.shutdown()
+        self._viewport_manager.shutdown()
+
+    def closeEvent(self, event) -> None:
+        """Shut down viewport lifecycle callbacks before widget teardown."""
+
+        self.shutdown()
+        super().closeEvent(event)
 
     def _register_initial_viewports(self) -> None:
         """Register the existing and auxiliary shared-scene viewport panes."""
@@ -647,13 +771,23 @@ class WorkspaceViewportArea(QWidget):
                 "viewport_front",
                 "Front",
                 ViewportType.FRONT,
-                SharedSceneViewportSurface(app, "3d", self),
+                SharedSceneViewportSurface(
+                    app,
+                    "3d",
+                    self._camera_for(ViewportType.FRONT),
+                    self,
+                ),
             ),
             ViewportPaneDefinition(
                 "viewport_right",
                 "Right",
                 ViewportType.RIGHT,
-                SharedSceneViewportSurface(app, "3d", self),
+                SharedSceneViewportSurface(
+                    app,
+                    "3d",
+                    self._camera_for(ViewportType.RIGHT),
+                    self,
+                ),
             ),
             ViewportPaneDefinition(
                 "viewport_3d",
@@ -665,19 +799,34 @@ class WorkspaceViewportArea(QWidget):
                 "viewport_user",
                 "User",
                 ViewportType.USER,
-                SharedSceneViewportSurface(app, "3d", self),
+                SharedSceneViewportSurface(
+                    app,
+                    "3d",
+                    self._camera_for(ViewportType.USER),
+                    self,
+                ),
             ),
             ViewportPaneDefinition(
                 "viewport_camera",
                 "Camera",
                 ViewportType.CAMERA,
-                SharedSceneViewportSurface(app, "3d", self),
+                SharedSceneViewportSurface(
+                    app,
+                    "3d",
+                    self._camera_for(ViewportType.CAMERA),
+                    self,
+                ),
             ),
             ViewportPaneDefinition(
                 "viewport_section",
                 "Section",
                 ViewportType.SECTION,
-                SharedSceneViewportSurface(app, "3d", self),
+                SharedSceneViewportSurface(
+                    app,
+                    "3d",
+                    self._camera_for(ViewportType.SECTION),
+                    self,
+                ),
             ),
         )
 
@@ -704,7 +853,75 @@ class WorkspaceViewportArea(QWidget):
         app = getattr(self._canvas, "app", None)
         if viewport_type == ViewportType.TOP:
             return getattr(self._canvas, "camera", None)
-        return getattr(app, "camera3d", None)
+        if viewport_type == ViewportType.PERSPECTIVE:
+            return getattr(app, "camera3d", None)
+        return self._viewport_cameras.get(viewport_type)
+
+    def _create_independent_cameras(self) -> dict[ViewportType, Camera3D]:
+        """Create independent cameras for non-primary 3D viewport panes."""
+
+        return {
+            ViewportType.FRONT: self._camera3d(
+                yaw=-90.0,
+                pitch=0.0,
+                projection_mode="orthographic",
+            ),
+            ViewportType.RIGHT: self._camera3d(
+                yaw=0.0,
+                pitch=0.0,
+                projection_mode="orthographic",
+            ),
+            ViewportType.LEFT: self._camera3d(
+                yaw=180.0,
+                pitch=0.0,
+                projection_mode="orthographic",
+            ),
+            ViewportType.BACK: self._camera3d(
+                yaw=90.0,
+                pitch=0.0,
+                projection_mode="orthographic",
+            ),
+            ViewportType.BOTTOM: self._camera3d(
+                yaw=45.0,
+                pitch=-89.0,
+                projection_mode="orthographic",
+            ),
+            ViewportType.USER: self._camera3d(
+                yaw=45.0,
+                pitch=35.0,
+                projection_mode="perspective",
+            ),
+            ViewportType.CAMERA: self._camera3d(
+                yaw=35.0,
+                pitch=25.0,
+                projection_mode="perspective",
+            ),
+            ViewportType.SECTION: self._camera3d(
+                yaw=-45.0,
+                pitch=20.0,
+                projection_mode="orthographic",
+            ),
+        }
+
+    def _camera3d(
+        self,
+        *,
+        yaw: float,
+        pitch: float,
+        projection_mode: str,
+    ) -> Camera3D:
+        """Create one independent initialized 3D camera."""
+
+        camera = Camera3D()
+        camera.state = Camera3DState(
+            target=Vector3(0.0, 0.0, 0.0),
+            distance=600.0,
+            yaw=yaw,
+            pitch=pitch,
+            projection_mode=projection_mode,
+            orthographic_scale=800.0,
+        )
+        return camera
 
     def _apply_style(self) -> None:
         """Apply professional viewport layout styling."""

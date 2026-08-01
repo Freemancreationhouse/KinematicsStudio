@@ -31,7 +31,11 @@ All notable changes to this project are documented here.
 
 ## Fixed
 
--
+- Fixed Viewport Layout Manager widget lifetime handling so reusable viewport widgets are not deleted during layout changes.
+- Fixed Quad View camera assignment so Perspective, Top, Front and Right viewports use independent cameras.
+- Fixed Viewport Layout Manager Maximize, Restore, Split, Close, Reopen and Swap routing.
+- Fixed stale viewport synchronization references after viewport destruction or invalid Qt wrapper detection.
+- Fixed ViewportManager signal emission after QObject destruction during viewport layout shutdown.
 
 ## Removed
 

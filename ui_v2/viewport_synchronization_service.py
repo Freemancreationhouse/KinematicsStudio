@@ -29,16 +29,37 @@ class ViewportSynchronizationService:
         for viewport in self.viewports():
             update = getattr(viewport, "update", None)
             if callable(update):
-                update()
+                try:
+                    update()
+                except RuntimeError:
+                    self._discard_invalid_viewport(viewport)
 
     def viewports(self) -> tuple[Any, ...]:
         """Return all injected viewport widgets without creating new widgets."""
 
         candidates: list[Any] = []
+        viewport_manager = self._viewport_manager()
+        if viewport_manager is not None:
+            registry = getattr(viewport_manager, "registry", None)
+            records = registry.all() if registry is not None else ()
+            for record in records:
+                viewport = getattr(record, "widget", None)
+                if viewport is not None and viewport not in candidates:
+                    if self._is_live_viewport(viewport):
+                        candidates.append(viewport)
+                    else:
+                        unregister = getattr(viewport_manager, "unregister_viewport", None)
+                        if callable(unregister):
+                            unregister(getattr(record, "viewport_id", ""))
+
         for accessor_name in ("canvas", "viewport3d"):
             accessor = getattr(self.viewport_area, accessor_name, None)
             viewport = accessor() if callable(accessor) else accessor
-            if viewport is not None and viewport not in candidates:
+            if (
+                viewport is not None
+                and viewport not in candidates
+                and self._is_live_viewport(viewport)
+            ):
                 candidates.append(viewport)
         return tuple(candidates)
 
@@ -87,3 +108,36 @@ class ViewportSynchronizationService:
             return current_workspace()
 
         return None
+
+    def _viewport_manager(self) -> Any | None:
+        """Return the viewport manager exposed by the viewport area."""
+
+        accessor = getattr(self.viewport_area, "viewport_manager", None)
+        return accessor() if callable(accessor) else accessor
+
+    def _is_live_viewport(self, viewport: Any) -> bool:
+        """Return True when a viewport QObject wrapper is still usable."""
+
+        try:
+            object_name = getattr(viewport, "objectName", None)
+            if callable(object_name):
+                object_name()
+            return True
+        except RuntimeError:
+            return False
+
+    def _discard_invalid_viewport(self, viewport: Any) -> None:
+        """Remove a deleted viewport from the manager registry if present."""
+
+        viewport_manager = self._viewport_manager()
+        if viewport_manager is None:
+            return
+
+        registry = getattr(viewport_manager, "registry", None)
+        records = registry.all() if registry is not None else ()
+        for record in records:
+            if getattr(record, "widget", None) is viewport:
+                unregister = getattr(viewport_manager, "unregister_viewport", None)
+                if callable(unregister):
+                    unregister(getattr(record, "viewport_id", ""))
+                return
