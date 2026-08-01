@@ -19,6 +19,10 @@ All notable changes to this project are documented here.
 - Ribbon Search
 - Quick Access Toolbar
 - Responsive Ribbon
+- Professional viewport chrome
+- Viewport overlays
+- Navigation toolbar
+- Viewport status indicators
 
 ## Changed
 

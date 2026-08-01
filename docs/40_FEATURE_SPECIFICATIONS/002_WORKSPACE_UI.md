@@ -153,3 +153,38 @@ Manual PySide6 launch validation, visual spacing review and responsive ribbon
 validation on target displays.
 
 ----------------------------------------
+
+## Task 2.1.3
+
+Status: IN PROGRESS
+
+Summary
+
+Professional viewport chrome was added around the existing injected viewport
+area. The viewport now presents a compact engineering title bar, Perspective
+and User View labels, orientation labels, navigation controls, view mode
+selector, world origin, snap, grid, axis, units, camera target, selection mode
+and coordinate indicators using the locked dark engineering design language.
+
+Files Modified
+
+ui_v2/workspace_shell.py
+docs/40_FEATURE_SPECIFICATIONS/002_WORKSPACE_UI.md
+PROJECT_STATUS.md
+SPRINT_BACKLOG.md
+CHANGELOG.md
+
+Architecture Decisions
+
+Sprint 1 runtime architecture remains frozen. Workspace, Scene, Rendering,
+Selection, Commands, ToolManager, WorkspaceProvider, ProjectService and Shared
+Scene were not modified. The viewport chrome is presentation-only and wraps the
+existing WorkspaceViewportArea without changing renderer, camera, navigation or
+selection behavior.
+
+Remaining Tasks
+
+Manual PySide6 launch validation, target-display visual review and final
+viewport interaction acceptance testing.
+
+----------------------------------------

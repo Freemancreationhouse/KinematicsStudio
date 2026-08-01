@@ -89,9 +89,9 @@ EPIC 2.1
 
 # Current Task
 
-Task 2.1.2
+Task 2.1.3
 
-Professional Ribbon System
+Professional Viewport Chrome
 
 Status:
 
@@ -144,3 +144,5 @@ Bug Fix Complete: Professional tool state machine now restores Select on Escape,
 Task 2.1.1 In Progress: Professional workspace UI redesign added a premium dark shell, Quick Access Toolbar, professional ribbon tabs, collapsed dock rails and viewport controls without modifying Sprint 1 runtime architecture.
 
 Task 2.1.2 In Progress: Professional ribbon redesign added compact command groups, context tabs, ribbon search, Quick Access Toolbar and responsive density without modifying Sprint 1 runtime architecture.
+
+Task 2.1.3 In Progress: Professional viewport chrome added a compact viewport title bar, navigation controls, view mode selector and technical viewport status indicators without modifying Sprint 1 runtime architecture.
