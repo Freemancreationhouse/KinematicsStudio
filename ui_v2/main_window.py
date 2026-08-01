@@ -283,6 +283,31 @@ class MainWindow(QMainWindow):
             action.triggered.connect(callback)
             workspace_menu.addAction(action)
 
+        viewport_menu = view_menu.addMenu("Viewport Layouts")
+        viewport_actions = (
+            ("Single View", "viewport_layout:single"),
+            ("Dual Horizontal", "viewport_layout:dual_horizontal"),
+            ("Dual Vertical", "viewport_layout:dual_vertical"),
+            ("Triple View", "viewport_layout:triple"),
+            ("Quad View", "viewport_layout:quad"),
+            (None, None),
+            ("Maximize Active Viewport", "viewport:maximize"),
+            ("Restore Previous Layout", "viewport:restore"),
+            ("Split Active Viewport", "viewport:split"),
+            ("Close Active Viewport", "viewport:close"),
+        )
+        for title, action_id in viewport_actions:
+            if title is None:
+                viewport_menu.addSeparator()
+                continue
+            action = QAction(title, self)
+            action.triggered.connect(
+                lambda checked=False, route=action_id: (
+                    self.workspace_connection_controller.route_action(route)
+                )
+            )
+            viewport_menu.addAction(action)
+
         view_menu.addSeparator()
         panels_menu = view_menu.addMenu("Panels")
         for definition in self.panel_manager.registry.definitions():

@@ -40,7 +40,8 @@ Status:
 
 ACTIVE
 
-- [IN PROGRESS] Multi Viewport Framework
+- [COMPLETE] Multi Viewport Framework
+- [IN PROGRESS] Viewport Layout Manager
 
 ---
 

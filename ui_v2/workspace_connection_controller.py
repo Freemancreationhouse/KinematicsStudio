@@ -234,6 +234,12 @@ class WorkspaceConnectionController(QObject):
             self._focus_active_view()
             self.synchronize_ui("ViewChanged")
             return
+        if action_id.startswith("viewport_layout:"):
+            self._route_viewport_layout_action(action_id.removeprefix("viewport_layout:"))
+            return
+        if action_id.startswith("viewport:"):
+            self._route_viewport_action(action_id.removeprefix("viewport:"))
+            return
         if action_id == "panels":
             self.panelsRequested.emit()
             return
@@ -1376,6 +1382,39 @@ class WorkspaceConnectionController(QObject):
             "show_status_text",
             "Workspace layout reset",
         )
+
+    def _route_viewport_layout_action(self, layout_id: str) -> None:
+        """Route viewport layout requests to the viewport area."""
+
+        method_map = {
+            "single": "single_view",
+            "dual_horizontal": "dual_horizontal",
+            "dual_vertical": "dual_vertical",
+            "triple": "triple_view",
+            "quad": "quad_view",
+        }
+        method_name = method_map.get(layout_id)
+        if method_name is None:
+            return
+        self._call_if_available(self.viewport_area, method_name)
+        self._focus_active_view()
+        self.synchronize_ui("ViewChanged")
+
+    def _route_viewport_action(self, action_id: str) -> None:
+        """Route viewport arrangement requests to the viewport area."""
+
+        method_map = {
+            "maximize": "maximize_active_viewport",
+            "restore": "restore_previous_layout",
+            "split": "split_viewport",
+            "close": "close_active_viewport",
+        }
+        method_name = method_map.get(action_id)
+        if method_name is None:
+            return
+        self._call_if_available(self.viewport_area, method_name)
+        self._focus_active_view()
+        self.synchronize_ui("ViewChanged")
 
     def _toggle_panel(self, panel_id: str) -> None:
         """Route a panel toggle request through the panel manager."""

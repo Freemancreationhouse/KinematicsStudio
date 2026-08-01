@@ -14,6 +14,12 @@ All notable changes to this project are documented here.
 - Viewport Registry
 - Viewport Events
 - Viewport Framework
+- Viewport Layout Manager
+- Quad View
+- Dual View
+- Triple View
+- Viewport Maximization
+- Layout Persistence
 
 ## Changed
 

@@ -30,6 +30,7 @@ class ViewportLayout(str, Enum):
     SINGLE = "Single"
     DUAL_HORIZONTAL = "Dual Horizontal"
     DUAL_VERTICAL = "Dual Vertical"
+    TRIPLE = "Triple View"
     QUAD = "Quad"
     CUSTOM = "Custom"
 
