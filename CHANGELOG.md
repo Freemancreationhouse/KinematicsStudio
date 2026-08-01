@@ -35,6 +35,7 @@ All notable changes to this project are documented here.
 - 2D entities now render in the 3D viewport through XY projection.
 - 3D entities now render in 2D orthographic views through wire projection.
 - 3D snapping now reads shared-scene entities without requiring duplicate 3D storage.
+- Active CAD tool state now returns to Select after cancellation and single-shot command completion.
 
 ## Improved
 
@@ -48,6 +49,7 @@ All notable changes to this project are documented here.
 - Fixed 2D snap feedback crash when snapping to MeshEntity.
 - Fixed viewport camera initialization, view fitting and CircleEntity 3D projection.
 - Fixed Renderer3D analysis overlays passing Vector2 points into Camera3D projection.
+- Fixed drawing tools remaining active after completion or Escape cancellation.
 
 ## Removed
 

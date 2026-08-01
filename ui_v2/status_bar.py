@@ -22,6 +22,9 @@ class StudioStatusBar(QStatusBar):
         self.tool = QLabel("Tool: Select")
         self.tool.setToolTip("Currently active tool.")
 
+        self.command = QLabel("Command: Select")
+        self.command.setToolTip("Current command prompt for the active tool.")
+
         self.selected = QLabel("Selected: None")
         self.selected.setToolTip("Current selection summary.")
 
@@ -40,6 +43,8 @@ class StudioStatusBar(QStatusBar):
         self.addPermanentWidget(self.snap)
 
         self.addPermanentWidget(self.tool)
+
+        self.addPermanentWidget(self.command)
 
         self.addPermanentWidget(self.selected)
 
@@ -85,6 +90,22 @@ class StudioStatusBar(QStatusBar):
             name = name[:-4]
 
         self.tool.setText(f"Tool: {name}")
+
+    # -----------------------------------------
+
+    def show_command(self, tool):
+
+        text = getattr(tool, "status_text", None)
+
+        if not text:
+            name = getattr(tool, "name", "SelectTool")
+
+            if name.endswith("Tool"):
+                name = name[:-4]
+
+            text = name
+
+        self.command.setText(f"Command: {text}")
 
     # -----------------------------------------
 

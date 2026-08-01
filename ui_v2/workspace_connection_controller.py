@@ -252,6 +252,9 @@ class WorkspaceConnectionController(QObject):
         if action_id == "command:delete":
             self._delete_selection()
             return
+        if action_id == "select":
+            self._activate_select()
+            return
 
         self._handle_action(action_id)
 
@@ -422,9 +425,12 @@ class WorkspaceConnectionController(QObject):
         active_tool = getattr(self.tool_manager, "active_tool", None)
         if active_tool is None:
             active_tool = getattr(self.tool_manager, "current_tool", None)
+        if active_tool is None:
+            active_tool = getattr(self.tool_manager, "current", None)
         tool = payload if payload is not None else active_tool
         if tool is not None:
             self._call_if_available(self.status_bar, "show_tool", tool)
+            self._call_if_available(self.status_bar, "show_command", tool)
 
     def _refresh_panels(self) -> None:
         """Refresh all opened on-demand panels through the panel manager."""
@@ -529,10 +535,22 @@ class WorkspaceConnectionController(QObject):
     def _handle_tool_selected(self, tool_name: str) -> None:
         """Activate a tool selected by a presentation widget."""
 
+        if tool_name == "SelectTool":
+            self._activate_select()
+            return
+
         self._call_if_available(self.tool_manager, "activate", tool_name)
         if tool_name in self.PRIMITIVE_TOOL_SPECS:
             self._create_primitive(tool_name)
             return
+        self.synchronize_ui("ActiveToolChanged")
+
+    def _activate_select(self) -> None:
+        """Cancel the active tool and restore the Select tool."""
+
+        if not self._call_if_available(self.tool_manager, "activate_select"):
+            self._call_if_available(self.tool_manager, "activate", "SelectTool")
+        self._call_if_available(self.left_toolbox, "set_active_action", "select")
         self.synchronize_ui("ActiveToolChanged")
 
     def _create_primitive(self, tool_name: str) -> None:
@@ -551,6 +569,7 @@ class WorkspaceConnectionController(QObject):
             name=f"{primitive_type.title()} Primitive",
         )
         command_manager.execute(command)
+        self._activate_select()
         self._call_if_available(self.project_service, "mark_dirty")
         self.synchronize_ui("EntityAdded", command.entity)
         self.synchronize_ui("SelectionChanged", command.entity)

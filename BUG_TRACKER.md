@@ -42,6 +42,86 @@ Closed In Version:
 
 # ACTIVE BUGS
 
+## BUG-007
+
+Title:
+
+Drawing tools remain active after completion or cancellation
+
+Priority:
+
+High
+
+Status:
+
+Fixed
+
+Assigned Sprint:
+
+Sprint 1
+
+Module:
+
+ToolManager / UI Synchronization
+
+Description:
+
+Drawing and primitive tools could remain active after completion. Escape
+cancelled only the internal tool state and did not reliably return the
+application to Select, leaving users trapped inside the previous command.
+
+Steps to Reproduce:
+
+Activate a drawing tool such as Line, Rectangle or Circle, complete the entity
+or press Escape, then attempt to select another object.
+
+Expected Behaviour:
+
+The application should maintain one active tool, restore Select after Escape
+or single-shot command completion, and update the StatusBar with the current
+tool and command prompt.
+
+Actual Behaviour:
+
+The active tool remained the previous drawing tool, and StatusBar state could
+stay stale because UI synchronization did not read ToolManager.current.
+
+Root Cause:
+
+ToolManager delegated input to tools but did not own command lifecycle
+transitions. It had no Select restoration path for Escape or completed
+single-shot commands, and the UI synchronization bridge did not resolve the
+manager's authoritative current tool.
+
+Files Modified:
+
+engine/tools/tool_manager.py
+ui_v2/workspace_connection_controller.py
+ui_v2/status_bar.py
+BUG_TRACKER.md
+CHANGELOG.md
+PROJECT_STATUS.md
+
+Fix:
+
+Added ToolManager lifecycle handling for Escape cancellation, Select
+restoration, single-shot command completion and multi-segment Enter
+completion. Routed Select actions through WorkspaceConnectionController and
+updated StatusBar synchronization to display the active tool and command.
+
+Verification:
+
+Compiled ToolManager, WorkspaceConnectionController, StatusBar and key UI
+modules successfully with the bundled Python runtime. Static trace confirms
+Select routing, Escape cancellation and single-shot command completion return
+to Select through the existing ToolManager.
+
+Closed In Version:
+
+0.1 Alpha
+
+---
+
 ## BUG-001
 
 Title:

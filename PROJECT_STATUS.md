@@ -134,3 +134,5 @@ Task 1.9A Complete: Workspace entities now provide one shared scene graph for 2D
 Bug Fix Complete: 3D primitive ribbon actions now execute CreatePrimitiveCommand through WorkspaceConnectionController.
 
 Bug Fix Complete: Viewport cameras now initialize at world origin, preserve targets across 2D/3D switching and expose Home, Zoom Extents and Zoom Selected routing.
+
+Bug Fix Complete: Professional tool state machine now restores Select on Escape, Select action and single-shot command completion.
