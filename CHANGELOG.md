@@ -27,6 +27,11 @@ All notable changes to this project are documented here.
 - Reusable UI Styling
 - Professional Component Library
 - Consistent Engineering Theme
+- Professional Docking System
+- Workspace Presets
+- Persistent Layouts
+- Floating Panels
+- Auto-hide Panels
 
 ## Changed
 

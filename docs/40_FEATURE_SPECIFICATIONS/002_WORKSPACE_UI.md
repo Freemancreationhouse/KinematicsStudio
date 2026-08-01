@@ -238,3 +238,48 @@ Manual launch validation, full visual QA on target displays and final Sprint 2
 workspace acceptance review.
 
 ----------------------------------------
+
+## Task 2.1.5
+
+Status: COMPLETE
+
+Summary
+
+Implemented a professional Qt docking and workspace management layer for the
+existing on-demand panel system. Registered panels now open lazily inside
+dockable, floatable, movable and closable workspace docks while preserving
+viewport-first startup behavior and Sprint 1 runtime ownership.
+
+Workspace Manager Features
+
+Dock panels, undock panels, floating panels, tabbed dock groups, native Qt
+dock guides and indicators, save current layout, load layout, reset layout,
+restore default layout, automatic startup layout restoration, Architect,
+Mechanical, Product Design and Visualization presets, hide-on-close panels,
+minimum panel sizes, grouped dragging and nested dock support.
+
+Files Modified
+
+ui_v2/workspace_panel_manager.py
+ui_v2/workspace_connection_controller.py
+docs/40_FEATURE_SPECIFICATIONS/002_WORKSPACE_UI.md
+PROJECT_STATUS.md
+SPRINT_BACKLOG.md
+CHANGELOG.md
+
+Architecture Decisions
+
+The implementation reuses the existing WorkspacePanelManager registration and
+lazy factory architecture instead of introducing a duplicate panel system.
+Panels remain created only on demand. Workspace, Shared Scene, Rendering,
+Navigation, Camera, Selection, ToolManager, Command System, ProjectService,
+WorkspaceProvider, Data Model and AI Architecture were not modified.
+
+Epic Completion Notes
+
+Epic 2.1 is functionally complete for the professional workspace experience
+foundation: workspace shell, ribbon, viewport chrome, design system and
+docking/workspace manager are implemented. Manual launch validation and final
+visual QA remain as Sprint-level acceptance checks.
+
+----------------------------------------

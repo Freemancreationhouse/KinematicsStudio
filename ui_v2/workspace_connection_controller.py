@@ -1330,6 +1330,7 @@ class WorkspaceConnectionController(QObject):
     def _reset_workspace_layout(self) -> None:
         """Route the shell back to the default workspace layout."""
 
+        self._call_if_available(self.panel_manager, "restore_default_layout")
         self._call_if_available(self.ribbon, "setVisible", True)
         self._call_if_available(self.left_toolbox, "setVisible", True)
         self._call_if_available(self.property_panel, "setVisible", True)
