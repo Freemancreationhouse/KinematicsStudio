@@ -10,7 +10,11 @@ from engine.constraints import ConstraintManager
 from engine.coordination_package import CoordinationPackageManager
 from engine.coordinate_systems import CoordinateSystemManager
 from engine.dimensions import DimensionStyleManager
+from engine.editing import EditingManager
+from engine.features import FeatureManager
+from engine.geometry import GeometryKernel
 from engine.groups import GroupManager
+from engine.history import HistoryManager
 from engine.gis import GISManager
 from engine.integrated_design import IntegratedDesignManager
 from engine.import3d import ImportManager
@@ -30,6 +34,7 @@ from engine.snap import SnapManager3D
 from engine.transform_gizmo import TransformGizmo
 from engine.view_states import DisplayModeManager, ViewStateManager, VisualStyleManager
 from engine.workspace.selection_manager import SelectionManager
+from engine.topology import TopologyManager
 
 
 class WorkspaceEntityList(list):
@@ -175,6 +180,20 @@ class Workspace:
         self.selection = SelectionManager()
 
         self.command_manager = CommandManager()
+        self.geometry_kernel = GeometryKernel(self)
+        self.geometry_context = self.geometry_kernel.context
+        self.topology_manager = TopologyManager()
+        self.topology = self.topology_manager
+        self.history_manager = HistoryManager()
+        self.feature_history = self.history_manager.feature_history
+        self.feature_manager = FeatureManager(
+            geometry_kernel=self.geometry_kernel,
+            topology_manager=self.topology_manager,
+            history_manager=self.history_manager,
+        )
+        self.features = self.feature_manager
+        self.editing_manager = EditingManager(self, self.geometry_kernel)
+        self.editing = self.editing_manager
 
     # --------------------------------
 
@@ -233,6 +252,11 @@ class Workspace:
         self.bim_manager.clear()
         self.gis_manager.clear()
         self.product_manager.clear()
+        self.geometry_kernel.clear()
+        self.topology_manager.clear()
+        self.feature_manager.clear()
+        self.history_manager.clear()
+        self.editing_manager.clear()
         self.simulation_workspace.clear()
         self.machine_workspace.clear()
         self.manufacturing_engine.clear()

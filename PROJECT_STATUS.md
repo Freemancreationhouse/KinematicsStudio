@@ -83,15 +83,15 @@ Sprint 2
 
 # Current Epic
 
-EPIC 2.2
+EPIC 2.3
 
 ---
 
 # Current Task
 
-Task 2.2.8
+Task 2.3.1
 
-Professional Viewport Presets & Workspace Profiles
+Geometry Editing Framework
 
 Status:
 
@@ -172,3 +172,5 @@ Task 2.2.6 Complete: View Synchronization System added event-aware dirty viewpor
 Task 2.2.7 In Progress: Viewport Performance & Rendering Optimization added cached foundation overlays, conservative frustum culling, no-quality-change LOD hooks and optional viewport statistics while preserving shared scene, camera independence and existing CAD workflows.
 
 Task 2.2.8 In Progress: Professional Viewport Presets & Workspace Profiles added UI-only preset capture, restore, persistence, built-in presets, custom preset management and workspace profile routing without modifying shared scene, rendering, selection, commands or project data.
+
+Task 2.3.1 In Progress: Geometry Editing Framework added passive Workspace-owned GeometryKernel, TopologyManager, EditingManager, FeatureManager and HistoryManager services with AI-native metadata and command-system-aware editing sessions while preserving locked viewport, rendering, selection, shared scene and command behavior.

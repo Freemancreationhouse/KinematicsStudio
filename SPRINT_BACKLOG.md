@@ -38,7 +38,7 @@ Multi Viewport System
 
 Status:
 
-ACTIVE
+COMPLETE
 
 - [COMPLETE] Multi Viewport Framework
 - [COMPLETE] Viewport Layout Manager
@@ -50,7 +50,19 @@ ACTIVE
 - [COMPLETE] Navigation Bar
 - [COMPLETE] View Synchronization
 - [COMPLETE] Viewport Performance
-- [IN PROGRESS] Viewport Presets
+- [COMPLETE] Viewport Presets
+
+---
+
+## Epic 2.3
+
+Geometry Editing
+
+Status:
+
+ACTIVE
+
+- [IN PROGRESS] Geometry Editing Framework
 
 ---
 

@@ -6,6 +6,37 @@ All notable changes to this project are documented here.
 
 ---
 
+# Version 0.4 Alpha
+
+## Added
+
+- Geometry Editing Framework
+- Geometry Kernel Framework
+- Topology Framework
+- Feature Framework
+- History Framework
+- AI CAD Framework
+
+## Changed
+
+- Architecture Cleanup
+- Package Refactor
+- No functional changes.
+
+## Improved
+
+-
+
+## Fixed
+
+-
+
+## Removed
+
+-
+
+---
+
 # Version 0.3 Alpha
 
 ## Added

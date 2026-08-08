@@ -32,3 +32,11 @@ from .curves import (
     nearest_on_curve,
     polyline_segments,
 )
+from .context import GeometryContext
+from .events import GeometryEvent, GeometryEvents
+from .factory import GeometryFactory
+from .kernel import GeometryKernel
+from .observer import GeometryObserver, GeometryObserverRegistry
+from .registry import GeometryRegistry, GeometryRegistryRecord
+from .transaction import GeometryTransaction, GeometryTransactionState
+from .validator import GeometryValidationResult, GeometryValidator
