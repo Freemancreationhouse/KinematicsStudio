@@ -38,6 +38,12 @@ All notable changes to this project are documented here.
 - Scale Commands
 - Scale Preview
 - Scale Transactions
+- Professional Snapping Engine
+- Snap Manager
+- Snap Context
+- Snap Session
+- Snap Filters
+- Snap Priority
 
 ## Changed
 

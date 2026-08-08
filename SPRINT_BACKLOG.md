@@ -68,6 +68,7 @@ ACTIVE
 - [IN PROGRESS] Professional Move Tool
 - [IN PROGRESS] Professional Rotate Tool
 - [IN PROGRESS] Professional Scale Tool
+- [IN PROGRESS] Professional Snapping Engine
 
 ---
 

@@ -89,9 +89,9 @@ EPIC 2.3
 
 # Current Task
 
-Task 2.3.6
+Task 2.3.7
 
-Professional Scale Tool
+Professional Snapping Engine
 
 Status:
 
@@ -184,3 +184,5 @@ Task 2.3.4 In Progress: Professional Move Tool now uses Transform Framework sess
 Task 2.3.5 In Progress: Professional Rotate Tool now uses Transform Framework sessions, reversible preview, RotateCommand commits, Undo/Redo and Feature History metadata while preserving locked rendering, viewport, selection and command architecture.
 
 Task 2.3.6 In Progress: Professional Scale Tool now uses Transform Framework sessions, reversible preview, ScaleCommand commits, Undo/Redo and Feature History metadata while preserving locked rendering, viewport, selection and command architecture.
+
+Task 2.3.7 In Progress: Professional Snapping Engine added reusable SnappingManager, SnappingContext, SnappingSession, SnappingResult, SnappingTarget, SnappingPriority, SnappingFilter and visual marker metadata without modifying locked rendering, viewport, selection, transform or command architecture.

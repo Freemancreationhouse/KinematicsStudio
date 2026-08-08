@@ -298,3 +298,47 @@ Direct Modeling and feature-specific topology scaling. Those tasks must
 preserve the same Transform Framework and CommandManager execution path.
 
 ----------------------------------------
+
+## Task 2.3.7
+
+Status: IN PROGRESS
+
+Professional Snapping Engine
+
+Implemented the Professional CAD Snapping Engine as a reusable engine-layer
+package for current and future editing tools. The engine resolves snap targets
+from Workspace and Shared Scene state, exposes snap result and marker metadata,
+supports sessions, filters, priority ordering, grid/origin targets and AI-safe
+snap requests without modifying geometry, rendering, viewports or commands.
+
+Architecture
+
+The Snapping Engine is UI-free and non-mutating. SnappingManager owns snapping
+settings, configurable priority, filters, cache, session state and events.
+SnappingContext reads existing Workspace services without owning them.
+SnappingResult and SnappingMarker provide tool and renderer-facing metadata
+without redesigning the rendering pipeline.
+
+Capabilities
+
+- Endpoint, Midpoint, Center, Intersection, Nearest, Quadrant, Tangent,
+  Perpendicular, Parallel, Grid, Origin, Construction, Reference, Body Center,
+  Bounding Box Center and Selection Center target types are represented.
+- Configurable snap priority is exposed through SnappingPriority and
+  SnappingManager.set_priority().
+- Geometry, Construction, Reference, Grid, Bodies, Faces, Edges, Vertices,
+  Sketches, Dimensions and Annotations filters are represented through
+  SnappingFilter.
+- Single, Multi, Temporary Override, Persistent and Smart snapping modes are
+  represented through SnappingSettings.
+- AI integration can request endpoint, midpoint, face center, grid and origin
+  snapping through SnappingManager without direct geometry edits.
+
+Remaining Tasks
+
+Future tasks may route individual editing tools to this engine, expose dynamic
+input HUD overrides, add transform gizmo snapping, add constraint-aware snaps
+and extend visual marker rendering. Those tasks must preserve Workspace,
+Shared Scene, Command System and rendering ownership.
+
+----------------------------------------------------
