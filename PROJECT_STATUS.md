@@ -89,9 +89,9 @@ EPIC 2.3
 
 # Current Task
 
-Task 2.3.5
+Task 2.3.6
 
-Professional Rotate Tool
+Professional Scale Tool
 
 Status:
 
@@ -182,3 +182,5 @@ Task 2.3.3 In Progress: Professional Transform Framework added passive transform
 Task 2.3.4 In Progress: Professional Move Tool now uses Transform Framework sessions, reversible preview, MoveCommand commits, Undo/Redo and Feature History metadata while preserving locked rendering, viewport, selection and command architecture.
 
 Task 2.3.5 In Progress: Professional Rotate Tool now uses Transform Framework sessions, reversible preview, RotateCommand commits, Undo/Redo and Feature History metadata while preserving locked rendering, viewport, selection and command architecture.
+
+Task 2.3.6 In Progress: Professional Scale Tool now uses Transform Framework sessions, reversible preview, ScaleCommand commits, Undo/Redo and Feature History metadata while preserving locked rendering, viewport, selection and command architecture.

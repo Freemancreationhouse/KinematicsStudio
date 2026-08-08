@@ -256,3 +256,45 @@ Direct Modeling and feature-specific topology rotation. Those tasks must
 preserve the same Transform Framework and CommandManager execution path.
 
 ----------------------------------------------------
+
+## Task 2.3.6
+
+Status: IN PROGRESS
+
+Professional Scale Tool
+
+Implemented the Professional Scale Tool on top of the Transform Framework.
+Scale interaction now uses ScaleSession, ScalePreview, ScaleTransaction,
+ScaleOperation and undoable ScaleCommand. Scale preview remains temporary,
+commits execute through CommandManager, Escape cancels preview state, and
+Undo/Redo restore the scaled selection through the existing command stack.
+
+Architecture
+
+The Scale Tool remains a Tool-layer input collector. It does not own geometry,
+rendering, viewport state or command history. Preview state is restored before
+ScaleCommand executes. Committed scales go through TransformTransaction and
+record Transform.Scale feature metadata through the existing FeatureManager
+and FeatureHistory integration.
+
+Capabilities
+
+- Object, Body, Face, Edge, Vertex, Component, Assembly and Sketch scale
+  targets are represented through TransformTarget metadata.
+- Uniform scale, non-uniform scale, X, Y, Z, XY, XZ, YZ, origin, selection
+  center, custom pivot and bounding-box-center concepts are carried through
+  scale context, mode metadata and TransformState.
+- Mouse press, pivot/reference selection, cursor preview, click confirmation
+  and numeric scale input are supported through one ScaleSession.
+- Numeric input accepts scale factor, percentage, absolute-size-style factors
+  and relative scale values before commit.
+- AI integration can request scale intent through ScaleCommand without direct
+  geometry mutation.
+
+Remaining Tasks
+
+Future tasks may add Copy, Dynamic Input HUD, Transform Gizmo, Mirror, Align,
+Direct Modeling and feature-specific topology scaling. Those tasks must
+preserve the same Transform Framework and CommandManager execution path.
+
+----------------------------------------

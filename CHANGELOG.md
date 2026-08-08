@@ -34,6 +34,10 @@ All notable changes to this project are documented here.
 - Rotate Commands
 - Rotate Preview
 - Rotate Transactions
+- Professional Scale Tool
+- Scale Commands
+- Scale Preview
+- Scale Transactions
 
 ## Changed
 

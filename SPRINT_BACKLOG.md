@@ -67,6 +67,7 @@ ACTIVE
 - [IN PROGRESS] Professional Transform Framework
 - [IN PROGRESS] Professional Move Tool
 - [IN PROGRESS] Professional Rotate Tool
+- [IN PROGRESS] Professional Scale Tool
 
 ---
 
