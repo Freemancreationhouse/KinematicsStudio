@@ -10,6 +10,7 @@ from engine.commands import (
 from engine.geometry import Vector3
 from engine.picking3d import PickingManager3D
 from engine.render import CameraController3D
+from ui_v2.navigation_bar import NavigationBar
 from ui_v2.viewcube import ViewCube
 
 
@@ -31,8 +32,18 @@ class Viewport3D(QWidget):
         self._gizmo_axis = None
         self._last_position = None
         self._press_position = None
+        self._navigation_mode = "orbit"
         self.viewcube = ViewCube(self.app.camera3d, self)
         self.viewcube.orientationChanged.connect(lambda _name: self.update())
+        self.navigation_bar = NavigationBar(
+            camera=self.app.camera3d,
+            controller=self.controller,
+            parent=self,
+            entities_provider=self._entities,
+            selection_provider=self._selected_entities,
+            update_callback=self._navigation_updated,
+        )
+        self.navigation_bar.navigationModeChanged.connect(self._set_navigation_mode)
 
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.StrongFocus)
@@ -54,6 +65,7 @@ class Viewport3D(QWidget):
 
         self.app.camera3d.resize(self.width(), self.height())
         self.viewcube.reposition()
+        self.navigation_bar.reposition()
         super().resizeEvent(event)
 
     # --------------------------------
@@ -76,7 +88,7 @@ class Viewport3D(QWidget):
                 event.accept()
                 return
 
-            self._drag_mode = "orbit"
+            self._drag_mode = self._navigation_mode
             self.setCursor(Qt.ClosedHandCursor)
             event.accept()
             return
@@ -236,6 +248,13 @@ class Viewport3D(QWidget):
 
     # --------------------------------
 
+    def _set_navigation_mode(self, mode):
+        """Set the left-drag navigation mode requested by the Navigation Bar."""
+
+        self._navigation_mode = mode
+
+    # --------------------------------
+
     def _show_status(self):
 
         if self.status_bar is None:
@@ -310,6 +329,34 @@ class Viewport3D(QWidget):
         """Return the injected selection service or active selection manager."""
 
         return self.selection_service or self.app.workspace.selection
+
+    # --------------------------------
+
+    def _entities(self):
+        """Return active shared-scene entities for Navigation Bar framing."""
+
+        entities = getattr(self.app.workspace, "entities", [])
+        if callable(entities):
+            return entities()
+        return entities
+
+    # --------------------------------
+
+    def _selected_entities(self):
+        """Return active selection for Navigation Bar framing."""
+
+        selected = getattr(self._selection_service(), "selected", [])
+        if callable(selected):
+            return selected()
+        return selected
+
+    # --------------------------------
+
+    def _navigation_updated(self):
+        """Refresh viewport status after Navigation Bar actions."""
+
+        self._show_status()
+        self.update()
 
     # --------------------------------
 

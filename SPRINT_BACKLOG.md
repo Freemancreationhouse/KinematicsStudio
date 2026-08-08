@@ -46,7 +46,8 @@ ACTIVE
 - [COMPLETE] Viewport Layout Manager Runtime Lifecycle Fix
 - [COMPLETE] Camera System
 - [COMPLETE] Camera System Orthographic Selection Fix
-- [IN PROGRESS] ViewCube
+- [COMPLETE] ViewCube
+- [IN PROGRESS] Navigation Bar
 
 ---
 

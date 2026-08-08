@@ -36,13 +36,25 @@ class Renderer3D:
         painter.setRenderHint(QPainter.Antialiasing, True)
         painter.fillRect(0, 0, width, height, QColor(getattr(style, "background", "#16191d")))
 
-        if getattr(style, "grid_visible", True):
+        camera_state = getattr(self.camera, "state", None)
+        grid_visible = (
+            getattr(style, "grid_visible", True)
+            and getattr(camera_state, "grid_visible", True)
+        )
+        axis_visible = (
+            getattr(style, "axis_visible", True)
+            and getattr(camera_state, "axis_visible", True)
+        )
+        origin_visible = getattr(camera_state, "origin_visible", True)
+
+        if grid_visible:
             self._draw_grid(painter, workspace)
 
-        if getattr(style, "axis_visible", True):
+        if axis_visible:
             self._draw_axes(painter, workspace)
 
-        self._draw_origin(painter)
+        if origin_visible:
+            self._draw_origin(painter)
         self._draw_scene(painter, workspace)
         painter.restore()
 

@@ -89,9 +89,9 @@ EPIC 2.2
 
 # Current Task
 
-Task 2.2.4
+Task 2.2.5
 
-Professional ViewCube
+Professional Navigation Bar
 
 Status:
 
@@ -159,8 +159,10 @@ Task 2.2.2 QA Fix Complete: Viewport Layout Manager now preserves reusable viewp
 
 Task 2.2.2 Runtime Lifecycle Fix Complete: ViewportManager now shuts down viewport callbacks, event filters, registry entries, active references and focused references before Qt destroys viewport widgets, preventing signal emission after QObject destruction.
 
-Task 2.2.3 In Progress: Camera System added independent viewport camera state, perspective and orthographic navigation support, active viewport Home/Zoom Extents/Zoom Selected routing and camera persistence across viewport layout changes without modifying Sprint 1 or Epic 2.1 runtime architecture.
+Task 2.2.3 Complete: Camera System added independent viewport camera state, perspective and orthographic navigation support, active viewport Home/Zoom Extents/Zoom Selected routing and camera persistence across viewport layout changes without modifying Sprint 1 or Epic 2.1 runtime architecture.
 
 Task 2.2.3 Selection Fix Complete: Front and Right orthographic viewport surfaces now route left-click selection through their own camera rays, PickingManager3D and the shared selection pipeline while preserving Perspective and Top selection behavior.
 
-Task 2.2.4 In Progress: Professional ViewCube overlays added per 3D viewport with independent camera orientation controls, compass feedback, Home navigation and animated camera transitions without modifying Sprint 1 or Epic 2.1 runtime architecture.
+Task 2.2.4 Complete: Professional ViewCube overlays added per 3D viewport with independent camera orientation controls, compass feedback, Home navigation and animated camera transitions without modifying Sprint 1 or Epic 2.1 runtime architecture.
+
+Task 2.2.5 In Progress: Professional Navigation Bar overlays added per 3D viewport with Home View, Zoom Extents, Zoom Selected, Projection, Grid, Axes and Origin controls routed through existing viewport camera APIs without modifying Sprint 1 or Epic 2.1 runtime architecture.

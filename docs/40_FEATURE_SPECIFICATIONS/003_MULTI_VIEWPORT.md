@@ -721,7 +721,7 @@ the manager without duplicating scene ownership or renderer logic.
 
 ## Task 2.2.2
 
-Status: IN PROGRESS
+Status: COMPLETE
 
 Summary
 
@@ -854,7 +854,7 @@ down the viewport area before Qt tears down child widgets.
 
 ## Task 2.2.3
 
-Status: IN PROGRESS
+Status: COMPLETE
 
 Summary
 
@@ -948,7 +948,7 @@ PickingManager3D selection rather than assuming Perspective or Top.
 
 ## Task 2.2.4
 
-Status: IN PROGRESS
+Status: COMPLETE
 
 Summary
 
@@ -995,5 +995,57 @@ Remaining Tasks
 Future tasks may add a dedicated navigation bar, camera bookmarks, named views
 and advanced viewport synchronization on top of the completed ViewCube
 foundation.
+
+----------------------------------------
+
+## Task 2.2.5
+
+Status: IN PROGRESS
+
+Summary
+
+Implemented a professional Navigation Bar overlay for every 3D viewport. The
+Navigation Bar is a viewport-local UI controller that calls existing camera and
+camera-controller APIs for camera operations while preserving shared-scene,
+rendering, selection and command architecture.
+
+Navigation Bar
+
+Each 3D viewport owns its own Navigation Bar instance. The bar is pinned along
+the right side of the viewport below the ViewCube and uses compact professional
+engineering controls aligned with the Sprint 2 design language. The primary
+Perspective viewport and auxiliary 3D viewport surfaces each maintain
+independent Navigation Bar state.
+
+Supported Controls
+
+The Navigation Bar supports Home View, Zoom Extents, Zoom Selected, Orbit mode,
+Pan mode, Projection Toggle, Grid Toggle, Axes Toggle, Origin Toggle, Camera
+Settings and Viewport Settings. Walk and Fly controls are present but disabled
+because those navigation modes are not implemented in the current camera
+system.
+
+Camera API Integration
+
+Home View, Zoom Extents and Zoom Selected route through CameraController3D and
+Camera3D.fit_bounds(). Projection, grid, axes and origin state are applied only
+to the camera state owned by the viewport that contains the Navigation Bar.
+No camera object is duplicated and no camera mathematics are modified.
+
+Architecture Decisions
+
+Shared Scene, Workspace, Camera Mathematics, Viewport Layout Manager, Camera
+System, ViewCube, Selection System, Command System, ToolManager,
+ProjectService and WorkspaceProvider were not modified. The rendering pipeline
+remains unchanged; the existing 3D renderer now honors viewport-local camera
+visibility flags for grid, axes and origin display. The Navigation Bar is
+presentation-layer infrastructure and observes injected viewport-local camera,
+controller, entity and selection providers.
+
+Remaining Tasks
+
+Future tasks may add full Walk/Fly navigation, camera settings dialogs,
+viewport settings dialogs, named views and advanced viewport navigation
+presets using the same viewport-local control pattern.
 
 ----------------------------------------

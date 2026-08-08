@@ -30,6 +30,11 @@ All notable changes to this project are documented here.
 - Professional ViewCube
 - Compass
 - Animated Camera Orientation
+- Professional Navigation Bar
+- Projection Toggle
+- Grid Toggle
+- Axes Toggle
+- Origin Toggle
 
 ## Changed
 

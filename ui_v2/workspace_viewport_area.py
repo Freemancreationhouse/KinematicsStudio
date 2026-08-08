@@ -19,6 +19,7 @@ from PySide6.QtWidgets import (
 from engine.geometry import Vector3
 from engine.picking3d import PickingManager3D
 from engine.render.camera3d import Camera3D, Camera3DState, CameraController3D
+from ui_v2.navigation_bar import NavigationBar
 from ui_v2.viewcube import ViewCube
 from ui_v2.viewport_manager import ViewportLayout, ViewportManager, ViewportType
 
@@ -55,13 +56,29 @@ class SharedSceneViewportSurface(QWidget):
         self._drag_mode: str | None = None
         self._last_position = None
         self._press_position = None
+        self._navigation_mode = "select"
         self._viewcube = (
             ViewCube(camera, self)
             if camera is not None and mode == "3d"
             else None
         )
+        self._navigation_bar = (
+            NavigationBar(
+                camera=camera,
+                controller=self._controller,
+                parent=self,
+                entities_provider=self._entities,
+                selection_provider=self._selected_entities,
+                update_callback=self._navigation_updated,
+                default_mode="select",
+            )
+            if camera is not None and self._controller is not None and mode == "3d"
+            else None
+        )
         if self._viewcube is not None:
             self._viewcube.orientationChanged.connect(lambda _name: self.update())
+        if self._navigation_bar is not None:
+            self._navigation_bar.navigationModeChanged.connect(self._set_navigation_mode)
         self.setMouseTracking(True)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
         self.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -84,6 +101,8 @@ class SharedSceneViewportSurface(QWidget):
             self._camera.resize(self.width(), self.height())
         if self._viewcube is not None:
             self._viewcube.reposition()
+        if self._navigation_bar is not None:
+            self._navigation_bar.reposition()
         super().resizeEvent(event)
 
     def mousePressEvent(self, event) -> None:
@@ -93,6 +112,13 @@ class SharedSceneViewportSurface(QWidget):
         self._press_position = event.position()
         self._last_position = event.position()
         if event.button() == Qt.MouseButton.LeftButton:
+            if self._navigation_mode in {"orbit", "pan"}:
+                projection = getattr(getattr(self._camera, "state", None), "projection_mode", "")
+                self._drag_mode = (
+                    "orbit"
+                    if self._navigation_mode == "orbit" and projection == "perspective"
+                    else "pan"
+                )
             event.accept()
             return
 
@@ -136,8 +162,9 @@ class SharedSceneViewportSurface(QWidget):
         """Complete professional viewport camera interaction."""
 
         if event.button() == Qt.MouseButton.LeftButton:
-            if self._is_click(event.position()):
+            if self._drag_mode is None and self._is_click(event.position()):
                 self._pick(event.position(), self._additive(event))
+            self._drag_mode = None
             self._press_position = None
             self._last_position = None
             self.update()
@@ -224,6 +251,38 @@ class SharedSceneViewportSurface(QWidget):
 
         selection_service = getattr(self._app, "selection_service", None)
         return selection_service or getattr(workspace, "selection", None)
+
+    def _entities(self):
+        """Return active shared-scene entities for Navigation Bar framing."""
+
+        workspace = self._workspace()
+        if workspace is None:
+            return []
+        entities = getattr(workspace, "entities", [])
+        return entities() if callable(entities) else entities
+
+    def _selected_entities(self):
+        """Return active shared selection for Navigation Bar framing."""
+
+        workspace = self._workspace()
+        if workspace is None:
+            return []
+
+        selection = self._selection_service(workspace)
+        if selection is None:
+            return []
+        selected = getattr(selection, "selected", [])
+        return selected() if callable(selected) else selected
+
+    def _set_navigation_mode(self, mode: str) -> None:
+        """Set the viewport-local left-drag navigation mode."""
+
+        self._navigation_mode = mode
+
+    def _navigation_updated(self) -> None:
+        """Refresh this viewport after Navigation Bar camera actions."""
+
+        self.update()
 
     def _additive(self, event) -> bool:
         """Return True when selection should be additive."""
