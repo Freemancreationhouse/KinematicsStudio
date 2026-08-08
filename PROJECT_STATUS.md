@@ -89,9 +89,9 @@ EPIC 2.3
 
 # Current Task
 
-Task 2.3.2
+Task 2.3.3
 
-Professional Selection Modes
+Professional Transform Framework
 
 Status:
 
@@ -176,3 +176,5 @@ Task 2.2.8 In Progress: Professional Viewport Presets & Workspace Profiles added
 Task 2.3.1 In Progress: Geometry Editing Framework added passive Workspace-owned GeometryKernel, TopologyManager, EditingManager, FeatureManager and HistoryManager services with AI-native metadata and command-system-aware editing sessions while preserving locked viewport, rendering, selection, shared scene and command behavior.
 
 Task 2.3.2 In Progress: Professional Selection System added selection modes, filters, priority, persistent target metadata, selection context and AI-safe selection request routing through the existing SelectionManager and SelectionService.
+
+Task 2.3.3 In Progress: Professional Transform Framework added passive transform sessions, contexts, operations, transactions, targets, constraints, state, axes, planes, spaces and AI request integration points without implementing concrete transform tools.

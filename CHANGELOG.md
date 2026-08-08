@@ -21,6 +21,11 @@ All notable changes to this project are documented here.
 - Selection Context
 - Persistent Selection
 - AI Selection Integration
+- Transform Framework
+- Transform Manager
+- Transform Sessions
+- Transform Transactions
+- Transform Context
 
 ## Changed
 

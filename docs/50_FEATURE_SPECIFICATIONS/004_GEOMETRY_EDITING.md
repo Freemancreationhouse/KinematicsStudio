@@ -131,3 +131,45 @@ AI can request body, face, edge, vertex or feature-oriented selection contexts
 without selecting rendered triangles or bypassing the shared selection system.
 
 ----------------------------------------------------
+
+## Task 2.3.3
+
+Status: IN PROGRESS
+
+Transform Framework
+
+Implemented the production Transform Framework as a passive engine package for
+future Move, Rotate, Scale, Mirror, Align, Direct Modeling and AI editing
+workflows. The framework defines transform sessions, contexts, operations,
+transactions, targets, constraints, state, axes, planes, spaces and events
+without applying geometry changes.
+
+Architecture
+
+The Transform Framework references existing Workspace services through
+TransformContext. It resolves targets from the active SelectionManager, records
+persistent target metadata, stores preview and transaction state, and requires
+future concrete transform operations to return undoable commands executed by
+the existing CommandManager. No viewport, renderer, UI, camera, shared scene,
+geometry kernel or feature-history behavior was changed.
+
+Responsibilities
+
+- Represent World, Local, Parent and Custom transform spaces.
+- Represent Reference Plane, Reference Axis, Pivot, Bounding Box, Selection
+  Center, Object Origin, Feature Origin and Component Origin metadata.
+- Track Incremental, Absolute and Preview transform state.
+- Coordinate Commit, Cancel, Undo Transaction and Redo Transaction metadata
+  through command-producing operations.
+- Provide AI integration points for Move, Rotate, Scale, Mirror and Align
+  requests without allowing AI to modify geometry directly.
+
+Remaining Tasks
+
+Future tasks may implement concrete Move, Rotate, Scale, Mirror, Align,
+Professional Gizmo, Direct Modeling and feature editing tools on top of this
+framework. Those implementations must continue to modify model data only
+through commands, GeometryKernel validation and the existing Workspace source
+of truth.
+
+----------------------------------------
