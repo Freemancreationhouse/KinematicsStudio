@@ -6,19 +6,6 @@ class ToolManager:
     SELECT_TOOL_NAME = "SelectTool"
     ESCAPE_KEYS = {"Escape", "Esc", 0x01000000}
     ENTER_KEYS = {"Enter", "Return", 0x01000004, 0x01000005}
-    SINGLE_SHOT_TOOLS = {
-        "LineTool",
-        "RectangleTool",
-        "CircleTool",
-        "ArcTool",
-        "EllipseTool",
-        "PolygonTool",
-        "CubePrimitiveTool",
-        "BoxPrimitiveTool",
-        "SpherePrimitiveTool",
-        "ConePrimitiveTool",
-        "CylinderPrimitiveTool",
-    }
     MULTI_SEGMENT_TOOLS = {
         "PolylineTool",
         "ClosedPolylineTool",
@@ -104,14 +91,11 @@ class ToolManager:
         if self.current:
 
             tool = self.current
-            command_count = self._command_count(workspace)
 
             try:
                 tool.mouse_press(workspace, point, additive)
             except TypeError:
                 tool.mouse_press(workspace, point)
-
-            self._return_to_select_if_complete(tool, workspace, command_count)
 
     # --------------------------------
 
@@ -128,14 +112,11 @@ class ToolManager:
         if self.current:
 
             tool = self.current
-            command_count = self._command_count(workspace)
 
             try:
                 tool.mouse_release(workspace, point, additive)
             except TypeError:
                 tool.mouse_release(workspace, point)
-
-            self._return_to_select_if_complete(tool, workspace, command_count)
 
     # --------------------------------
 
@@ -149,14 +130,11 @@ class ToolManager:
         if self.current:
 
             tool = self.current
-            command_count = self._command_count(workspace)
             tool.key_press(workspace, key)
 
             if key in self.ENTER_KEYS and tool.name in self.MULTI_SEGMENT_TOOLS:
                 self.activate_select()
                 return
-
-            self._return_to_select_if_complete(tool, workspace, command_count)
 
     # --------------------------------
 
@@ -165,20 +143,6 @@ class ToolManager:
         if self.current:
 
             self.current.draw_preview(painter)
-
-    # --------------------------------
-
-    def _return_to_select_if_complete(self, tool, workspace, command_count):
-        """Restore Select after a single-shot tool commits a command."""
-
-        if tool is not self.current:
-            return
-
-        if tool.name not in self.SINGLE_SHOT_TOOLS:
-            return
-
-        if self._command_count(workspace) != command_count:
-            self.activate_select()
 
     # --------------------------------
 

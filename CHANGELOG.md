@@ -38,6 +38,10 @@ All notable changes to this project are documented here.
 - Viewport Synchronization
 - Dirty Refresh
 - Workspace-wide View Updates
+- Dirty Region Rendering
+- Viewport Caching
+- Frustum Culling
+- Viewport Statistics
 
 ## Changed
 

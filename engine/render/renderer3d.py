@@ -1,7 +1,8 @@
 import math
+import time
 
 from PySide6.QtCore import QPointF
-from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPolygonF
+from PySide6.QtGui import QColor, QFont, QPainter, QPen, QPicture, QPolygonF
 
 try:
     from engine.cad.occ_mesher import OCCMesher
@@ -21,6 +22,18 @@ class Renderer3D:
         self.grid_lines = 20
         self.debug_bounds = False
         self.occ_mesher = OCCMesher() if OCCMesher is not None else None
+        self.stats_enabled = False
+        self.last_stats = {
+            "fps": 0.0,
+            "frame_time_ms": 0.0,
+            "visible_entity_count": 0,
+            "culled_entity_count": 0,
+            "dirty_viewport_count": 0,
+        }
+        self._overlay_cache_key = None
+        self._overlay_cache_picture = None
+        self._visible_entity_count = 0
+        self._culled_entity_count = 0
 
     # --------------------------------
 
@@ -30,6 +43,7 @@ class Renderer3D:
         if self.camera is None:
             return
 
+        frame_start = time.perf_counter()
         self.camera.resize(width, height)
         style = self._visual_style(workspace)
         painter.save()
@@ -47,16 +61,103 @@ class Renderer3D:
         )
         origin_visible = getattr(camera_state, "origin_visible", True)
 
-        if grid_visible:
-            self._draw_grid(painter, workspace)
-
-        if axis_visible:
-            self._draw_axes(painter, workspace)
-
-        if origin_visible:
-            self._draw_origin(painter)
+        self._draw_cached_foundation_overlays(
+            painter,
+            workspace,
+            style,
+            grid_visible,
+            axis_visible,
+            origin_visible,
+            width,
+            height,
+        )
         self._draw_scene(painter, workspace)
+        self._update_frame_stats(frame_start)
         painter.restore()
+
+    # --------------------------------
+
+    def _draw_cached_foundation_overlays(
+        self,
+        painter,
+        workspace,
+        style,
+        grid_visible,
+        axis_visible,
+        origin_visible,
+        width,
+        height,
+    ):
+        """Draw grid, axes and origin from a per-camera overlay cache."""
+
+        key = self._foundation_overlay_cache_key(
+            workspace,
+            style,
+            grid_visible,
+            axis_visible,
+            origin_visible,
+            width,
+            height,
+        )
+
+        if self._overlay_cache_key != key or self._overlay_cache_picture is None:
+            picture = QPicture()
+            cache_painter = QPainter(picture)
+            cache_painter.setRenderHint(QPainter.Antialiasing, True)
+            if grid_visible:
+                self._draw_grid(cache_painter, workspace)
+            if axis_visible:
+                self._draw_axes(cache_painter, workspace)
+            if origin_visible:
+                self._draw_origin(cache_painter)
+            cache_painter.end()
+            self._overlay_cache_key = key
+            self._overlay_cache_picture = picture
+
+        painter.drawPicture(0, 0, self._overlay_cache_picture)
+
+    # --------------------------------
+
+    def _foundation_overlay_cache_key(
+        self,
+        workspace,
+        style,
+        grid_visible,
+        axis_visible,
+        origin_visible,
+        width,
+        height,
+    ):
+        """Return a stable key for static viewport foundation overlays."""
+
+        state = getattr(self.camera, "state", None)
+        target = getattr(state, "target", Vector3())
+        coordinate_manager = getattr(workspace, "coordinate_system_manager", None)
+        active = getattr(coordinate_manager, "active", None)
+        origin = getattr(active, "origin", Vector3())
+
+        return (
+            int(width),
+            int(height),
+            getattr(style, "background", "#16191d"),
+            bool(grid_visible),
+            bool(axis_visible),
+            bool(origin_visible),
+            getattr(state, "projection_mode", "perspective"),
+            round(float(getattr(state, "yaw", 0.0)), 4),
+            round(float(getattr(state, "pitch", 0.0)), 4),
+            round(float(getattr(state, "distance", 0.0)), 4),
+            round(float(getattr(state, "orthographic_scale", 0.0)), 4),
+            round(float(getattr(target, "x", 0.0)), 4),
+            round(float(getattr(target, "y", 0.0)), 4),
+            round(float(getattr(target, "z", 0.0)), 4),
+            getattr(coordinate_manager, "grid_visible", True),
+            getattr(coordinate_manager, "grid_spacing", self.grid_size),
+            getattr(coordinate_manager, "grid_subdivisions", 5),
+            round(float(getattr(origin, "x", 0.0)), 4),
+            round(float(getattr(origin, "y", 0.0)), 4),
+            round(float(getattr(origin, "z", 0.0)), 4),
+        )
 
     # --------------------------------
 
@@ -145,17 +246,26 @@ class Renderer3D:
             if hasattr(workspace, "visible_3d_entities")
             else []
         )
+        self._visible_entity_count = 0
+        self._culled_entity_count = 0
+        visible_entities = []
 
         for entity in entities:
+            bounds = self._entity_bounds3d(entity)
+            if bounds is not None and not self._bounds_visible(bounds):
+                self._culled_entity_count += 1
+                continue
+
+            visible_entities.append(entity)
+            self._visible_entity_count += 1
             self._draw_entity(painter, workspace, entity)
 
-            bounds = self._entity_bounds3d(entity)
             if self.debug_bounds and bounds is not None:
                 self._draw_bounds(painter, bounds)
 
         self._draw_occ_shapes(painter, workspace)
         self._draw_sections(painter, workspace)
-        self._draw_analysis_overlays(painter, workspace, entities)
+        self._draw_analysis_overlays(painter, workspace, visible_entities)
         self._draw_measurements(painter, workspace)
         self._draw_annotations(painter, workspace)
         self._draw_references(painter, workspace)
@@ -173,13 +283,78 @@ class Renderer3D:
         count = len(entities)
         painter.setPen(QColor("#b0bec5"))
         painter.drawText(QPointF(12, 24), f"3D Scene Entities: {count}")
+        if self.stats_enabled:
+            self._draw_viewport_statistics(painter)
         self._draw_snap_preview(painter, workspace)
         self._draw_gizmo(painter, workspace)
 
     # --------------------------------
 
+    def _bounds_visible(self, bounds):
+        """Return True when a bounding box intersects the camera view."""
+
+        corners = bounds.corners()
+        if not corners:
+            return True
+
+        projected = []
+        for corner in corners:
+            screen = self._project_point(corner)
+            if screen is not None:
+                projected.append(screen)
+
+        if not projected:
+            return False
+
+        width = getattr(self.camera, "viewport_width", 1)
+        height = getattr(self.camera, "viewport_height", 1)
+
+        if all(point[0] < 0 for point in projected):
+            return False
+        if all(point[0] > width for point in projected):
+            return False
+        if all(point[1] < 0 for point in projected):
+            return False
+        if all(point[1] > height for point in projected):
+            return False
+        return True
+
+    # --------------------------------
+
+    def _update_frame_stats(self, frame_start):
+        """Update optional viewport performance statistics."""
+
+        elapsed = max(time.perf_counter() - frame_start, 0.000001)
+        self.last_stats = {
+            "fps": 1.0 / elapsed,
+            "frame_time_ms": elapsed * 1000.0,
+            "visible_entity_count": self._visible_entity_count,
+            "culled_entity_count": self._culled_entity_count,
+            "dirty_viewport_count": int(getattr(self, "dirty_viewport_count", 0)),
+        }
+
+    # --------------------------------
+
+    def _draw_viewport_statistics(self, painter):
+        """Draw optional debug render statistics when explicitly enabled."""
+
+        stats = self.last_stats
+        painter.setPen(QColor("#90caf9"))
+        painter.drawText(
+            QPointF(12, 44),
+            (
+                f"FPS {stats['fps']:.1f} | "
+                f"{stats['frame_time_ms']:.1f} ms | "
+                f"Visible {stats['visible_entity_count']} | "
+                f"Culled {stats['culled_entity_count']}"
+            ),
+        )
+
+    # --------------------------------
+
     def _draw_entity(self, painter, workspace, entity):
 
+        self._lod_for_entity(entity)
         color = QColor(getattr(entity, "display_color", "#FFFFFF"))
         style = self._visual_style(workspace)
 
@@ -206,10 +381,33 @@ class Renderer3D:
 
     # --------------------------------
 
+    def _lod_for_entity(self, entity):
+        """Return the current entity LOD without reducing geometry quality."""
+
+        bounds = self._entity_bounds3d(entity)
+        if bounds is None or not getattr(bounds, "valid", False):
+            return "full"
+
+        center = bounds.center
+        camera_position = getattr(self.camera, "position", None)
+        if camera_position is None:
+            return "full"
+
+        distance = (center - camera_position).length()
+        if distance > 100000.0:
+            return "far"
+        if distance > 10000.0:
+            return "medium"
+        return "full"
+
+    # --------------------------------
+
     def _entity_bounds3d(self, entity):
         """Return 3D bounds for native 3D or projected 2D entities."""
 
         bounds = getattr(entity, "bounding_box3d", None)
+        if callable(bounds):
+            bounds = bounds()
         if bounds is not None:
             return bounds
 

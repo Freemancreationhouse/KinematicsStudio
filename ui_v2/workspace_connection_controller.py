@@ -599,10 +599,10 @@ class WorkspaceConnectionController(QObject):
             name=f"{primitive_type.title()} Primitive",
         )
         command_manager.execute(command)
-        self._activate_select()
         self._call_if_available(self.project_service, "mark_dirty")
         self.synchronize_ui("EntityAdded", command.entity)
         self.synchronize_ui("SelectionChanged", command.entity)
+        self.synchronize_ui("ActiveToolChanged")
 
     def _new_project(self, template_name: str) -> None:
         """Create a project through the project service."""

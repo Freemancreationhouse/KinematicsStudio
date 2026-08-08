@@ -89,9 +89,9 @@ EPIC 2.2
 
 # Current Task
 
-Task 2.2.6
+Task 2.2.7
 
-View Synchronization System
+Viewport Performance & Rendering Optimization
 
 Status:
 
@@ -167,4 +167,6 @@ Task 2.2.4 Complete: Professional ViewCube overlays added per 3D viewport with i
 
 Task 2.2.5 Complete: Professional Navigation Bar overlays added per 3D viewport with Home View, Zoom Extents, Zoom Selected, Projection, Grid, Axes and Origin controls routed through existing viewport camera APIs without modifying Sprint 1 or Epic 2.1 runtime architecture.
 
-Task 2.2.6 In Progress: View Synchronization System added event-aware dirty viewport tracking, selective redraw and workspace-state synchronization for scene, selection, layer, property, undo, redo and project lifecycle events while preserving independent viewport cameras.
+Task 2.2.6 Complete: View Synchronization System added event-aware dirty viewport tracking, selective redraw and workspace-state synchronization for scene, selection, layer, property, undo, redo and project lifecycle events while preserving independent viewport cameras.
+
+Task 2.2.7 In Progress: Viewport Performance & Rendering Optimization added cached foundation overlays, conservative frustum culling, no-quality-change LOD hooks and optional viewport statistics while preserving shared scene, camera independence and existing CAD workflows.

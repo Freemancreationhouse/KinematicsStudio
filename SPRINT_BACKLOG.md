@@ -48,7 +48,8 @@ ACTIVE
 - [COMPLETE] Camera System Orthographic Selection Fix
 - [COMPLETE] ViewCube
 - [COMPLETE] Navigation Bar
-- [IN PROGRESS] View Synchronization
+- [COMPLETE] View Synchronization
+- [IN PROGRESS] Viewport Performance
 
 ---
 

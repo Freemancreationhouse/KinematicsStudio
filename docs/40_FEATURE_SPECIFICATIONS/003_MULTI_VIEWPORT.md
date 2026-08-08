@@ -1102,3 +1102,62 @@ metrics and advanced dependency-aware dirty region tracking after the baseline
 workspace-state synchronization system passes manual QA.
 
 ----------------------------------------
+
+## Task 2.2.7
+
+Status: IN PROGRESS
+
+Summary
+
+Implemented viewport rendering performance optimization for the existing
+multi-viewport renderer. The optimization pass improves rendering execution
+only and preserves shared scene ownership, workspace state, camera behavior,
+selection, commands, ToolManager, ProjectService, WorkspaceProvider, ViewCube,
+Navigation Bar and View Synchronization architecture.
+
+Dirty Rendering
+
+The completed View Synchronization System remains responsible for marking and
+flushing dirty viewports. Renderer3D now complements that path by avoiding
+unnecessary per-frame overlay reconstruction and by tracking frame statistics
+for optional diagnostics. Qt repaint coalescing remains the scheduling layer
+for viewport update requests.
+
+Frustum Culling
+
+Renderer3D now performs conservative per-viewport frustum checks for bounded
+entities before drawing. Entities outside the active camera view are skipped.
+Entities without reliable bounds continue to render to avoid false negatives
+and preserve visual correctness.
+
+Overlay Cache
+
+Renderer3D caches static foundation overlays including grid, axes and world
+origin using a camera- and workspace-state cache key. The cache is rebuilt only
+when viewport dimensions, camera state, visibility flags or coordinate-system
+settings change. ViewCube and Navigation Bar remain independent overlay widgets
+and continue to use Qt's widget backing-store repaint behavior.
+
+Viewport Statistics
+
+Renderer3D exposes optional debug statistics disabled by default, including FPS,
+frame time, visible entity count, culled entity count and dirty viewport count.
+When enabled, statistics render as a lightweight viewport diagnostic overlay
+without changing normal visual output.
+
+Architecture Decisions
+
+Shared Scene, Workspace, Camera System, Viewport Layout Manager, View
+Synchronization, Navigation Bar, ViewCube, Selection System, Command System,
+ToolManager, ProjectService and WorkspaceProvider were not modified. Rendering
+algorithms and camera behavior remain unchanged. LOD support is introduced as a
+no-quality-change distance classification hook for future optimization work.
+
+Remaining Tasks
+
+Future performance work may add measured dirty-region rectangles, GPU-backed
+geometry buffers, persistent mesh caches, adaptive LOD quality levels and
+viewport performance dashboards after manual QA confirms this baseline remains
+visually identical.
+
+----------------------------------------
