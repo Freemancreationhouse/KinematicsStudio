@@ -124,6 +124,7 @@ class WorkspaceConnectionController(QObject):
         self._property_edit_connected = False
         self._project_lifecycle_connected = False
         self._has_activated_3d_view = False
+        self._last_command_counts = self._command_counts()
 
     def connect_all(self) -> None:
         """Connect all injected objects through this controller."""
@@ -194,18 +195,27 @@ class WorkspaceConnectionController(QObject):
             "FullRefresh": all_surfaces,
             "ProjectOpened": all_surfaces,
             "ProjectClosed": all_surfaces,
+            "ProjectRecovered": all_surfaces,
             "WorkspaceChanged": all_surfaces,
             "SceneChanged": {"status_bar", "panels", "viewport"},
             "EntityAdded": {"status_bar", "panels", "viewport"},
             "EntityRemoved": {"status_bar", "panels", "viewport"},
             "EntityModified": {"status_bar", "panels", "viewport"},
+            "EntityVisibilityChanged": {"status_bar", "panels", "viewport"},
             "SelectionChanged": {"property_panel", "status_bar", "viewport"},
             "CameraChanged": {"status_bar", "viewport"},
             "ActiveToolChanged": {"property_panel", "status_bar"},
             "DocumentModified": {"status_bar", "panels", "viewport"},
+            "CommandCompleted": {"status_bar", "panels", "viewport"},
             "CommandHistoryChanged": {"status_bar", "panels", "viewport"},
+            "Undo": {"property_panel", "status_bar", "panels", "viewport"},
+            "Redo": {"property_panel", "status_bar", "panels", "viewport"},
             "PropertyChanged": {"property_panel", "status_bar", "panels", "viewport"},
             "LayerChanged": {"property_panel", "status_bar", "panels", "viewport"},
+            "LayerVisibilityChanged": {"property_panel", "status_bar", "panels", "viewport"},
+            "LayerLockChanged": {"property_panel", "status_bar", "panels", "viewport"},
+            "ActiveLayerChanged": {"property_panel", "status_bar", "panels", "viewport"},
+            "MaterialChanged": {"property_panel", "status_bar", "panels", "viewport"},
             "ViewChanged": {"status_bar", "viewport"},
             "PanelChanged": {"status_bar"},
         }
@@ -1254,7 +1264,17 @@ class WorkspaceConnectionController(QObject):
     def _handle_command_history_changed(self, *args: Any) -> None:
         """Refresh shell state when command history changes."""
 
-        self.synchronize_ui("CommandHistoryChanged")
+        previous_undo, previous_redo = self._last_command_counts
+        current_undo, current_redo = self._command_counts()
+        self._last_command_counts = (current_undo, current_redo)
+
+        if current_undo < previous_undo and current_redo > previous_redo:
+            self.synchronize_ui("Undo")
+            return
+        if current_undo > previous_undo and current_redo < previous_redo:
+            self.synchronize_ui("Redo")
+            return
+        self.synchronize_ui("CommandCompleted")
 
     def _handle_tool_changed(self, tool: Any = None, *args: Any) -> None:
         """Refresh shell state when the active tool changes."""
@@ -1306,14 +1326,17 @@ class WorkspaceConnectionController(QObject):
     def _handle_project_service_lifecycle(self, *args: Any) -> None:
         """Refresh routed shell state after project-service lifecycle events."""
 
+        self._last_command_counts = self._command_counts()
         self._handle_project_loaded(*args)
 
     def _project_synchronization_event(self, args: tuple[Any, ...]) -> str:
         """Return the UI synchronization event for a project lifecycle callback."""
 
         lifecycle_event = str(args[0]) if args else ""
-        if lifecycle_event in ("new_project", "open_project", "recover_project"):
+        if lifecycle_event in ("new_project", "open_project"):
             return "ProjectOpened"
+        if lifecycle_event == "recover_project":
+            return "ProjectRecovered"
         if lifecycle_event == "close_project":
             return "ProjectClosed"
         if lifecycle_event == "save_project":
@@ -1634,6 +1657,22 @@ class WorkspaceConnectionController(QObject):
         if manager is not None:
             return manager
         return self._fallback_command_manager
+
+    def _command_counts(self) -> tuple[int, int]:
+        """Return undo and redo stack counts for synchronization routing."""
+
+        manager = self.command_manager
+        if manager is None:
+            return (0, 0)
+        undo_count = getattr(manager, "undo_count", None)
+        redo_count = getattr(manager, "redo_count", None)
+        if undo_count is None:
+            undo_stack = getattr(manager, "undo_stack", [])
+            undo_count = len(undo_stack or [])
+        if redo_count is None:
+            redo_stack = getattr(manager, "redo_stack", [])
+            redo_count = len(redo_stack or [])
+        return (int(undo_count or 0), int(redo_count or 0))
 
     def _connect_signal(self, signal: Any, slot: Callable[..., Any]) -> None:
         """Connect a Qt signal and track it for safe disconnection."""

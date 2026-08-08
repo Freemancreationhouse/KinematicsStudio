@@ -35,6 +35,9 @@ All notable changes to this project are documented here.
 - Grid Toggle
 - Axes Toggle
 - Origin Toggle
+- Viewport Synchronization
+- Dirty Refresh
+- Workspace-wide View Updates
 
 ## Changed
 
