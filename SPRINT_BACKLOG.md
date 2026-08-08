@@ -65,6 +65,7 @@ ACTIVE
 - [IN PROGRESS] Geometry Editing Framework
 - [IN PROGRESS] Selection Modes
 - [IN PROGRESS] Professional Transform Framework
+- [IN PROGRESS] Professional Move Tool
 
 ---
 

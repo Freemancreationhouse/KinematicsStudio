@@ -173,3 +173,44 @@ through commands, GeometryKernel validation and the existing Workspace source
 of truth.
 
 ----------------------------------------
+
+## Task 2.3.4
+
+Status: IN PROGRESS
+
+Professional Move Tool
+
+Implemented the Professional Move Tool on top of the Transform Framework.
+Move interaction now uses a MoveSession, MovePreview, MoveTransaction,
+MoveOperation and undoable MoveCommand. Dragging updates a reversible preview,
+release commits through CommandManager, Escape cancels preview state, and
+Undo/Redo restore the moved selection through the existing command stack.
+
+Capabilities
+
+- Object, Body, Face, Edge, Vertex and Component move targets are represented
+  through TransformTarget metadata.
+- Selection center, object origin, feature origin, component origin, custom
+  pivot, World, Local, Parent and Custom transform concepts are carried by
+  TransformState and TransformContext.
+- Mouse press, drag and release create preview and commit workflows.
+- Numeric move input supports X, Y, Z, Delta X, Delta Y, Delta Z, Distance,
+  Absolute Position and Relative Position preview updates before commit.
+- AI integration can request move intent through MoveCommand without direct
+  geometry mutation.
+
+Architecture
+
+The Move Tool remains a Tool-layer input collector. It never records a move by
+mutating geometry directly. Preview state is temporary and restored before
+MoveCommand executes. Committed moves go through CommandManager and record a
+Transform.Move feature metadata entry through the existing FeatureManager and
+FeatureHistory integration.
+
+Remaining Work
+
+Future tasks may add Rotate, Scale, Mirror, Align, Transform Gizmo, Direct
+Modeling and feature-specific topology movement. Those tasks must preserve the
+same Transform Framework and CommandManager execution path.
+
+----------------------------------------------------

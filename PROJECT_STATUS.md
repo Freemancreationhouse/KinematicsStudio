@@ -89,9 +89,9 @@ EPIC 2.3
 
 # Current Task
 
-Task 2.3.3
+Task 2.3.4
 
-Professional Transform Framework
+Professional Move Tool
 
 Status:
 
@@ -178,3 +178,5 @@ Task 2.3.1 In Progress: Geometry Editing Framework added passive Workspace-owned
 Task 2.3.2 In Progress: Professional Selection System added selection modes, filters, priority, persistent target metadata, selection context and AI-safe selection request routing through the existing SelectionManager and SelectionService.
 
 Task 2.3.3 In Progress: Professional Transform Framework added passive transform sessions, contexts, operations, transactions, targets, constraints, state, axes, planes, spaces and AI request integration points without implementing concrete transform tools.
+
+Task 2.3.4 In Progress: Professional Move Tool now uses Transform Framework sessions, reversible preview, MoveCommand commits, Undo/Redo and Feature History metadata while preserving locked rendering, viewport, selection and command architecture.

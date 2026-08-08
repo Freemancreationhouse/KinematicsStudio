@@ -26,12 +26,19 @@ All notable changes to this project are documented here.
 - Transform Sessions
 - Transform Transactions
 - Transform Context
+- Professional Move Tool
+- Move Command
+- Move Preview
+- Move Transactions
 
 ## Changed
 
 - Architecture Cleanup
 - Package Refactor
 - No functional changes.
+- Professional Move Tool package refactor
+- Architecture cleanup
+- No functional changes
 
 ## Improved
 
