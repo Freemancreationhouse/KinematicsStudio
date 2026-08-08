@@ -23,6 +23,12 @@ from engine.entities import (
 from engine.geometry import Vector2
 from engine.geometry.curves import hit_curve
 from engine.geometry.primitives import point_to_segment_distance
+from engine.selection import (
+    SelectionContext,
+    SelectionMode,
+    SelectionPolicy,
+    SelectionTarget,
+)
 
 
 @dataclass
@@ -158,7 +164,12 @@ class SelectionManager:
         self.selected = []
         self.previous = []
         self.filter = SelectionFilter()
+        self.policy = SelectionPolicy()
+        self.selection_context = SelectionContext()
         self.selection_sets = {}
+        self.persistent_targets = {}
+        self.hovered = None
+        self.preselected = None
         self._cycle_point = None
         self._cycle_candidates = []
         self._cycle_index = -1
@@ -190,11 +201,16 @@ class SelectionManager:
         self._sync_occ_selection()
         if had_selection:
             self._changed()
+        else:
+            self._update_context()
 
     # --------------------------------
 
     def select(self, entity, additive=False):
         """Select one entity."""
+
+        if entity is None:
+            return
 
         if not additive:
 
@@ -205,6 +221,7 @@ class SelectionManager:
             self._set_selected_flag(entity, True)
 
             self.selected.append(entity)
+            self._remember_persistent_target(entity)
             self._sync_occ_selection()
             self._changed()
 
@@ -243,6 +260,10 @@ class SelectionManager:
             item for item in self.previous
             if item is not entity
         ]
+
+        persistent_id = self._persistent_id_for(entity)
+        if persistent_id:
+            self.persistent_targets.pop(persistent_id, None)
 
         for selection_set in self.selection_sets.values():
             selection_set.entities = [
@@ -290,6 +311,8 @@ class SelectionManager:
     def _changed(self):
         """Notify observers that the selection state changed."""
 
+        self._update_context()
+
         if callable(self.on_change):
             self.on_change(self)
 
@@ -323,7 +346,152 @@ class SelectionManager:
         return [
             entity for entity in candidates
             if self.filter.matches(entity, workspace)
+            and self.policy.accepts(entity, workspace)
         ]
+
+    # --------------------------------
+
+    def set_mode(self, mode):
+        """Set the active professional selection mode."""
+
+        normalized = self.policy.set_mode(mode)
+        self._changed()
+        return normalized
+
+    # --------------------------------
+
+    def selection_mode(self):
+        """Return the active professional selection mode."""
+
+        return self.policy.mode
+
+    # --------------------------------
+
+    def enable_filter(self, filter_type):
+        """Enable a professional selection filter."""
+
+        self.policy.enable_filter(filter_type)
+        self._changed()
+
+    # --------------------------------
+
+    def disable_filter(self, filter_type):
+        """Disable a professional selection filter."""
+
+        self.policy.disable_filter(filter_type)
+        self._changed()
+
+    # --------------------------------
+
+    def clear_filters(self):
+        """Clear professional and legacy selection filters."""
+
+        self.policy.clear_filters()
+        self.filter.reset()
+        self._changed()
+
+    # --------------------------------
+
+    def enabled_filters(self):
+        """Return enabled professional selection filters."""
+
+        return tuple(self.policy.enabled_filters)
+
+    # --------------------------------
+
+    def set_priority(self, priority):
+        """Set configurable selection priority."""
+
+        self.policy.set_priority(priority)
+        self._changed()
+
+    # --------------------------------
+
+    def selection_priority(self):
+        """Return current selection priority."""
+
+        return tuple(self.policy.priority)
+
+    # --------------------------------
+
+    def context(self):
+        """Return the current selection context."""
+
+        return self.selection_context
+
+    # --------------------------------
+
+    def targets(self):
+        """Return persistent selection target records."""
+
+        return tuple(
+            self.persistent_targets.get(self._persistent_id_for(entity))
+            or SelectionTarget.from_entity(entity, self.policy.mode)
+            for entity in self.selected
+        )
+
+    # --------------------------------
+
+    def persistent_selection_ids(self):
+        """Return persistent identifiers for the active selection."""
+
+        return tuple(
+            persistent_id for persistent_id in (
+                self._persistent_id_for(entity)
+                for entity in self.selected
+            )
+            if persistent_id
+        )
+
+    # --------------------------------
+
+    def restore_persistent_selection(self, workspace, additive=False):
+        """Restore current persistent selection IDs against workspace entities."""
+
+        ids = set(self.persistent_selection_ids())
+        if not ids:
+            return []
+        matched = [
+            entity for entity in self._workspace_entities(workspace)
+            if self._persistent_id_for(entity) in ids
+        ]
+        self.select_many(matched, additive)
+        return matched
+
+    # --------------------------------
+
+    def set_hovered(self, entity):
+        """Set hover highlight state without modifying selection."""
+
+        if self.hovered is entity:
+            return
+        self._set_highlight_flag(self.hovered, "hovered", False)
+        self.hovered = entity
+        self._set_highlight_flag(self.hovered, "hovered", True)
+        self._changed()
+
+    # --------------------------------
+
+    def set_preselected(self, entity):
+        """Set preselection highlight state without modifying selection."""
+
+        if self.preselected is entity:
+            return
+        self._set_highlight_flag(self.preselected, "preselected", False)
+        self.preselected = entity
+        self._set_highlight_flag(self.preselected, "preselected", True)
+        self._changed()
+
+    # --------------------------------
+
+    def clear_highlights(self):
+        """Clear hover and preselection highlight state."""
+
+        self._set_highlight_flag(self.hovered, "hovered", False)
+        self._set_highlight_flag(self.preselected, "preselected", False)
+        self.hovered = None
+        self.preselected = None
+        self._changed()
 
     # --------------------------------
 
@@ -488,6 +656,139 @@ class SelectionManager:
 
     # --------------------------------
 
+    def select_loop(self, workspace, source=None, additive=False):
+        """Select a loop-related set using available topology metadata."""
+
+        seed = source or self.first
+        matched = self._related_by_metadata(workspace, seed, ("loop_id", "loop_ids"))
+        self.select_many(matched or ([seed] if seed is not None else []), additive)
+        return list(self.selected)
+
+    # --------------------------------
+
+    def select_ring(self, workspace, source=None, additive=False):
+        """Select a ring-related set using available topology metadata."""
+
+        seed = source or self.first
+        matched = self._related_by_metadata(workspace, seed, ("ring_id", "ring_ids"))
+        self.select_many(matched or ([seed] if seed is not None else []), additive)
+        return list(self.selected)
+
+    # --------------------------------
+
+    def select_connected_faces(self, workspace, source=None, additive=False):
+        """Select faces connected by shared body or shell metadata."""
+
+        return self._select_connected(
+            workspace,
+            source,
+            additive,
+            ("body_id", "shell_id", "face_ids"),
+            SelectionMode.FACE,
+        )
+
+    # --------------------------------
+
+    def select_connected_edges(self, workspace, source=None, additive=False):
+        """Select edges connected by shared loop or vertex metadata."""
+
+        return self._select_connected(
+            workspace,
+            source,
+            additive,
+            ("loop_id", "vertex_ids", "edge_ids"),
+            SelectionMode.EDGE,
+        )
+
+    # --------------------------------
+
+    def select_connected_bodies(self, workspace, source=None, additive=False):
+        """Select bodies connected by component or assembly metadata."""
+
+        return self._select_connected(
+            workspace,
+            source,
+            additive,
+            ("component_id", "assembly_id", "body_ids"),
+            SelectionMode.BODY,
+        )
+
+    # --------------------------------
+
+    def grow_selection(self, workspace):
+        """Grow selection to directly related metadata neighbors."""
+
+        seeds = list(self.selected)
+        grown = list(seeds)
+        for seed in seeds:
+            for entity in self._workspace_entities(workspace):
+                if entity in grown:
+                    continue
+                if self._shares_metadata(seed, entity):
+                    grown.append(entity)
+        self.select_many(grown, False)
+        return list(self.selected)
+
+    # --------------------------------
+
+    def shrink_selection(self):
+        """Shrink selection by removing the most recently selected item."""
+
+        if self.selected:
+            self.deselect(self.selected[-1])
+        return list(self.selected)
+
+    # --------------------------------
+
+    def select_by_layer(self, workspace, layer_name, additive=False):
+        """Select all selectable entities on one layer."""
+
+        matched = [
+            entity for entity in self.filtered_entities(workspace)
+            if self._layer_name_for(entity, workspace) == layer_name
+        ]
+        self.select_many(matched, additive)
+        return matched
+
+    # --------------------------------
+
+    def select_by_material(self, workspace, material_id, additive=False):
+        """Select all selectable entities with one material identifier."""
+
+        material = str(material_id or "")
+        matched = [
+            entity for entity in self.filtered_entities(workspace)
+            if str(
+                getattr(
+                    entity,
+                    "material_id",
+                    getattr(entity, "material", ""),
+                )
+            ) == material
+        ]
+        self.select_many(matched, additive)
+        return matched
+
+    # --------------------------------
+
+    def select_by_ai_request(self, workspace, request, additive=False):
+        """Resolve an AI selection request through SelectionManager."""
+
+        text = str(request or "").strip().lower()
+        if "vertex" in text:
+            self.set_mode(SelectionMode.VERTEX)
+        elif "edge" in text:
+            self.set_mode(SelectionMode.EDGE)
+        elif "face" in text:
+            self.set_mode(SelectionMode.FACE)
+        elif "body" in text:
+            self.set_mode(SelectionMode.BODY)
+        elif "feature" in text:
+            self.set_mode(SelectionMode.OBJECT)
+        return self.filtered_entities(workspace)
+
+    # --------------------------------
+
     def create_set(self, name, entities=None):
         """Create or replace a named selection set."""
 
@@ -580,6 +881,157 @@ class SelectionManager:
 
         if self.selected:
             self.previous = list(self.selected)
+
+    # --------------------------------
+
+    def _update_context(self):
+
+        self.selection_context.update(
+            mode=self.policy.mode,
+            targets=self.targets(),
+        )
+
+    # --------------------------------
+
+    def _remember_persistent_target(self, entity):
+
+        target = SelectionTarget.from_entity(entity, self.policy.mode)
+        if target.persistent_id:
+            self.persistent_targets[target.persistent_id] = target
+
+    # --------------------------------
+
+    def _persistent_id_for(self, entity):
+
+        if entity is None:
+            return ""
+
+        for name in (
+            "persistent_topology_id",
+            "topology_id",
+            "persistent_id",
+            "id",
+            "name",
+        ):
+            value = getattr(entity, name, "")
+            if callable(value):
+                try:
+                    value = value()
+                except TypeError:
+                    continue
+            if value:
+                return str(value)
+        return ""
+
+    # --------------------------------
+
+    def _set_highlight_flag(self, entity, name, value):
+
+        if entity is None:
+            return
+
+        try:
+            setattr(entity, name, bool(value))
+        except Exception:
+            pass
+
+    # --------------------------------
+
+    def _workspace_entities(self, workspace):
+
+        if workspace is None:
+            return []
+
+        entities = getattr(workspace, "entities", None)
+        if callable(entities):
+            return list(entities())
+        return list(entities or [])
+
+    # --------------------------------
+
+    def _related_by_metadata(self, workspace, seed, names):
+
+        if seed is None:
+            return []
+
+        seed_values = self._metadata_values(seed, names)
+        if not seed_values:
+            return []
+
+        return [
+            entity for entity in self.filtered_entities(workspace)
+            if self._metadata_values(entity, names).intersection(seed_values)
+        ]
+
+    # --------------------------------
+
+    def _select_connected(self, workspace, source, additive, names, mode):
+
+        seed = source or self.first
+        previous_mode = self.policy.mode
+        try:
+            self.policy.set_mode(mode)
+            matched = self._related_by_metadata(workspace, seed, names)
+            self.select_many(matched or ([seed] if seed is not None else []), additive)
+            return list(self.selected)
+        finally:
+            self.policy.set_mode(previous_mode)
+            self._update_context()
+
+    # --------------------------------
+
+    def _shares_metadata(self, first, second):
+
+        names = (
+            "body_id",
+            "shell_id",
+            "face_id",
+            "loop_id",
+            "edge_id",
+            "vertex_id",
+            "component_id",
+            "assembly_id",
+            "layer_name",
+            "material_id",
+        )
+        return bool(self._metadata_values(first, names).intersection(
+            self._metadata_values(second, names)
+        ))
+
+    # --------------------------------
+
+    def _metadata_values(self, entity, names):
+
+        values = set()
+        if entity is None:
+            return values
+
+        metadata = getattr(entity, "metadata", None)
+        for name in names:
+            candidates = [getattr(entity, name, None)]
+            if isinstance(metadata, dict):
+                candidates.append(metadata.get(name))
+            for candidate in candidates:
+                if candidate is None:
+                    continue
+                if isinstance(candidate, (list, tuple, set)):
+                    values.update(str(item) for item in candidate if item)
+                elif candidate:
+                    values.add(str(candidate))
+        return values
+
+    # --------------------------------
+
+    def _layer_name_for(self, entity, workspace):
+
+        layer = None
+        if workspace is not None and hasattr(workspace, "entity_layer"):
+            layer = workspace.entity_layer(entity)
+        return (
+            getattr(layer, "name", None)
+            or getattr(entity, "layer_name", None)
+            or getattr(entity, "layer", "")
+        )
 
     # --------------------------------
 

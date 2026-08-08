@@ -89,9 +89,9 @@ EPIC 2.3
 
 # Current Task
 
-Task 2.3.1
+Task 2.3.2
 
-Geometry Editing Framework
+Professional Selection Modes
 
 Status:
 
@@ -174,3 +174,5 @@ Task 2.2.7 In Progress: Viewport Performance & Rendering Optimization added cach
 Task 2.2.8 In Progress: Professional Viewport Presets & Workspace Profiles added UI-only preset capture, restore, persistence, built-in presets, custom preset management and workspace profile routing without modifying shared scene, rendering, selection, commands or project data.
 
 Task 2.3.1 In Progress: Geometry Editing Framework added passive Workspace-owned GeometryKernel, TopologyManager, EditingManager, FeatureManager and HistoryManager services with AI-native metadata and command-system-aware editing sessions while preserving locked viewport, rendering, selection, shared scene and command behavior.
+
+Task 2.3.2 In Progress: Professional Selection System added selection modes, filters, priority, persistent target metadata, selection context and AI-safe selection request routing through the existing SelectionManager and SelectionService.

@@ -16,6 +16,11 @@ All notable changes to this project are documented here.
 - Feature Framework
 - History Framework
 - AI CAD Framework
+- Professional Selection System
+- Selection Filters
+- Selection Context
+- Persistent Selection
+- AI Selection Integration
 
 ## Changed
 

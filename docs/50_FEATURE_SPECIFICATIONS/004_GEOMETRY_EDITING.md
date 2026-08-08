@@ -78,3 +78,56 @@ top of this framework. Those tasks must continue to route permanent model
 changes through the Command System and preserve Shared Scene ownership.
 
 ----------------------------------------
+
+## Task 2.3.2
+
+Status: IN PROGRESS
+
+Selection System
+
+Implemented the Professional Selection System as an extension of the existing
+SelectionManager and SelectionService. Selection remains UI-free, rendering
+independent and non-mutating. Existing object selection behavior remains the
+default.
+
+Selection Modes
+
+- Object
+- Body
+- Face
+- Edge
+- Vertex
+- Loop
+- Ring
+- Shell
+- Component
+- Assembly
+
+Selection Filters
+
+- Bodies
+- Faces
+- Edges
+- Vertices
+- Sketches
+- Construction Geometry
+- Reference Geometry
+- Assemblies
+- Annotations
+- Dimensions
+- Constraints
+
+Persistent Selection
+
+Selections now record persistent target metadata using available topology,
+feature, layer, material and entity identifiers. Persistent selections can be
+resolved back against the active Workspace without duplicating geometry or
+viewport data.
+
+AI Integration
+
+AI selection requests are routed through SelectionManager via SelectionService.
+AI can request body, face, edge, vertex or feature-oriented selection contexts
+without selecting rendered triangles or bypassing the shared selection system.
+
+----------------------------------------------------

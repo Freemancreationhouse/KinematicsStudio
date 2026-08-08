@@ -171,6 +171,232 @@ class SelectionService:
         self.select_many(targets)
         return self.selected()
 
+    def selection_mode(self) -> Any:
+        """Return the active professional selection mode when available."""
+
+        selection = self.selection()
+        return self._call_first(selection, ("selection_mode",))
+
+    def set_mode(self, mode: Any) -> Any:
+        """Set the active professional selection mode."""
+
+        selection = self.selection()
+        return self._call_first(selection, ("set_mode",), mode)
+
+    def enable_filter(self, filter_type: Any) -> Any:
+        """Enable a professional selection filter."""
+
+        selection = self.selection()
+        return self._call_first(selection, ("enable_filter",), filter_type)
+
+    def disable_filter(self, filter_type: Any) -> Any:
+        """Disable a professional selection filter."""
+
+        selection = self.selection()
+        return self._call_first(selection, ("disable_filter",), filter_type)
+
+    def clear_filters(self) -> Any:
+        """Clear professional and legacy selection filters."""
+
+        selection = self.selection()
+        return self._call_first(selection, ("clear_filters",))
+
+    def enabled_filters(self) -> tuple[Any, ...]:
+        """Return enabled professional selection filters."""
+
+        selection = self.selection()
+        value = self._call_first(selection, ("enabled_filters",))
+        return tuple(value or ())
+
+    def set_priority(self, priority: Iterable[Any]) -> Any:
+        """Set configurable selection priority."""
+
+        selection = self.selection()
+        return self._call_first(selection, ("set_priority",), priority)
+
+    def selection_priority(self) -> tuple[Any, ...]:
+        """Return current selection priority."""
+
+        selection = self.selection()
+        value = self._call_first(selection, ("selection_priority",))
+        return tuple(value or ())
+
+    def context(self) -> Any:
+        """Return the current selection context when available."""
+
+        selection = self.selection()
+        return self._call_first(selection, ("context",))
+
+    def targets(self) -> tuple[Any, ...]:
+        """Return persistent selection target records."""
+
+        selection = self.selection()
+        value = self._call_first(selection, ("targets",))
+        return tuple(value or ())
+
+    def persistent_selection_ids(self) -> tuple[str, ...]:
+        """Return persistent identifiers for the active selection."""
+
+        selection = self.selection()
+        value = self._call_first(selection, ("persistent_selection_ids",))
+        return tuple(value or ())
+
+    def restore_persistent_selection(self, additive: bool = False) -> list[Any]:
+        """Restore current persistent selection IDs against the workspace."""
+
+        selection = self.selection()
+        result = self._call_first(
+            selection,
+            ("restore_persistent_selection",),
+            self.workspace(),
+            additive,
+        )
+        return list(result or [])
+
+    def set_hovered(self, entity: Any) -> Any:
+        """Set hover highlight state without modifying selection."""
+
+        selection = self.selection()
+        return self._call_first(selection, ("set_hovered",), entity)
+
+    def set_preselected(self, entity: Any) -> Any:
+        """Set preselection highlight state without modifying selection."""
+
+        selection = self.selection()
+        return self._call_first(selection, ("set_preselected",), entity)
+
+    def clear_highlights(self) -> Any:
+        """Clear hover and preselection highlight state."""
+
+        selection = self.selection()
+        return self._call_first(selection, ("clear_highlights",))
+
+    def select_loop(self, additive: bool = False) -> list[Any]:
+        """Select a loop-related set through the SelectionManager."""
+
+        selection = self.selection()
+        result = self._call_first(
+            selection,
+            ("select_loop",),
+            self.workspace(),
+            None,
+            additive,
+        )
+        return list(result or [])
+
+    def select_ring(self, additive: bool = False) -> list[Any]:
+        """Select a ring-related set through the SelectionManager."""
+
+        selection = self.selection()
+        result = self._call_first(
+            selection,
+            ("select_ring",),
+            self.workspace(),
+            None,
+            additive,
+        )
+        return list(result or [])
+
+    def select_connected_faces(self, additive: bool = False) -> list[Any]:
+        """Select connected faces through the SelectionManager."""
+
+        selection = self.selection()
+        result = self._call_first(
+            selection,
+            ("select_connected_faces",),
+            self.workspace(),
+            None,
+            additive,
+        )
+        return list(result or [])
+
+    def select_connected_edges(self, additive: bool = False) -> list[Any]:
+        """Select connected edges through the SelectionManager."""
+
+        selection = self.selection()
+        result = self._call_first(
+            selection,
+            ("select_connected_edges",),
+            self.workspace(),
+            None,
+            additive,
+        )
+        return list(result or [])
+
+    def select_connected_bodies(self, additive: bool = False) -> list[Any]:
+        """Select connected bodies through the SelectionManager."""
+
+        selection = self.selection()
+        result = self._call_first(
+            selection,
+            ("select_connected_bodies",),
+            self.workspace(),
+            None,
+            additive,
+        )
+        return list(result or [])
+
+    def grow_selection(self) -> list[Any]:
+        """Grow selection to directly related metadata neighbors."""
+
+        selection = self.selection()
+        result = self._call_first(selection, ("grow_selection",), self.workspace())
+        return list(result or [])
+
+    def shrink_selection(self) -> list[Any]:
+        """Shrink selection by one item."""
+
+        selection = self.selection()
+        result = self._call_first(selection, ("shrink_selection",))
+        return list(result or [])
+
+    def select_by_layer(self, layer_name: str, additive: bool = False) -> list[Any]:
+        """Select entities by layer through the SelectionManager."""
+
+        selection = self.selection()
+        result = self._call_first(
+            selection,
+            ("select_by_layer",),
+            self.workspace(),
+            layer_name,
+            additive,
+        )
+        return list(result or [])
+
+    def select_by_material(
+        self,
+        material_id: str,
+        additive: bool = False,
+    ) -> list[Any]:
+        """Select entities by material through the SelectionManager."""
+
+        selection = self.selection()
+        result = self._call_first(
+            selection,
+            ("select_by_material",),
+            self.workspace(),
+            material_id,
+            additive,
+        )
+        return list(result or [])
+
+    def select_by_ai_request(
+        self,
+        request: str,
+        additive: bool = False,
+    ) -> list[Any]:
+        """Resolve an AI selection request through the SelectionManager."""
+
+        selection = self.selection()
+        result = self._call_first(
+            selection,
+            ("select_by_ai_request",),
+            self.workspace(),
+            request,
+            additive,
+        )
+        return list(result or [])
+
     def bounding_box(self) -> Any:
         """Return a combined bounding box for the current selection when possible."""
 

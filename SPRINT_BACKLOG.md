@@ -63,6 +63,7 @@ Status:
 ACTIVE
 
 - [IN PROGRESS] Geometry Editing Framework
+- [IN PROGRESS] Selection Modes
 
 ---
 
