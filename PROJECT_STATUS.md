@@ -89,9 +89,9 @@ EPIC 2.3
 
 # Current Task
 
-Task 2.3.4
+Task 2.3.5
 
-Professional Move Tool
+Professional Rotate Tool
 
 Status:
 
@@ -180,3 +180,5 @@ Task 2.3.2 In Progress: Professional Selection System added selection modes, fil
 Task 2.3.3 In Progress: Professional Transform Framework added passive transform sessions, contexts, operations, transactions, targets, constraints, state, axes, planes, spaces and AI request integration points without implementing concrete transform tools.
 
 Task 2.3.4 In Progress: Professional Move Tool now uses Transform Framework sessions, reversible preview, MoveCommand commits, Undo/Redo and Feature History metadata while preserving locked rendering, viewport, selection and command architecture.
+
+Task 2.3.5 In Progress: Professional Rotate Tool now uses Transform Framework sessions, reversible preview, RotateCommand commits, Undo/Redo and Feature History metadata while preserving locked rendering, viewport, selection and command architecture.

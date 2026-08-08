@@ -30,6 +30,10 @@ All notable changes to this project are documented here.
 - Move Command
 - Move Preview
 - Move Transactions
+- Professional Rotate Tool
+- Rotate Commands
+- Rotate Preview
+- Rotate Transactions
 
 ## Changed
 

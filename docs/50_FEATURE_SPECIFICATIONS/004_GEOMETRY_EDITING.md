@@ -214,3 +214,45 @@ Modeling and feature-specific topology movement. Those tasks must preserve the
 same Transform Framework and CommandManager execution path.
 
 ----------------------------------------------------
+
+## Task 2.3.5
+
+Status: IN PROGRESS
+
+Professional Rotate Tool
+
+Implemented the Professional Rotate Tool on top of the Transform Framework.
+Rotate interaction now uses RotateSession, RotatePreview, RotateTransaction,
+RotateOperation and undoable RotateCommand. Rotation preview remains temporary,
+commits execute through CommandManager, Escape cancels preview state, and
+Undo/Redo restore the rotated selection through the existing command stack.
+
+Architecture
+
+The Rotate Tool remains a Tool-layer input collector. It does not own geometry,
+rendering, viewport state or command history. Preview state is restored before
+RotateCommand executes. Committed rotations go through TransformTransaction and
+record Transform.Rotate feature metadata through the existing FeatureManager
+and FeatureHistory integration.
+
+Capabilities
+
+- Object, Body, Face, Edge, Vertex, Component, Assembly and Sketch rotate
+  targets are represented through TransformTarget metadata.
+- World, Local, Parent, Custom, Screen, Reference Edge, Reference Line,
+  Reference Plane and Selection Normal concepts are carried through rotate
+  context, axis metadata and TransformState.
+- Mouse press, cursor preview, click confirmation and numeric angle input are
+  supported through one RotateSession.
+- Numeric input accepts degrees, radians, relative angle, absolute angle,
+  clockwise and counter-clockwise values before commit.
+- AI integration can request rotate intent through RotateCommand without direct
+  geometry mutation.
+
+Remaining Tasks
+
+Future tasks may add Scale, Mirror, Align, Dynamic Input HUD, Transform Gizmo,
+Direct Modeling and feature-specific topology rotation. Those tasks must
+preserve the same Transform Framework and CommandManager execution path.
+
+----------------------------------------------------
