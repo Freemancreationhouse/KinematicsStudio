@@ -89,6 +89,11 @@ class NavigationBar(QWidget):
 
         return self._navigation_mode
 
+    def sync_state(self) -> None:
+        """Refresh button state from the current viewport-local camera state."""
+
+        self._sync_state()
+
     def paintEvent(self, event) -> None:
         """Paint a subtle professional overlay background."""
 

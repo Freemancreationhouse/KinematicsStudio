@@ -42,6 +42,22 @@ Closed In Version:
 
 # ACTIVE BUGS
 
+## TASK 2.2.8 QA NOTE
+
+Status:
+
+No new bug opened.
+
+Summary:
+
+Viewport Presets and Workspace Profiles were implemented as UI-only
+configuration. Static verification confirmed the preset manager does not store
+or mutate entities, selection, layers, command history, undo data or project
+geometry. Runtime GUI validation remains a manual QA activity on the local
+PySide6 application environment.
+
+---
+
 ## BUG-009
 
 Title:

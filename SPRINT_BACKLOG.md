@@ -49,7 +49,8 @@ ACTIVE
 - [COMPLETE] ViewCube
 - [COMPLETE] Navigation Bar
 - [COMPLETE] View Synchronization
-- [IN PROGRESS] Viewport Performance
+- [COMPLETE] Viewport Performance
+- [IN PROGRESS] Viewport Presets
 
 ---
 

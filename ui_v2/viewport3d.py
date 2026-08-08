@@ -255,6 +255,32 @@ class Viewport3D(QWidget):
 
     # --------------------------------
 
+    def navigation_state(self):
+        """Return viewport-local navigation and overlay UI state."""
+
+        return {
+            "navigation_mode": self._navigation_mode,
+            "viewcube_visible": self.viewcube.isVisible(),
+            "navigation_bar_visible": self.navigation_bar.isVisible(),
+        }
+
+    # --------------------------------
+
+    def apply_navigation_state(self, state):
+        """Apply viewport-local navigation and overlay UI state."""
+
+        state = state or {}
+        mode = state.get("navigation_mode")
+        if mode in {"orbit", "pan"}:
+            self._set_navigation_mode(mode)
+            self.navigation_bar.set_navigation_mode(mode)
+        self.viewcube.setVisible(bool(state.get("viewcube_visible", True)))
+        self.navigation_bar.setVisible(bool(state.get("navigation_bar_visible", True)))
+        self.navigation_bar.sync_state()
+        self.update()
+
+    # --------------------------------
+
     def _show_status(self):
 
         if self.status_bar is None:

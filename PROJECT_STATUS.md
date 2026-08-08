@@ -89,9 +89,9 @@ EPIC 2.2
 
 # Current Task
 
-Task 2.2.7
+Task 2.2.8
 
-Viewport Performance & Rendering Optimization
+Professional Viewport Presets & Workspace Profiles
 
 Status:
 
@@ -170,3 +170,5 @@ Task 2.2.5 Complete: Professional Navigation Bar overlays added per 3D viewport 
 Task 2.2.6 Complete: View Synchronization System added event-aware dirty viewport tracking, selective redraw and workspace-state synchronization for scene, selection, layer, property, undo, redo and project lifecycle events while preserving independent viewport cameras.
 
 Task 2.2.7 In Progress: Viewport Performance & Rendering Optimization added cached foundation overlays, conservative frustum culling, no-quality-change LOD hooks and optional viewport statistics while preserving shared scene, camera independence and existing CAD workflows.
+
+Task 2.2.8 In Progress: Professional Viewport Presets & Workspace Profiles added UI-only preset capture, restore, persistence, built-in presets, custom preset management and workspace profile routing without modifying shared scene, rendering, selection, commands or project data.

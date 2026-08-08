@@ -448,6 +448,38 @@ class Ribbon(QWidget):
                     self._action("Reset", "RS", "reset_workspace_layout", "Reset workspace layout."),
                 ),
             ),
+            (
+                "Presets",
+                (
+                    self._action("Single", "S1", "viewport_preset:single_view", "Apply Single View preset."),
+                    self._action("Draft", "DR", "viewport_preset:drafting", "Apply Drafting preset."),
+                    self._action("Model", "MD", "viewport_preset:modeling", "Apply Modeling preset."),
+                    self._action("Quad", "Q4", "viewport_preset:quad_view", "Apply Quad View preset."),
+                    self._action("Present", "PV", "viewport_preset:presentation", "Apply Presentation preset."),
+                    self._action("Visual", "VZ", "viewport_preset:visualization", "Apply Visualization preset."),
+                ),
+            ),
+            (
+                "Profiles",
+                (
+                    self._action("Arch", "AR", "workspace_profile:architecture", "Apply Architecture profile."),
+                    self._action("Mech", "ME", "workspace_profile:mechanical", "Apply Mechanical profile."),
+                    self._action("Product", "PD", "workspace_profile:product_design", "Apply Product Design profile."),
+                    self._action("Visual", "VZ", "workspace_profile:visualization", "Apply Visualization profile."),
+                    self._action("CAM", "CM", "workspace_profile:cam", "Apply CAM profile."),
+                    self._action("Fab", "DF", "workspace_profile:digital_fabrication", "Apply Digital Fabrication profile."),
+                    self._action("Robot", "RB", "workspace_profile:robotics", "Apply Robotics profile."),
+                ),
+            ),
+            (
+                "Manage",
+                (
+                    self._action("Save", "SV", "workspace_preset:save", "Save current workspace preset."),
+                    self._action("Rename", "RN", "workspace_preset:rename", "Rename a custom preset."),
+                    self._action("Delete", "DL", "workspace_preset:delete", "Delete a custom preset."),
+                    self._action("Defaults", "DF", "workspace_preset:restore_defaults", "Restore default presets."),
+                ),
+            ),
         )
 
     def _create_groups(self) -> tuple[tuple[str, tuple[RibbonCommand, ...]], ...]:

@@ -16,7 +16,7 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from engine.geometry import Vector3
+from engine.geometry import Vector2, Vector3
 from engine.picking3d import PickingManager3D
 from engine.render.camera3d import Camera3D, Camera3DState, CameraController3D
 from ui_v2.navigation_bar import NavigationBar
@@ -282,6 +282,39 @@ class SharedSceneViewportSurface(QWidget):
     def _navigation_updated(self) -> None:
         """Refresh this viewport after Navigation Bar camera actions."""
 
+        self.update()
+
+    def navigation_state(self) -> dict:
+        """Return viewport-local navigation and overlay UI state."""
+
+        return {
+            "navigation_mode": self._navigation_mode,
+            "viewcube_visible": (
+                self._viewcube.isVisible() if self._viewcube is not None else False
+            ),
+            "navigation_bar_visible": (
+                self._navigation_bar.isVisible()
+                if self._navigation_bar is not None
+                else False
+            ),
+        }
+
+    def apply_navigation_state(self, state: dict | None) -> None:
+        """Apply viewport-local navigation and overlay UI state."""
+
+        state = state or {}
+        mode = state.get("navigation_mode")
+        if mode in {"orbit", "pan"}:
+            self._set_navigation_mode(mode)
+            if self._navigation_bar is not None:
+                self._navigation_bar.set_navigation_mode(mode)
+        if self._viewcube is not None:
+            self._viewcube.setVisible(bool(state.get("viewcube_visible", True)))
+        if self._navigation_bar is not None:
+            self._navigation_bar.setVisible(
+                bool(state.get("navigation_bar_visible", True))
+            )
+            self._navigation_bar.sync_state()
         self.update()
 
     def _additive(self, event) -> bool:
@@ -649,6 +682,56 @@ class ViewportLayoutManager:
 
         return self._layout
 
+    def capture_layout_state(self) -> dict:
+        """Capture UI-only viewport layout, camera and overlay state."""
+
+        return {
+            "layout": self._layout.value,
+            "open_panes": list(self._open_pane_ids),
+            "active": self._active_pane_id,
+            "maximized": self._maximized_pane_id or "",
+            "closed_panes": sorted(self._closed_pane_ids),
+            "cameras": self._owner.capture_camera_states(),
+            "navigation": self._owner.capture_navigation_states(),
+        }
+
+    def apply_layout_state(self, state: dict) -> None:
+        """Restore UI-only viewport layout, camera and overlay state."""
+
+        state = state or {}
+        try:
+            self._layout = self._normalize_layout(
+                state.get("layout", ViewportLayout.SINGLE.value)
+            )
+        except ValueError:
+            self._layout = ViewportLayout.SINGLE
+
+        pane_ids = self._coerce_pane_ids(state.get("open_panes"))
+        self._open_pane_ids = [
+            pane_id for pane_id in pane_ids if pane_id in self._pane_definitions
+        ] or list(self._default_panes(self._layout))
+        self._closed_pane_ids = {
+            pane_id
+            for pane_id in self._coerce_pane_ids(state.get("closed_panes"))
+            if pane_id in self._pane_definitions
+        }
+        active = str(state.get("active", ""))
+        self._active_pane_id = (
+            active if active in self._pane_definitions else self._open_pane_ids[0]
+        )
+        maximized = str(state.get("maximized", ""))
+        self._maximized_pane_id = (
+            maximized if maximized in self._pane_definitions else None
+        )
+        if self._maximized_pane_id:
+            self._previous_open_pane_ids = list(self._open_pane_ids)
+            self._open_pane_ids = [self._maximized_pane_id]
+        self._owner.apply_camera_states(state.get("cameras", {}))
+        self._viewport_manager.set_layout(self._layout)
+        self._rearrange()
+        self._owner.apply_navigation_states(state.get("navigation", {}))
+        self.persist_layout_state()
+
     def _rearrange(self) -> None:
         """Rebuild the splitter layout from current pane ids."""
 
@@ -999,6 +1082,108 @@ class WorkspaceViewportArea(QWidget):
 
         self._layout_manager.swap_active_with_next()
 
+    def capture_workspace_preset_state(self) -> dict:
+        """Capture the current UI-only viewport preset state."""
+
+        return self._layout_manager.capture_layout_state()
+
+    def apply_workspace_preset_state(self, state: dict) -> None:
+        """Apply a UI-only viewport preset state."""
+
+        self._layout_manager.apply_layout_state(state)
+        active_id = self.active_viewport_id()
+        self._active_view_name = "2d" if active_id == "viewport_2d" else "3d"
+        self.active_view_changed.emit(self._active_view_name)
+
+    def default_workspace_preset_state(self, preset_id: str) -> dict:
+        """Return a built-in UI-only preset state by identifier."""
+
+        preset_key = str(preset_id).strip().lower()
+        if preset_key == "drafting":
+            return self._preset_state(
+                ViewportLayout.SINGLE,
+                ("viewport_2d",),
+                "viewport_2d",
+            )
+        if preset_key == "quad_view":
+            return self._preset_state(
+                ViewportLayout.QUAD,
+                ("viewport_2d", "viewport_front", "viewport_right", "viewport_3d"),
+                "viewport_3d",
+            )
+        if preset_key == "presentation":
+            return self._preset_state(
+                ViewportLayout.SINGLE,
+                ("viewport_3d",),
+                "viewport_3d",
+                grid_visible=False,
+                axis_visible=True,
+                origin_visible=False,
+                render_mode="shaded",
+            )
+        if preset_key == "visualization":
+            return self._preset_state(
+                ViewportLayout.SINGLE,
+                ("viewport_3d",),
+                "viewport_3d",
+                grid_visible=False,
+                axis_visible=False,
+                origin_visible=False,
+                render_mode="rendered",
+            )
+        return self._preset_state(
+            ViewportLayout.SINGLE,
+            ("viewport_3d",),
+            "viewport_3d",
+        )
+
+    def capture_camera_states(self) -> dict:
+        """Capture serializable per-viewport camera UI state."""
+
+        camera_states = {}
+        for record in self._viewport_manager.viewports():
+            camera_states[record.viewport_id] = self._camera_state(record)
+        return camera_states
+
+    def apply_camera_states(self, states: dict) -> None:
+        """Apply serializable per-viewport camera UI state."""
+
+        if not isinstance(states, dict):
+            return
+        for record in self._viewport_manager.viewports():
+            state = states.get(record.viewport_id)
+            if not isinstance(state, dict):
+                continue
+            self._apply_camera_state(record, state)
+
+    def capture_navigation_states(self) -> dict:
+        """Capture per-viewport navigation overlay UI state."""
+
+        navigation_states = {}
+        for record in self._viewport_manager.viewports():
+            widget = getattr(record, "widget", None)
+            state_method = getattr(widget, "navigation_state", None)
+            if callable(state_method):
+                navigation_states[record.viewport_id] = state_method()
+                continue
+            navigation_states[record.viewport_id] = {
+                "navigation_mode": "",
+                "viewcube_visible": False,
+                "navigation_bar_visible": False,
+            }
+        return navigation_states
+
+    def apply_navigation_states(self, states: dict) -> None:
+        """Apply per-viewport navigation overlay UI state."""
+
+        if not isinstance(states, dict):
+            return
+        for record in self._viewport_manager.viewports():
+            widget = getattr(record, "widget", None)
+            apply_method = getattr(widget, "apply_navigation_state", None)
+            if callable(apply_method):
+                apply_method(states.get(record.viewport_id, {}))
+
     def shutdown(self) -> None:
         """Disconnect viewport lifecycle hooks before Qt destroys widgets."""
 
@@ -1182,6 +1367,135 @@ class WorkspaceViewportArea(QWidget):
         )
         camera.set_default_state(camera.state)
         return camera
+
+    def _preset_state(
+        self,
+        layout: ViewportLayout,
+        open_panes: tuple[str, ...],
+        active: str,
+        *,
+        grid_visible: bool = True,
+        axis_visible: bool = True,
+        origin_visible: bool = True,
+        render_mode: str = "wireframe",
+    ) -> dict:
+        """Create a deterministic built-in UI preset state."""
+
+        cameras = self._default_camera_states(
+            grid_visible=grid_visible,
+            axis_visible=axis_visible,
+            origin_visible=origin_visible,
+            render_mode=render_mode,
+        )
+        navigation = {}
+        for record in self._viewport_manager.viewports():
+            is_3d = record.viewport_id != "viewport_2d"
+            navigation[record.viewport_id] = {
+                "navigation_mode": "orbit" if is_3d else "",
+                "viewcube_visible": is_3d,
+                "navigation_bar_visible": is_3d,
+            }
+        return {
+            "layout": layout.value,
+            "open_panes": list(open_panes),
+            "active": active,
+            "maximized": "",
+            "closed_panes": [
+                pane_id
+                for pane_id in self._layout_manager._pane_definitions
+                if pane_id not in open_panes
+            ],
+            "cameras": cameras,
+            "navigation": navigation,
+        }
+
+    def _default_camera_states(
+        self,
+        *,
+        grid_visible: bool,
+        axis_visible: bool,
+        origin_visible: bool,
+        render_mode: str,
+    ) -> dict:
+        """Return default per-viewport camera state dictionaries."""
+
+        states = {}
+        for record in self._viewport_manager.viewports():
+            state = self._default_camera_state(record)
+            state["grid_visible"] = grid_visible
+            state["axis_visible"] = axis_visible
+            state["origin_visible"] = origin_visible
+            state["render_mode"] = render_mode
+            states[record.viewport_id] = state
+        return states
+
+    def _default_camera_state(self, record) -> dict:
+        """Return a default camera state for one registered viewport."""
+
+        if record.viewport_id == "viewport_2d":
+            return {
+                "position": {"x": 0.0, "y": 0.0},
+                "zoom": 1.0,
+                "projection_mode": "orthographic",
+                "render_mode": "wireframe",
+                "grid_visible": True,
+                "axis_visible": True,
+                "origin_visible": True,
+            }
+
+        camera = getattr(record, "camera", None)
+        default_state = getattr(camera, "_default_state", None)
+        if default_state is not None and hasattr(default_state, "to_dict"):
+            return dict(default_state.to_dict())
+        if camera is not None and hasattr(camera, "to_dict"):
+            return dict(camera.to_dict())
+        return {}
+
+    def _camera_state(self, record) -> dict:
+        """Return the current serializable camera state for a record."""
+
+        camera = getattr(record, "camera", None)
+        if record.viewport_id == "viewport_2d":
+            position = getattr(camera, "position", Vector2())
+            return {
+                "position": {
+                    "x": float(getattr(position, "x", 0.0)),
+                    "y": float(getattr(position, "y", 0.0)),
+                },
+                "zoom": float(getattr(camera, "zoom", 1.0)),
+                "projection_mode": "orthographic",
+                "render_mode": "wireframe",
+                "grid_visible": True,
+                "axis_visible": True,
+                "origin_visible": True,
+            }
+        if camera is None or not hasattr(camera, "to_dict"):
+            return {}
+        state = dict(camera.to_dict())
+        camera_state = getattr(camera, "state", None)
+        state["origin_visible"] = bool(
+            getattr(camera_state, "origin_visible", state.get("origin_visible", True))
+        )
+        return state
+
+    def _apply_camera_state(self, record, state: dict) -> None:
+        """Apply a captured camera state to one registered viewport."""
+
+        camera = getattr(record, "camera", None)
+        if camera is None:
+            return
+        if record.viewport_id == "viewport_2d":
+            position = state.get("position", {})
+            camera.position = Vector2(
+                float(position.get("x", 0.0)),
+                float(position.get("y", 0.0)),
+            )
+            camera.zoom = float(state.get("zoom", 1.0))
+            return
+        from_dict = getattr(camera, "from_dict", None)
+        if callable(from_dict):
+            from_dict(state)
+            camera.state.origin_visible = bool(state.get("origin_visible", True))
 
     def _restore_camera_states(self) -> None:
         """Restore persisted per-viewport camera states when available."""

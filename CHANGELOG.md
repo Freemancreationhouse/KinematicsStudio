@@ -42,6 +42,9 @@ All notable changes to this project are documented here.
 - Viewport Caching
 - Frustum Culling
 - Viewport Statistics
+- Viewport Presets
+- Workspace Profiles
+- Preset Persistence
 
 ## Changed
 

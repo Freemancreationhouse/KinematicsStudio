@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from PySide6.QtCore import QObject, Signal
-from PySide6.QtWidgets import QFileDialog
+from PySide6.QtWidgets import QFileDialog, QInputDialog, QLineEdit
 
 from engine.commands import (
     CancelAITaskCommand,
@@ -91,6 +91,7 @@ class WorkspaceConnectionController(QObject):
         property_command_service: Any | None = None,
         selection_service: Any | None = None,
         viewport_synchronization_service: Any | None = None,
+        viewport_preset_manager: Any | None = None,
         command_manager: Any | None = None,
         workspace: Any | None = None,
         workspace_provider: Any | None = None,
@@ -113,6 +114,7 @@ class WorkspaceConnectionController(QObject):
         self.property_command_service = property_command_service
         self.selection_service = selection_service
         self.viewport_synchronization_service = viewport_synchronization_service
+        self.viewport_preset_manager = viewport_preset_manager
         self.app = app
         self.tool_manager = tool_manager
         self.workspace_provider = workspace_provider or app or workspace
@@ -249,6 +251,15 @@ class WorkspaceConnectionController(QObject):
             return
         if action_id.startswith("viewport:"):
             self._route_viewport_action(action_id.removeprefix("viewport:"))
+            return
+        if action_id.startswith("viewport_preset:"):
+            self._route_viewport_preset_action(action_id.removeprefix("viewport_preset:"))
+            return
+        if action_id.startswith("workspace_profile:"):
+            self._route_workspace_profile_action(action_id.removeprefix("workspace_profile:"))
+            return
+        if action_id.startswith("workspace_preset:"):
+            self._route_workspace_preset_action(action_id.removeprefix("workspace_preset:"))
             return
         if action_id == "panels":
             self.panelsRequested.emit()
@@ -1439,6 +1450,153 @@ class WorkspaceConnectionController(QObject):
         self._call_if_available(self.viewport_area, method_name)
         self._focus_active_view()
         self.synchronize_ui("ViewChanged")
+
+    def _route_viewport_preset_action(self, preset_id: str) -> None:
+        """Apply a built-in or custom viewport preset."""
+
+        if self._call_if_available(self.viewport_preset_manager, "apply_preset", preset_id):
+            self._focus_active_view()
+            self.synchronize_ui("ViewChanged")
+            self._call_if_available(
+                self.status_bar,
+                "show_status_text",
+                f"Viewport preset applied: {preset_id.replace('_', ' ').title()}",
+            )
+
+    def _route_workspace_profile_action(self, profile_id: str) -> None:
+        """Apply a workspace profile through viewport preset state only."""
+
+        if self._call_if_available(
+            self.viewport_preset_manager,
+            "apply_profile",
+            profile_id,
+        ):
+            self._focus_active_view()
+            self.synchronize_ui("ViewChanged")
+            self._call_if_available(
+                self.status_bar,
+                "show_status_text",
+                f"Workspace profile applied: {profile_id.replace('_', ' ').title()}",
+            )
+
+    def _route_workspace_preset_action(self, action_id: str) -> None:
+        """Route custom viewport preset management actions."""
+
+        if action_id == "save":
+            self._save_current_workspace_preset()
+            return
+        if action_id == "rename":
+            self._rename_workspace_preset()
+            return
+        if action_id == "delete":
+            self._delete_workspace_preset()
+            return
+        if action_id == "restore_defaults":
+            self._call_if_available(
+                self.viewport_preset_manager,
+                "restore_default_presets",
+            )
+            self._call_if_available(
+                self.status_bar,
+                "show_status_text",
+                "Viewport preset defaults restored",
+            )
+
+    def _save_current_workspace_preset(self) -> None:
+        """Save the current viewport configuration as a custom preset."""
+
+        name, accepted = QInputDialog.getText(
+            self._dialog_parent(),
+            "Save Workspace Preset",
+            "Preset name",
+        )
+        if not accepted or not str(name).strip():
+            return
+        preset = self._call_if_available(
+            self.viewport_preset_manager,
+            "save_current",
+            str(name),
+        )
+        if preset is not None:
+            self._call_if_available(
+                self.status_bar,
+                "show_status_text",
+                f"Workspace preset saved: {getattr(preset, 'name', str(name))}",
+            )
+
+    def _rename_workspace_preset(self) -> None:
+        """Rename a saved custom viewport preset."""
+
+        preset = self._choose_custom_preset("Rename Workspace Preset")
+        if preset is None:
+            return
+        name, accepted = QInputDialog.getText(
+            self._dialog_parent(),
+            "Rename Workspace Preset",
+            "Preset name",
+            QLineEdit.EchoMode.Normal,
+            getattr(preset, "name", ""),
+        )
+        if not accepted or not str(name).strip():
+            return
+        if self._call_if_available(
+            self.viewport_preset_manager,
+            "rename_preset",
+            getattr(preset, "preset_id", ""),
+            str(name),
+        ):
+            self._call_if_available(
+                self.status_bar,
+                "show_status_text",
+                f"Workspace preset renamed: {str(name).strip()}",
+            )
+
+    def _delete_workspace_preset(self) -> None:
+        """Delete a saved custom viewport preset."""
+
+        preset = self._choose_custom_preset("Delete Workspace Preset")
+        if preset is None:
+            return
+        if self._call_if_available(
+            self.viewport_preset_manager,
+            "delete_preset",
+            getattr(preset, "preset_id", ""),
+        ):
+            self._call_if_available(
+                self.status_bar,
+                "show_status_text",
+                f"Workspace preset deleted: {getattr(preset, 'name', '')}",
+            )
+
+    def _choose_custom_preset(self, title: str) -> Any | None:
+        """Ask the user to choose one custom preset."""
+
+        custom_presets = self._call_if_available(
+            self.viewport_preset_manager,
+            "custom_presets",
+        )
+        if not custom_presets:
+            self._call_if_available(
+                self.status_bar,
+                "show_status_text",
+                "No custom workspace presets are saved",
+            )
+            return None
+        labels = [getattr(preset, "name", "") for preset in custom_presets]
+        chosen, accepted = QInputDialog.getItem(
+            self._dialog_parent(),
+            title,
+            "Preset",
+            labels,
+            0,
+            False,
+        )
+        if not accepted:
+            return None
+        for preset in custom_presets:
+            if getattr(preset, "name", "") == chosen:
+                return preset
+        return None
 
     def _toggle_panel(self, panel_id: str) -> None:
         """Route a panel toggle request through the panel manager."""

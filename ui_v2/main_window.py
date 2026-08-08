@@ -69,6 +69,7 @@ from ui_v2.ribbon import Ribbon
 from ui_v2.status_bar import StudioStatusBar
 from ui_v2.theme import THEMES
 from ui_v2.viewport3d import Viewport3D
+from ui_v2.viewport_presets import ViewportPresetManager
 from ui_v2.workspace_connection_controller import WorkspaceConnectionController
 from ui_v2.workspace_panel_manager import WorkspacePanelManager
 from ui_v2.workspace_shell import WorkspaceShell
@@ -102,6 +103,7 @@ class MainWindow(QMainWindow):
             app=self.cad_application,
             workspace_provider=self.workspace_provider,
         )
+        self._create_viewport_preset_manager()
         self._create_command_palette()
         self._create_landing_platform()
         self._create_connection_controller()
@@ -214,6 +216,11 @@ class MainWindow(QMainWindow):
 
         self.panel_manager = WorkspacePanelManager(self)
 
+    def _create_viewport_preset_manager(self) -> None:
+        """Create the UI-only viewport preset manager."""
+
+        self.viewport_preset_manager = ViewportPresetManager(self.viewport_area)
+
     def _create_command_palette(self) -> None:
         """Create the command palette without routing it directly."""
 
@@ -245,6 +252,7 @@ class MainWindow(QMainWindow):
             status_bar=self.studio_status_bar,
             command_palette=self.command_palette,
             panel_manager=self.panel_manager,
+            viewport_preset_manager=self.viewport_preset_manager,
             project_service=self.project_service,
             property_command_service=self.property_command_service,
             selection_service=self.selection_service,
@@ -309,6 +317,51 @@ class MainWindow(QMainWindow):
                 )
             )
             viewport_menu.addAction(action)
+
+        presets_menu = view_menu.addMenu("Viewport Presets")
+        preset_actions = (
+            ("Single View", "viewport_preset:single_view"),
+            ("Drafting", "viewport_preset:drafting"),
+            ("Modeling", "viewport_preset:modeling"),
+            ("Quad View", "viewport_preset:quad_view"),
+            ("Presentation", "viewport_preset:presentation"),
+            ("Visualization", "viewport_preset:visualization"),
+            (None, None),
+            ("Save Current Workspace", "workspace_preset:save"),
+            ("Rename Workspace Preset", "workspace_preset:rename"),
+            ("Delete Workspace Preset", "workspace_preset:delete"),
+            ("Restore Default Presets", "workspace_preset:restore_defaults"),
+        )
+        for title, action_id in preset_actions:
+            if title is None:
+                presets_menu.addSeparator()
+                continue
+            action = QAction(title, self)
+            action.triggered.connect(
+                lambda checked=False, route=action_id: (
+                    self.workspace_connection_controller.route_action(route)
+                )
+            )
+            presets_menu.addAction(action)
+
+        profiles_menu = view_menu.addMenu("Workspace Profiles")
+        profile_actions = (
+            ("Architecture", "workspace_profile:architecture"),
+            ("Mechanical", "workspace_profile:mechanical"),
+            ("Product Design", "workspace_profile:product_design"),
+            ("Visualization", "workspace_profile:visualization"),
+            ("CAM", "workspace_profile:cam"),
+            ("Digital Fabrication", "workspace_profile:digital_fabrication"),
+            ("Robotics", "workspace_profile:robotics"),
+        )
+        for title, action_id in profile_actions:
+            action = QAction(title, self)
+            action.triggered.connect(
+                lambda checked=False, route=action_id: (
+                    self.workspace_connection_controller.route_action(route)
+                )
+            )
+            profiles_menu.addAction(action)
 
         view_menu.addSeparator()
         panels_menu = view_menu.addMenu("Panels")

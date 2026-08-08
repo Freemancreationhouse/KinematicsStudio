@@ -1161,3 +1161,59 @@ viewport performance dashboards after manual QA confirms this baseline remains
 visually identical.
 
 ----------------------------------------
+
+## Task 2.2.8
+
+Status: IN PROGRESS
+
+Summary
+
+Implemented a professional Viewport Preset and Workspace Profile system for
+the existing multi-viewport workspace. Presets store only visual workspace
+configuration: viewport layout, active viewport, camera states, projection
+modes, grid visibility, axis visibility, origin visibility, ViewCube visibility
+and Navigation Bar state. Presets never store geometry, entities, selection,
+layers, commands, command history or undo data.
+
+Viewport Presets
+
+The system provides built-in presets for Single View, Drafting, Modeling, Quad
+View, Presentation and Visualization. Presets are applied through
+WorkspaceConnectionController using the same action routing used by viewport
+layouts and viewport tools. WorkspaceViewportArea captures and restores preset
+state through existing ViewportLayoutManager and ViewportManager ownership
+without duplicating viewports, cameras or scene data.
+
+Workspace Profiles
+
+Workspace profiles are available for Architecture, Mechanical, Product Design,
+Visualization, CAM, Digital Fabrication and Robotics. Profiles apply only
+workspace UI configuration by selecting an appropriate viewport preset. They do
+not modify project geometry, shared scene state, command history, selection or
+project data.
+
+Persistence
+
+Custom presets are persisted through QSettings as UI-only serialized state.
+Users can save the current workspace, rename custom presets, delete custom
+presets and restore default presets. Applying a preset also updates the
+existing viewport layout persistence so the visual workspace survives
+application restart, project close, project open and project recovery.
+
+Architecture Decisions
+
+Shared Scene, Workspace, Rendering, Camera System, ViewCube, Navigation Bar,
+View Synchronization, Selection System, Command System, ToolManager,
+ProjectService and WorkspaceProvider were not redesigned. Camera states remain
+owned by their viewports. Presets restore camera data in place and never copy
+or mirror project model data. Existing viewport widgets are reused through the
+layout manager to avoid QObject lifetime regressions.
+
+EPIC Completion
+
+Task 2.2.8 completes the planned Multi Viewport System feature set by adding
+commercial-grade visual presets and profile workflows on top of the existing
+multi-viewport, camera, ViewCube, Navigation Bar, synchronization and
+performance foundation.
+
+----------------------------------------
