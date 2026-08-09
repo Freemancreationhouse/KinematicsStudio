@@ -69,6 +69,7 @@ ACTIVE
 - [IN PROGRESS] Professional Rotate Tool
 - [IN PROGRESS] Professional Scale Tool
 - [IN PROGRESS] Professional Snapping Engine
+- [IN PROGRESS] Professional Dynamic Input (HUD)
 
 ---
 

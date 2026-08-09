@@ -44,6 +44,11 @@ All notable changes to this project are documented here.
 - Snap Session
 - Snap Filters
 - Snap Priority
+- Professional Dynamic Input
+- HUD Manager
+- Expression Parser
+- Unit Parser
+- Cursor Overlay
 
 ## Changed
 

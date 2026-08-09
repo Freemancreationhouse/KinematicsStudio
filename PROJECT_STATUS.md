@@ -89,9 +89,9 @@ EPIC 2.3
 
 # Current Task
 
-Task 2.3.7
+Task 2.3.8
 
-Professional Snapping Engine
+Professional Dynamic Input (HUD)
 
 Status:
 
@@ -186,3 +186,5 @@ Task 2.3.5 In Progress: Professional Rotate Tool now uses Transform Framework se
 Task 2.3.6 In Progress: Professional Scale Tool now uses Transform Framework sessions, reversible preview, ScaleCommand commits, Undo/Redo and Feature History metadata while preserving locked rendering, viewport, selection and command architecture.
 
 Task 2.3.7 In Progress: Professional Snapping Engine added reusable SnappingManager, SnappingContext, SnappingSession, SnappingResult, SnappingTarget, SnappingPriority, SnappingFilter and visual marker metadata without modifying locked rendering, viewport, selection, transform or command architecture.
+
+Task 2.3.8 In Progress: Professional Dynamic Input (HUD) added reusable DynamicInputManager, DynamicInputSession, DynamicInputOverlay, field definitions, expression parsing, unit parsing and AI-safe numeric input APIs without modifying locked tool, snapping, viewport, rendering or command architecture.

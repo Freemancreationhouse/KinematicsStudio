@@ -342,3 +342,51 @@ and extend visual marker rendering. Those tasks must preserve Workspace,
 Shared Scene, Command System and rendering ownership.
 
 ----------------------------------------------------
+
+## Task 2.3.8
+
+Status: IN PROGRESS
+
+Professional Dynamic Input (HUD)
+
+Implemented the Professional Dynamic Input foundation as a reusable engine-layer
+package for current and future editing tools. The system provides one shared
+numeric input manager, session lifecycle, cursor overlay presentation model,
+field definitions, safe expression parsing, unit parsing and AI-safe request
+metadata without modifying locked tool, snapping, viewport, rendering or command
+architecture.
+
+Architecture
+
+DynamicInputManager is the authoritative entry point for sessions, expression
+evaluation, unit conversion, field routing and AI integration requests.
+DynamicInputSession owns the active HUD state for one tool interaction.
+DynamicInputOverlay is a viewport-independent presentation model that UI
+presenters can render beside the cursor without becoming geometry or command
+owners. DynamicInputParser delegates safe arithmetic expressions and unit-aware
+normalization to dedicated parsers.
+
+Capabilities
+
+- Tool-specific HUD fields are represented for ΔX, ΔY, ΔZ, Distance, Angle,
+  Scale, Radius, Offset, Copies, Rows, Columns, Spacing, Coordinate Space,
+  Snap Target and Units.
+- Keyboard workflow supports field activation, Tab and Shift+Tab traversal,
+  Enter commit, Escape cancel and arrow-key numeric nudging.
+- Unit-aware input supports mm, cm, m, km, in, ft, deg and ° suffixes.
+- Expression input supports arithmetic such as 1000/2, 25*4, 300+25,
+  500-125 and (1000+250)/2 through a safe AST parser.
+- Cursor overlay metadata supports multi-viewport routing, HiDPI scale
+  factors, dark/light theme metadata and live field snapshots.
+- AI integration can request dynamic input sessions, expression evaluation,
+  numeric input and unit conversion through DynamicInputManager without direct
+  geometry mutation.
+
+Remaining Tasks
+
+Future tasks may connect Move, Rotate, Scale, Copy, Offset, Extrude, Fillet,
+Chamfer, Mirror, Pattern, Array and Transform Gizmo tools to this shared HUD.
+Those integrations must preserve Workspace, Shared Scene, Snapping Engine,
+Transform Framework, Command System and rendering ownership.
+
+----------------------------------------------------
