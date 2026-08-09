@@ -49,6 +49,15 @@ All notable changes to this project are documented here.
 - Expression Parser
 - Unit Parser
 - Cursor Overlay
+- Professional Copy Tool
+- Copy Commands
+- Copy Preview
+- Copy Transactions
+- Professional Transform Gizmo
+- Gizmo Manager
+- Handle Picking
+- Orientation System
+- Constraint System
 
 ## Changed
 

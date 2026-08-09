@@ -89,9 +89,9 @@ EPIC 2.3
 
 # Current Task
 
-Task 2.3.8
+Task 2.3.10
 
-Professional Dynamic Input (HUD)
+Professional Transform Gizmo
 
 Status:
 
@@ -188,3 +188,7 @@ Task 2.3.6 In Progress: Professional Scale Tool now uses Transform Framework ses
 Task 2.3.7 In Progress: Professional Snapping Engine added reusable SnappingManager, SnappingContext, SnappingSession, SnappingResult, SnappingTarget, SnappingPriority, SnappingFilter and visual marker metadata without modifying locked rendering, viewport, selection, transform or command architecture.
 
 Task 2.3.8 In Progress: Professional Dynamic Input (HUD) added reusable DynamicInputManager, DynamicInputSession, DynamicInputOverlay, field definitions, expression parsing, unit parsing and AI-safe numeric input APIs without modifying locked tool, snapping, viewport, rendering or command architecture.
+
+Task 2.3.9 In Progress: Professional Copy Tool added a dedicated copy package with CopyTool, CopySession, CopyCommand, CopyPreview, CopyTransaction, Dynamic Input routing and Snapping Engine integration while preserving locked Workspace, Shared Scene, Transform Framework, rendering, viewport and command architecture.
+
+Task 2.3.10 In Progress: Professional Transform Gizmo added GizmoManager, GizmoSession, handle definitions, handle picking, orientation, pivot, constraints and renderer-facing metadata while reusing existing Move, Rotate, Scale, Copy, Snapping and Dynamic Input systems.

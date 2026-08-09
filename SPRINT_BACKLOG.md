@@ -70,6 +70,8 @@ ACTIVE
 - [IN PROGRESS] Professional Scale Tool
 - [IN PROGRESS] Professional Snapping Engine
 - [IN PROGRESS] Professional Dynamic Input (HUD)
+- [IN PROGRESS] Professional Copy Tool
+- [IN PROGRESS] Professional Transform Gizmo
 
 ---
 

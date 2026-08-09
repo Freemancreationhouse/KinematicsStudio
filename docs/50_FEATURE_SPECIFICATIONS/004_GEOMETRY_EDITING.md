@@ -390,3 +390,102 @@ Those integrations must preserve Workspace, Shared Scene, Snapping Engine,
 Transform Framework, Command System and rendering ownership.
 
 ----------------------------------------------------
+
+## Task 2.3.9
+
+Status: IN PROGRESS
+
+Professional Copy Tool
+
+Implemented the Professional Copy Tool as a dedicated package that reuses the
+Selection System, Transform Framework, Professional Snapping Engine and Dynamic
+Input (HUD). The tool supports selected-source copy workflows, base point and
+destination point interaction, transient preview clones, numeric offsets,
+copy counts, spacing and undoable command commits without modifying locked
+systems.
+
+Architecture
+
+The Copy Tool remains a Tool-layer input collector. It does not own Workspace,
+Shared Scene, rendering, viewport state, snapping, dynamic input, transform
+services or command history. CopySession coordinates TransformManager,
+SnappingManager and DynamicInputManager. CopyPreview creates transient cloned
+preview entities only. CopyCommand is the only component that adds copied
+geometry to Workspace through CommandManager and records feature-history
+metadata.
+
+Capabilities
+
+- Lines, polylines, arcs, circles, ellipses, splines, sketches, bodies, faces,
+  edges, vertices, components, assemblies, construction geometry and AI
+  geometry can participate when they expose existing clone/deepcopy-compatible
+  entity behavior.
+- Single Copy, Multiple Copy, Linear Copy, Incremental Copy, Reference Copy,
+  Associative Copy and Non-associative Copy concepts are represented through
+  copy mode, command metadata and transaction metadata.
+- Dynamic Input is reused for ΔX, ΔY, ΔZ, Distance, Copies and Spacing without
+  duplicating expression or unit parsing.
+- Professional Snapping Engine is reused to resolve destination points when a
+  snapping manager is available.
+- Undo and Redo are supported by CopyCommand through the existing CommandManager.
+- AI integration can request copy intent through CopyCommand metadata without
+  directly duplicating geometry.
+
+Remaining Tasks
+
+Future tasks may add Copy-specific ribbon controls, richer associative copy
+constraints, transform gizmo support, pattern/array integration and advanced
+topology-aware copy behaviors. Those tasks must preserve the same Transform
+Framework, Dynamic Input, Snapping Engine and CommandManager execution path.
+
+----------------------------------------------------
+
+## Task 2.3.10
+
+Status: IN PROGRESS
+
+Professional Transform Gizmo
+
+Implemented the Professional Transform Gizmo as a reusable controller-layer
+package for universal manipulation workflows. The gizmo exposes move, rotate,
+scale and universal handle sets, handle picking, orientation and pivot metadata,
+constraint state, renderer-facing packets, session lifecycle, event routing and
+AI-safe request metadata without duplicating Move, Rotate, Scale, Copy,
+Snapping or Dynamic Input logic.
+
+Architecture
+
+GizmoManager is the authoritative entry point for gizmo configuration, selection
+refresh, handle picking, drag lifecycle, rendering metadata and AI integration
+requests. GizmoSession delegates preview, commit and cancel behavior to existing
+editing tools through their public APIs. GizmoPicker resolves hovered handles.
+GizmoRenderer emits presentation metadata only and does not own rendering.
+GizmoState stores handle, pivot, orientation, constraint, viewport and selection
+metadata without owning Workspace or Shared Scene state.
+
+Capabilities
+
+- Move gizmo handles are represented for X, Y and Z axis arrows, XY, XZ and YZ
+  plane handles and the center handle.
+- Rotate gizmo handles are represented for X, Y and Z rotation rings, screen
+  rotation and free rotation.
+- Scale gizmo handles are represented for uniform scale, X, Y and Z scale and
+  XY, XZ and YZ scale handles.
+- Orientation modes are represented for World, Local, Parent, View and Custom.
+- Pivot modes are represented for Selection Center, Bounding Box Center, Origin,
+  Custom Pivot and Active Pivot.
+- Gizmo sessions update Dynamic Input cursor metadata, resolve points through
+  the Snapping Engine when available and delegate transform preview/commit to
+  existing Move, Rotate and Scale tools.
+- AI integration can request Move, Rotate, Scale or Universal gizmos through
+  GizmoManager without manipulating geometry directly.
+
+Remaining Tasks
+
+Future tasks may wire viewport presenters to GizmoRenderPacket, connect richer
+camera-aware screen-space picking, add visual polish in the renderer layer and
+extend tool-specific gizmo behaviors. Those integrations must preserve the
+existing Move, Rotate, Scale, Copy, Snapping, Dynamic Input, Transform Framework
+and CommandManager execution paths.
+
+----------------------------------------------------
